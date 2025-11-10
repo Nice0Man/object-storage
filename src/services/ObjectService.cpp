@@ -120,14 +120,10 @@ Result<Object, ApiError> ObjectService::upload_object(
         ));
     }
 
-    clients::PutObjectOptions options;
-    options.content_type = content_type;
-
     auto result = minio_client_->put_object(
         bucket_name,
         object_key,
-        data,
-        options
+        data
     );
 
     if (!result) {

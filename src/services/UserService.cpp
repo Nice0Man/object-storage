@@ -31,7 +31,7 @@ Result<Vector<User>, ApiError> UserService::list_users(
     }
 
     CONSOLE_LOG_INFO("Successfully listed {} users", result.value().size());
-    return Ok<Vector<User>>(result.value());
+    return Result<Vector<User>, ApiError>(ok_tag, result.value());
 }
 
 Result<User, ApiError> UserService::get_user(
@@ -48,7 +48,7 @@ Result<User, ApiError> UserService::get_user(
         return Err<User>(*error);
     }
 
-    auto result = admin_client_->get_user_info(access_key);
+    auto result = admin_client_->get_user(access_key);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get user {}: {}", access_key, result.error());
         return Err<User>(ApiError(
@@ -57,7 +57,7 @@ Result<User, ApiError> UserService::get_user(
         ));
     }
 
-    return Ok<User>(result.value());
+    return Result<User, ApiError>(ok_tag, result.value());
 }
 
 Result<User, ApiError> UserService::create_user(
@@ -103,7 +103,7 @@ Result<User, ApiError> UserService::create_user(
     }
 
     CONSOLE_LOG_INFO("Successfully created user: {}", access_key);
-    return Ok<User>(result.value());
+    return Result<User, ApiError>(ok_tag, result.value());
 }
 
 Result<void, ApiError> UserService::update_user(
@@ -279,7 +279,7 @@ Result<Vector<String>, ApiError> UserService::list_user_policies(
         return Err<Vector<String>>(user_result.error());
     }
 
-    return Ok<Vector<String>>(user_result.value().policies());
+    return Result<Vector<String>, ApiError>(ok_tag, user_result.value().policies());
 }
 
 Result<void, ApiError> UserService::add_user_to_group(
