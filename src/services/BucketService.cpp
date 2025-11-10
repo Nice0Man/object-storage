@@ -85,7 +85,7 @@ Result<Bucket, ApiError> BucketService::get_bucket_info(
 ) {
     CONSOLE_LOG_DEBUG("Getting bucket info: {}", name);
 
-    auto result = minio_client_->get_bucket_info(name);
+    auto result = minio_client_->get_bucket(name);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get bucket info for {}: {}", name, result.error());
         return Err<models::ApiError>(ApiError(
@@ -130,7 +130,11 @@ Result<String, ApiError> BucketService::get_bucket_policy(
 ) {
     CONSOLE_LOG_DEBUG("Getting bucket policy for: {}", name);
 
-    auto result = minio_client_->get_bucket_policy(name);
+    // TODO: Implement get_bucket_policy in MinioClient
+    return Err<String>(ApiError(
+        HttpStatus::NotImplemented,
+        "get_bucket_policy not yet implemented"
+    ));
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get bucket policy for {}: {}", 
                   name, result.error());
@@ -150,7 +154,11 @@ Result<void, ApiError> BucketService::set_bucket_versioning(
 ) {
     CONSOLE_LOG_INFO("Setting bucket versioning for {}: {}", name, enabled);
 
-    auto result = minio_client_->set_bucket_versioning(name, enabled);
+    // TODO: Implement set_bucket_versioning in MinioClient
+    return Result<void, models::ApiError>(err_tag, ApiError(
+        HttpStatus::NotImplemented,
+        "set_bucket_versioning not yet implemented"
+    ));
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to set bucket versioning for {}: {}", 
                   name, result.error());
@@ -170,7 +178,11 @@ Result<bool, ApiError> BucketService::get_bucket_versioning(
 ) {
     CONSOLE_LOG_DEBUG("Getting bucket versioning for: {}", name);
 
-    auto result = minio_client_->get_bucket_versioning(name);
+    // TODO: Implement get_bucket_versioning in MinioClient
+    return Err<bool>(ApiError(
+        HttpStatus::NotImplemented,
+        "get_bucket_versioning not yet implemented"
+    ));
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get bucket versioning for {}: {}", 
                   name, result.error());

@@ -21,11 +21,12 @@ Result<Vector<Object>, ApiError> ObjectService::list_objects(
     CONSOLE_LOG_DEBUG("Listing objects in bucket: {} with prefix: {}", 
               bucket_name, prefix);
 
-    auto result = minio_client_->list_objects(
-        bucket_name,
-        prefix,
-        recursive
-    );
+    clients::ListObjectsOptions options;
+    options.prefix = prefix;
+    options.recursive = recursive;
+    options.max_keys = max_keys;
+    
+    auto result = minio_client_->list_objects(bucket_name, options);
 
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to list objects in bucket {}: {}", 
