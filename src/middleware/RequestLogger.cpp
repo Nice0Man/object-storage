@@ -5,7 +5,6 @@
 
 namespace console::middleware {
 
-using namespace console::utils;
 
 void RequestLogger::doFilter(
     const drogon::HttpRequestPtr& req,

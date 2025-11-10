@@ -25,28 +25,28 @@ Result<Json::Value, ApiError> AuthService::login(
     // Validate credentials format
     if (auto error = validate_credentials(username, password)) {
         CONSOLE_LOG_WARN("Invalid credentials format for user: {}", username);
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // Authenticate with MinIO and get STS credentials
     auto auth_result = authenticate_with_minio(username, password);
     if (!auth_result) {
         CONSOLE_LOG_ERROR("Authentication failed for user: {}", username);
-        return Err(auth_result.error());
+        return Err<models::ApiError>(auth_result.error());
     }
 
     // Generate JWT tokens
     auto tokens = generate_tokens(auth_result.value());
     
     CONSOLE_LOG_INFO("Login successful for user: {}", username);
-    return Ok(tokens);
+    return Ok<models::ApiError>(tokens);
 }
 
 Result<void, ApiError> AuthService::logout(const String& token) {
     // Validate token first
     auto validate_result = validate_token(token);
     if (!validate_result) {
-        return Err(validate_result.error());
+        return Err<models::ApiError>(validate_result.error());
     }
 
     // Add token to blacklist
@@ -56,7 +56,7 @@ Result<void, ApiError> AuthService::logout(const String& token) {
     }
 
     CONSOLE_LOG_INFO("User logged out successfully");
-    return Ok();
+    return Ok<models::ApiError>();
 }
 
 Result<Json::Value, ApiError> AuthService::refresh_token(
@@ -67,7 +67,7 @@ Result<Json::Value, ApiError> AuthService::refresh_token(
     auto user_info_opt = JWT::validate_token(refresh_token, jwt_secret);
     
     if (!user_info_opt) {
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::Unauthorized,
             "Invalid or expired refresh token"
         ));
@@ -77,7 +77,7 @@ Result<Json::Value, ApiError> AuthService::refresh_token(
     {
         std::lock_guard<std::mutex> lock(blacklist_mutex_);
         if (token_blacklist_.count(refresh_token) > 0) {
-            return Err(ApiError(
+            return Err<models::ApiError>(ApiError(
                 HttpStatus::Unauthorized,
                 "Token has been revoked"
             ));
@@ -89,7 +89,7 @@ Result<Json::Value, ApiError> AuthService::refresh_token(
     
     CONSOLE_LOG_INFO("Token refreshed successfully for user: {}", 
              user_info_opt->access_key);
-    return Ok(tokens);
+    return Ok<models::ApiError>(tokens);
 }
 
 Result<models::User, ApiError> AuthService::get_current_user(
@@ -98,7 +98,7 @@ Result<models::User, ApiError> AuthService::get_current_user(
     // Validate token
     auto validate_result = validate_token(token);
     if (!validate_result) {
-        return Err(validate_result.error());
+        return Err<models::ApiError>(validate_result.error());
     }
 
     auto& user_info = validate_result.value();
@@ -106,13 +106,13 @@ Result<models::User, ApiError> AuthService::get_current_user(
     // Get user details from MinIO Admin API
     auto user_result = admin_client_->get_user_info(user_info.access_key);
     if (!user_result) {
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to fetch user information: " + user_result.error()
         ));
     }
 
-    return Ok(user_result.value());
+    return Ok<models::ApiError>(user_result.value());
 }
 
 Result<void, ApiError> AuthService::change_password(
@@ -123,14 +123,14 @@ Result<void, ApiError> AuthService::change_password(
     // Validate token
     auto validate_result = validate_token(token);
     if (!validate_result) {
-        return Err(validate_result.error());
+        return Err<models::ApiError>(validate_result.error());
     }
 
     auto& user_info = validate_result.value();
 
     // Validate new password
     if (new_password.length() < 8) {
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::BadRequest,
             "Password must be at least 8 characters long"
         ));
@@ -142,7 +142,7 @@ Result<void, ApiError> AuthService::change_password(
         old_password
     );
     if (!auth_result) {
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::Unauthorized,
             "Current password is incorrect"
         ));
@@ -152,7 +152,7 @@ Result<void, ApiError> AuthService::change_password(
     // Currently MinIO doesn't have direct password change API
     // We would need to delete and recreate user, or use LDAP/IDP
     
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Password change not yet implemented"
     ));
@@ -163,7 +163,7 @@ Result<UserInfo, ApiError> AuthService::validate_token(const String& token) {
     {
         std::lock_guard<std::mutex> lock(blacklist_mutex_);
         if (token_blacklist_.count(token) > 0) {
-            return Err(ApiError(
+            return Err<models::ApiError>(ApiError(
                 HttpStatus::Unauthorized,
                 "Token has been revoked"
             ));
@@ -175,13 +175,13 @@ Result<UserInfo, ApiError> AuthService::validate_token(const String& token) {
     auto user_info_opt = JWT::validate_token(token, jwt_secret);
     
     if (!user_info_opt) {
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::Unauthorized,
             "Invalid or expired token"
         ));
     }
 
-    return Ok(*user_info_opt);
+    return Ok<models::ApiError>(*user_info_opt);
 }
 
 // Private methods
@@ -207,10 +207,10 @@ Result<UserInfo, ApiError> AuthService::authenticate_with_minio(
         user_info.is_admin = true;
         user_info.created_at = std::chrono::system_clock::now();
         
-        return Ok(user_info);
+        return Ok<models::ApiError>(user_info);
     }
     
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::Unauthorized,
         "Invalid username or password"
     ));

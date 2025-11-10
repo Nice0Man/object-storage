@@ -4,7 +4,6 @@
 
 namespace console::api {
 
-using namespace console::utils;
 
 void ObjectsController::set_object_service(
     std::shared_ptr<services::IObjectService> service

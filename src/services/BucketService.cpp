@@ -23,14 +23,14 @@ Result<Vector<Bucket>, ApiError> BucketService::list_buckets(
     auto result = minio_client_->list_buckets();
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to list buckets: {}", result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to list buckets: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully listed {} buckets", result.value().size());
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<Bucket, ApiError> BucketService::create_bucket(
@@ -44,20 +44,20 @@ Result<Bucket, ApiError> BucketService::create_bucket(
     // Validate bucket name
     if (auto error = validate_bucket_name(name)) {
         CONSOLE_LOG_WARN("Invalid bucket name: {}", name);
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     auto result = minio_client_->create_bucket(name, region, object_locking);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to create bucket {}: {}", name, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to create bucket: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully created bucket: {}", name);
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<void, ApiError> BucketService::delete_bucket(
@@ -69,14 +69,14 @@ Result<void, ApiError> BucketService::delete_bucket(
     auto result = minio_client_->delete_bucket(name);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to delete bucket {}: {}", name, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to delete bucket: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully deleted bucket: {}", name);
-    return Ok();
+    return Ok<models::ApiError>();
 }
 
 Result<Bucket, ApiError> BucketService::get_bucket_info(
@@ -88,13 +88,13 @@ Result<Bucket, ApiError> BucketService::get_bucket_info(
     auto result = minio_client_->get_bucket_info(name);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get bucket info for {}: {}", name, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::NotFound,
             "Bucket not found: " + result.error()
         ));
     }
 
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<void, ApiError> BucketService::set_bucket_policy(
@@ -107,21 +107,21 @@ Result<void, ApiError> BucketService::set_bucket_policy(
     // Validate policy JSON
     if (auto error = validate_policy_json(policy_json)) {
         CONSOLE_LOG_WARN("Invalid policy JSON for bucket: {}", name);
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     auto result = minio_client_->set_bucket_policy(name, policy_json);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to set bucket policy for {}: {}", 
                   name, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to set bucket policy: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully set bucket policy for: {}", name);
-    return Ok();
+    return Ok<models::ApiError>();
 }
 
 Result<String, ApiError> BucketService::get_bucket_policy(
@@ -134,13 +134,13 @@ Result<String, ApiError> BucketService::get_bucket_policy(
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get bucket policy for {}: {}", 
                   name, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to get bucket policy: " + result.error()
         ));
     }
 
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<void, ApiError> BucketService::set_bucket_versioning(
@@ -154,14 +154,14 @@ Result<void, ApiError> BucketService::set_bucket_versioning(
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to set bucket versioning for {}: {}", 
                   name, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to set bucket versioning: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully set bucket versioning for: {}", name);
-    return Ok();
+    return Ok<models::ApiError>();
 }
 
 Result<bool, ApiError> BucketService::get_bucket_versioning(
@@ -174,13 +174,13 @@ Result<bool, ApiError> BucketService::get_bucket_versioning(
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get bucket versioning for {}: {}", 
                   name, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to get bucket versioning: " + result.error()
         ));
     }
 
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<void, ApiError> BucketService::set_bucket_tags(
@@ -191,7 +191,7 @@ Result<void, ApiError> BucketService::set_bucket_tags(
     CONSOLE_LOG_INFO("Setting {} tags for bucket: {}", tags.size(), name);
 
     // TODO(Nice0Man): Implement bucket tagging
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Bucket tagging not yet implemented"
     ));
@@ -204,7 +204,7 @@ Result<StringMap, ApiError> BucketService::get_bucket_tags(
     CONSOLE_LOG_DEBUG("Getting tags for bucket: {}", name);
 
     // TODO(Nice0Man): Implement bucket tagging
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Bucket tagging not yet implemented"
     ));
@@ -217,7 +217,7 @@ Result<void, ApiError> BucketService::delete_bucket_tags(
     CONSOLE_LOG_INFO("Deleting tags for bucket: {}", name);
 
     // TODO(Nice0Man): Implement bucket tagging
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Bucket tagging not yet implemented"
     ));

@@ -5,7 +5,6 @@
 
 namespace console::websocket {
 
-using namespace console::utils;
 
 // Static members initialization
 std::set<drogon::WebSocketConnectionPtr> EventsController::connections_;

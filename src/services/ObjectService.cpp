@@ -30,7 +30,7 @@ Result<Vector<Object>, ApiError> ObjectService::list_objects(
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to list objects in bucket {}: {}", 
                   bucket_name, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to list objects: " + result.error()
         ));
@@ -43,7 +43,7 @@ Result<Vector<Object>, ApiError> ObjectService::list_objects(
     }
 
     CONSOLE_LOG_INFO("Listed {} objects from bucket: {}", objects.size(), bucket_name);
-    return Ok(objects);
+    return Ok<models::ApiError>(objects);
 }
 
 Result<Object, ApiError> ObjectService::get_object_info(
@@ -55,20 +55,20 @@ Result<Object, ApiError> ObjectService::get_object_info(
               object_key, bucket_name);
 
     if (auto error = validate_object_key(object_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     auto result = minio_client_->get_object_info(bucket_name, object_key);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get object info for {}/{}: {}", 
                   bucket_name, object_key, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::NotFound,
             "Object not found: " + result.error()
         ));
     }
 
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<ByteArray, ApiError> ObjectService::download_object(
@@ -80,14 +80,14 @@ Result<ByteArray, ApiError> ObjectService::download_object(
              object_key, bucket_name);
 
     if (auto error = validate_object_key(object_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     auto result = minio_client_->download_object(bucket_name, object_key);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to download object {}/{}: {}", 
                   bucket_name, object_key, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to download object: " + result.error()
         ));
@@ -95,7 +95,7 @@ Result<ByteArray, ApiError> ObjectService::download_object(
 
     CONSOLE_LOG_INFO("Successfully downloaded object: {} ({} bytes)", 
              object_key, result.value().size());
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<Object, ApiError> ObjectService::upload_object(
@@ -110,13 +110,13 @@ Result<Object, ApiError> ObjectService::upload_object(
              object_key, bucket_name, data.size());
 
     if (auto error = validate_object_key(object_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // Validate data size (max 5GB for single upload)
     const size_t max_size = 5ULL * 1024 * 1024 * 1024;  // 5GB
     if (data.size() > max_size) {
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::BadRequest,
             "Object size exceeds maximum of 5GB for single upload"
         ));
@@ -132,14 +132,14 @@ Result<Object, ApiError> ObjectService::upload_object(
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to upload object {}/{}: {}", 
                   bucket_name, object_key, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to upload object: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully uploaded object: {}", object_key);
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<void, ApiError> ObjectService::delete_object(
@@ -150,21 +150,21 @@ Result<void, ApiError> ObjectService::delete_object(
     CONSOLE_LOG_INFO("Deleting object: {} from bucket: {}", object_key, bucket_name);
 
     if (auto error = validate_object_key(object_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     auto result = minio_client_->delete_object(bucket_name, object_key);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to delete object {}/{}: {}", 
                   bucket_name, object_key, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to delete object: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully deleted object: {}", object_key);
-    return Ok();
+    return Ok<models::ApiError>();
 }
 
 Result<Json::Value, ApiError> ObjectService::delete_objects(
@@ -199,7 +199,7 @@ Result<Json::Value, ApiError> ObjectService::delete_objects(
              result["deleted_count"].asInt(), 
              result["error_count"].asInt());
 
-    return Ok(result);
+    return Ok<models::ApiError>(result);
 }
 
 Result<Object, ApiError> ObjectService::copy_object(
@@ -213,14 +213,14 @@ Result<Object, ApiError> ObjectService::copy_object(
              source_bucket, source_key, dest_bucket, dest_key);
 
     if (auto error = validate_object_key(source_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
     if (auto error = validate_object_key(dest_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // TODO(Nice0Man): Implement object copy via MinIO API
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Object copy not yet implemented"
     ));
@@ -235,7 +235,7 @@ Result<void, ApiError> ObjectService::set_object_metadata(
     CONSOLE_LOG_INFO("Setting metadata for object: {}/{}", bucket_name, object_key);
 
     // TODO(Nice0Man): Implement metadata update via MinIO API
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Object metadata update not yet implemented"
     ));
@@ -250,7 +250,7 @@ Result<void, ApiError> ObjectService::set_object_tags(
     CONSOLE_LOG_INFO("Setting tags for object: {}/{}", bucket_name, object_key);
 
     // TODO(Nice0Man): Implement object tagging
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Object tagging not yet implemented"
     ));
@@ -264,7 +264,7 @@ Result<StringMap, ApiError> ObjectService::get_object_tags(
     CONSOLE_LOG_DEBUG("Getting tags for object: {}/{}", bucket_name, object_key);
 
     // TODO(Nice0Man): Implement object tagging
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Object tagging not yet implemented"
     ));
@@ -280,18 +280,18 @@ Result<String, ApiError> ObjectService::generate_presigned_url(
              bucket_name, object_key, expiry_seconds);
 
     if (auto error = validate_object_key(object_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     if (expiry_seconds < 1 || expiry_seconds > 604800) {  // Max 7 days
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::BadRequest,
             "Expiry must be between 1 second and 7 days"
         ));
     }
 
     // TODO(Nice0Man): Implement presigned URL generation
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Presigned URL generation not yet implemented"
     ));

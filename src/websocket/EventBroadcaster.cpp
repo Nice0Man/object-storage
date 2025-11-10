@@ -5,7 +5,6 @@
 
 namespace console::websocket {
 
-using namespace console::utils;
 
 void EventBroadcaster::broadcast_bucket_created(
     const String& bucket_name,

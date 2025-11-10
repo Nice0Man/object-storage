@@ -4,7 +4,6 @@
 
 namespace console::middleware {
 
-using namespace console::utils;
 
 AuthMiddleware::AuthMiddleware() {
     // Config will be injected or accessed via singleton

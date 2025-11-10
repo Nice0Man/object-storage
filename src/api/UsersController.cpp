@@ -4,7 +4,6 @@
 
 namespace console::api {
 
-using namespace console::utils;
 
 void UsersController::set_user_service(
     std::shared_ptr<services::IUserService> service

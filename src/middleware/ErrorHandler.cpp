@@ -4,7 +4,6 @@
 
 namespace console::middleware {
 
-using namespace console::utils;
 using namespace console::models;
 
 void ErrorHandler::doFilter(

@@ -18,20 +18,20 @@ Result<Vector<User>, ApiError> UserService::list_users(
     CONSOLE_LOG_DEBUG("Listing users");
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     auto result = admin_client_->list_users();
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to list users: {}", result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to list users: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully listed {} users", result.value().size());
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<User, ApiError> UserService::get_user(
@@ -41,23 +41,23 @@ Result<User, ApiError> UserService::get_user(
     CONSOLE_LOG_DEBUG("Getting user: {}", access_key);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     if (auto error = validate_access_key(access_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     auto result = admin_client_->get_user_info(access_key);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get user {}: {}", access_key, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::NotFound,
             "User not found: " + result.error()
         ));
     }
 
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<User, ApiError> UserService::create_user(
@@ -69,22 +69,22 @@ Result<User, ApiError> UserService::create_user(
     CONSOLE_LOG_INFO("Creating user: {}", access_key);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     if (auto error = validate_access_key(access_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     if (auto error = validate_secret_key(secret_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // Create user
     auto result = admin_client_->create_user(access_key, secret_key);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to create user {}: {}", access_key, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to create user: " + result.error()
         ));
@@ -103,7 +103,7 @@ Result<User, ApiError> UserService::create_user(
     }
 
     CONSOLE_LOG_INFO("Successfully created user: {}", access_key);
-    return Ok(result.value());
+    return Ok<models::ApiError>(result.value());
 }
 
 Result<void, ApiError> UserService::update_user(
@@ -115,17 +115,17 @@ Result<void, ApiError> UserService::update_user(
     CONSOLE_LOG_INFO("Updating user: {}", access_key);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     if (auto error = validate_access_key(access_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // Update secret key if provided
     if (new_secret_key) {
         if (auto error = validate_secret_key(*new_secret_key)) {
-            return Err(*error);
+            return Err<models::ApiError>(*error);
         }
 
         // Delete and recreate user with new credentials
@@ -133,7 +133,7 @@ Result<void, ApiError> UserService::update_user(
         if (!delete_result) {
             CONSOLE_LOG_ERROR("Failed to delete user for update: {}", 
                       delete_result.error());
-            return Err(ApiError(
+            return Err<models::ApiError>(ApiError(
                 HttpStatus::InternalServerError,
                 "Failed to update user credentials"
             ));
@@ -145,7 +145,7 @@ Result<void, ApiError> UserService::update_user(
         );
         if (!create_result) {
             CONSOLE_LOG_ERROR("Failed to recreate user: {}", create_result.error());
-            return Err(ApiError(
+            return Err<models::ApiError>(ApiError(
                 HttpStatus::InternalServerError,
                 "Failed to update user credentials"
             ));
@@ -167,7 +167,7 @@ Result<void, ApiError> UserService::update_user(
     }
 
     CONSOLE_LOG_INFO("Successfully updated user: {}", access_key);
-    return Ok();
+    return Ok<models::ApiError>();
 }
 
 Result<void, ApiError> UserService::delete_user(
@@ -177,16 +177,16 @@ Result<void, ApiError> UserService::delete_user(
     CONSOLE_LOG_INFO("Deleting user: {}", access_key);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     if (auto error = validate_access_key(access_key)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // Prevent deleting self
     if (access_key == admin_info.access_key) {
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::BadRequest,
             "Cannot delete your own user account"
         ));
@@ -195,14 +195,14 @@ Result<void, ApiError> UserService::delete_user(
     auto result = admin_client_->delete_user(access_key);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to delete user {}: {}", access_key, result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to delete user: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully deleted user: {}", access_key);
-    return Ok();
+    return Ok<models::ApiError>();
 }
 
 Result<void, ApiError> UserService::set_user_status(
@@ -213,11 +213,11 @@ Result<void, ApiError> UserService::set_user_status(
     CONSOLE_LOG_INFO("Setting user {} status to: {}", access_key, enabled);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // TODO(Nice0Man): Implement user enable/disable via MinIO Admin API
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "User status change not yet implemented"
     ));
@@ -231,20 +231,20 @@ Result<void, ApiError> UserService::attach_user_policy(
     CONSOLE_LOG_INFO("Attaching policy {} to user {}", policy_name, access_key);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     auto result = admin_client_->set_user_policy(access_key, policy_name);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to attach policy to user: {}", result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to attach policy: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully attached policy to user");
-    return Ok();
+    return Ok<models::ApiError>();
 }
 
 Result<void, ApiError> UserService::detach_user_policy(
@@ -255,11 +255,11 @@ Result<void, ApiError> UserService::detach_user_policy(
     CONSOLE_LOG_INFO("Detaching policy {} from user {}", policy_name, access_key);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // TODO(Nice0Man): Implement policy detachment
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Policy detachment not yet implemented"
     ));
@@ -272,16 +272,16 @@ Result<Vector<String>, ApiError> UserService::list_user_policies(
     CONSOLE_LOG_DEBUG("Listing policies for user: {}", access_key);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // Get user info (includes policies)
     auto user_result = get_user(admin_info, access_key);
     if (!user_result) {
-        return Err(user_result.error());
+        return Err<models::ApiError>(user_result.error());
     }
 
-    return Ok(user_result.value().policies());
+    return Ok<models::ApiError>(user_result.value().policies());
 }
 
 Result<void, ApiError> UserService::add_user_to_group(
@@ -292,7 +292,7 @@ Result<void, ApiError> UserService::add_user_to_group(
     CONSOLE_LOG_INFO("Adding user {} to group {}", access_key, group_name);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // Get current groups
@@ -301,14 +301,14 @@ Result<void, ApiError> UserService::add_user_to_group(
     auto result = admin_client_->update_user_groups(access_key, groups);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to add user to group: {}", result.error());
-        return Err(ApiError(
+        return Err<models::ApiError>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to add user to group: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully added user to group");
-    return Ok();
+    return Ok<models::ApiError>();
 }
 
 Result<void, ApiError> UserService::remove_user_from_group(
@@ -319,11 +319,11 @@ Result<void, ApiError> UserService::remove_user_from_group(
     CONSOLE_LOG_INFO("Removing user {} from group {}", access_key, group_name);
 
     if (auto error = require_admin(admin_info)) {
-        return Err(*error);
+        return Err<models::ApiError>(*error);
     }
 
     // TODO(Nice0Man): Implement group removal
-    return Err(ApiError(
+    return Err<models::ApiError>(ApiError(
         HttpStatus::NotImplemented,
         "Group removal not yet implemented"
     ));
