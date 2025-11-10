@@ -28,6 +28,7 @@ yarn build            # Production build
 ```
 
 **Процесс:**
+
 1. TypeScript compilation
 2. React optimization (minification, tree-shaking)
 3. CSS processing
@@ -35,6 +36,7 @@ yarn build            # Production build
 5. Generate `build/` directory
 
 **Результат:**
+
 ```
 web-app/build/
 ├── index.html              # Entry point
@@ -64,6 +66,7 @@ var Assets embed.FS
 ```
 
 **Преимущества:**
+
 - ✅ Single binary deployment
 - ✅ No external file dependencies
 - ✅ Simplified distribution
@@ -74,21 +77,23 @@ var Assets embed.FS
 ```makefile
 # Makefile
 console:
-	@echo "Building Console binary to './console'"
-	@GO111MODULE=on CGO_ENABLED=0 go build \
-		-trimpath \
-		--tags=kqueue \
-		--ldflags "-s -w" \
-		-o console ./cmd/console
+ @echo "Building Console binary to './console'"
+ @GO111MODULE=on CGO_ENABLED=0 go build \
+  -trimpath \
+  --tags=kqueue \
+  --ldflags "-s -w" \
+  -o console ./cmd/console
 ```
 
 **Build flags:**
+
 - `-trimpath` - Remove file system paths from binary
 - `--tags=kqueue` - Build tags для platform-specific code
 - `-ldflags "-s -w"` - Strip debug info (smaller binary)
 - `CGO_ENABLED=0` - Static linking (portable binary)
 
 **Инжектирование build info:**
+
 ```makefile
 BUILD_VERSION := $(shell git describe --exact-match --tags 2>/dev/null || git rev-parse --abbrev-ref HEAD)
 BUILD_TIME := $(shell date)
@@ -101,14 +106,14 @@ go build --ldflags "-X 'github.com/minio/console/pkg.Version=$(BUILD_VERSION)' \
 
 ```makefile
 assets:
-	@(cd web-app && yarn install && yarn build)
-	
+ @(cd web-app && yarn install && yarn build)
+
 console: assets
-	@GO111MODULE=on CGO_ENABLED=0 go build \
-		-trimpath \
-		--tags=kqueue \
-		--ldflags "-s -w" \
-		-o console ./cmd/console
+ @GO111MODULE=on CGO_ENABLED=0 go build \
+  -trimpath \
+  --tags=kqueue \
+  --ldflags "-s -w" \
+  -o console ./cmd/console
 ```
 
 ## 🐳 Docker Build
@@ -180,7 +185,7 @@ services:
       - "9001:9001"
     volumes:
       - minio-data:/data
-  
+
   console:
     image: openmaxio/console:latest
     environment:
@@ -212,6 +217,7 @@ export CONSOLE_PBKDF_SALT=your-secret-salt
 ### Опциональные переменные
 
 #### Server Configuration
+
 ```bash
 CONSOLE_PORT=9090                    # HTTP port
 CONSOLE_TLS_PORT=9443               # HTTPS port
@@ -220,23 +226,27 @@ CONSOLE_SUBPATH=/                   # Subpath для reverse proxy
 ```
 
 #### TLS/SSL
+
 ```bash
 CONSOLE_TLS_REDIRECT=on             # Force HTTPS
 CONSOLE_CERTS_DIR=~/.console/certs  # Certificate directory
 ```
 
 #### Development
+
 ```bash
 CONSOLE_DEV_MODE=on                 # Development mode
 CONSOLE_DEBUG_LOGLEVEL=6            # Debug level (0-6)
 ```
 
 #### LDAP (если используется)
+
 ```bash
 CONSOLE_LDAP_ENABLED=on
 ```
 
 #### Features
+
 ```bash
 CONSOLE_PROMETHEUS_URL=http://prometheus:9090  # Prometheus integration
 ```
@@ -263,6 +273,7 @@ export CONSOLE_PBKDF_SALT=secret
 ```
 
 **Преимущества:**
+
 - ✅ Нет dependencies
 - ✅ Быстрый старт
 - ✅ Простая отладка
@@ -301,6 +312,7 @@ CONSOLE_PORT=9090
 ```
 
 **Управление:**
+
 ```bash
 sudo systemctl enable console
 sudo systemctl start console
@@ -431,6 +443,7 @@ spec:
 ```
 
 **Deploy:**
+
 ```bash
 kubectl apply -f console-deployment.yaml
 kubectl apply -f console-ingress.yaml
@@ -449,7 +462,7 @@ upstream console_backend {
 server {
     listen 80;
     server_name console.example.com;
-    
+
     # Redirect HTTP to HTTPS
     return 301 https://$server_name$request_uri;
 }
@@ -457,16 +470,16 @@ server {
 server {
     listen 443 ssl http2;
     server_name console.example.com;
-    
+
     # SSL certificates
     ssl_certificate /etc/letsencrypt/live/console.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/console.example.com/privkey.pem;
-    
+
     # SSL optimization
     ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_ciphers HIGH:!aNULL:!MD5;  # codespell:ignore aNULL
     ssl_prefer_server_ciphers on;
-    
+
     # Proxy settings
     location / {
         proxy_pass http://console_backend;
@@ -474,18 +487,18 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        
+
         # WebSocket support
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        
+
         # Timeouts
         proxy_connect_timeout 60s;
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
     }
-    
+
     # Static assets caching
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         proxy_pass http://console_backend;
@@ -507,6 +520,7 @@ location /console/ {
 ```
 
 **Console environment:**
+
 ```bash
 CONSOLE_SUBPATH=/console/
 ```
@@ -516,6 +530,7 @@ CONSOLE_SUBPATH=/console/
 ### Certificate Setup
 
 **Directory structure:**
+
 ```
 ~/.console/certs/
 ├── public.crt           # Default certificate
@@ -580,6 +595,7 @@ curl http://localhost:9000/minio/v2/metrics/cluster
 ### Logging
 
 **Console logs:**
+
 ```bash
 # With systemd
 sudo journalctl -u console -f
@@ -596,6 +612,7 @@ CONSOLE_DEBUG_LOGLEVEL=6 ./console server
 ### Common Issues
 
 #### 1. Cannot connect to MinIO
+
 ```bash
 # Check MinIO is running
 curl http://localhost:9000/minio/health/live
@@ -608,6 +625,7 @@ telnet localhost 9000
 ```
 
 #### 2. JWT encryption errors
+
 ```bash
 # Ensure secrets are set
 echo $CONSOLE_PBKDF_PASSPHRASE
@@ -617,6 +635,7 @@ echo $CONSOLE_PBKDF_SALT
 ```
 
 #### 3. TLS certificate errors
+
 ```bash
 # Check certificate files exist
 ls -la ~/.console/certs/
@@ -629,6 +648,7 @@ openssl s_client -connect localhost:9443
 ```
 
 #### 4. WebSocket connection fails
+
 ```bash
 # Check if upgrade header is preserved by proxy
 # Nginx needs:
@@ -657,4 +677,3 @@ proxy_set_header Connection "upgrade";
 - **[08-testing.md](08-testing.md)** - Тестирование
 - **[12-advanced-topics.md](12-advanced-topics.md)** - HA, scaling
 - **[13-practical-exercises.md](13-practical-exercises.md)** - Практика deployment
-

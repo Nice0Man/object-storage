@@ -62,18 +62,18 @@ OpenMaxIO Object Browser поддерживает **4 метода аутент�
 
 type ClaimsWithCustomFields struct {
     jwt.StandardClaims
-    
+
     // MinIO STS credentials (encrypted)
     STSAccessKeyID     string `json:"stsAccessKeyID,omitempty"`
     STSSecretAccessKey string `json:"stsSecretAccessKey,omitempty"`
     STSSessionToken    string `json:"stsSessionToken,omitempty"`
-    
+
     // Account info
     AccountAccessKey   string `json:"accountAccessKey,omitempty"`
-    
+
     // Permissions
     Actions            []string `json:"actions,omitempty"`
-    
+
     // Custom fields
     CustomStyleOb      string `json:"customStyleOb,omitempty"`
 }
@@ -95,20 +95,20 @@ func generateJWT(stsCredentials *credentials.Value) (string, error) {
         STSSecretAccessKey: stsCredentials.SecretAccessKey,
         STSSessionToken:    stsCredentials.SessionToken,
     }
-    
+
     // Encrypt sensitive fields with PBKDF2
     encryptedClaims, err := auth.EncryptClaims(claims)
     if err != nil {
         return "", err
     }
-    
+
     // Sign JWT
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, encryptedClaims)
     tokenString, err := token.SignedString(getJWTSecret())
     if err != nil {
         return "", err
     }
-    
+
     return tokenString, nil
 }
 ```
@@ -123,19 +123,19 @@ api.KeyAuth = func(token string, scopes []string) (*models.Principal, error) {
     if token == "Anonymous" {
         return &models.Principal{}, nil
     }
-    
+
     // Parse and validate JWT
     claims, err := auth.ParseClaimsFromToken(token)
     if err != nil {
         api.Logger("Token validation failed: %v", err)
         return nil, errors.New(401, "incorrect api key auth")
     }
-    
+
     // Check expiration
     if claims.ExpiresAt < time.Now().Unix() {
         return nil, errors.New(401, "token expired")
     }
-    
+
     // Return principal with decrypted credentials
     return &models.Principal{
         STSAccessKeyID:     claims.STSAccessKeyID,
@@ -158,7 +158,7 @@ func EncryptClaims(claims ClaimsWithCustomFields) (string, error) {
     if err != nil {
         return "", err
     }
-    
+
     // Derive key from passphrase using PBKDF2
     key := pbkdf2.Key(
         []byte(getPassphrase()),
@@ -167,25 +167,25 @@ func EncryptClaims(claims ClaimsWithCustomFields) (string, error) {
         32,    // key length (256 bits)
         sha256.New,
     )
-    
+
     // Encrypt with AES-256-GCM
     block, err := aes.NewCipher(key)
     if err != nil {
         return "", err
     }
-    
+
     gcm, err := cipher.NewGCM(block)
     if err != nil {
         return "", err
     }
-    
+
     nonce := make([]byte, gcm.NonceSize())
     if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
         return "", err
     }
-    
+
     ciphertext := gcm.Seal(nonce, nonce, data, nil)
-    
+
     return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 ```
@@ -221,37 +221,37 @@ func getLoginResponse(lr *models.LoginRequest) (*string, error) {
     // Extract credentials
     accessKey := *lr.AccessKey
     secretKey := *lr.SecretKey
-    
+
     // Create MinIO credentials
     creds := credentials.NewStaticV4(accessKey, secretKey, "")
-    
+
     // Create MinIO client
     client, err := newMinioClient(creds)
     if err != nil {
         return nil, err
     }
-    
+
     // Test connection by listing buckets
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
-    
+
     _, err = client.listBucketsWithContext(ctx)
     if err != nil {
         return nil, errors.New("invalid credentials")
     }
-    
+
     // Get STS credentials from MinIO
     stsCredentials, err := getSTSCredentials(accessKey, secretKey)
     if err != nil {
         return nil, err
     }
-    
+
     // Generate JWT
     token, err := generateJWT(stsCredentials)
     if err != nil {
         return nil, err
     }
-    
+
     return &token, nil
 }
 ```
@@ -267,31 +267,31 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     try {
       const api = new ConsoleApi();
       const response = await api.login({
         accessKey,
         secretKey,
       });
-      
+
       // Store token
       localStorage.setItem('token', response.data.token);
-      
+
       // Update Redux store
       dispatch(setLogin(true));
-      
+
       // Navigate to console
       navigate('/console');
     } catch (error) {
       setError('Invalid credentials');
     }
   };
-  
+
   return (
     <form onSubmit={handleLogin}>
       <InputBox
@@ -373,31 +373,31 @@ func getLoginOauth2AuthResponse(lr *models.LoginOauth2AuthRequest) (*models.Logi
     // Extract authorization code
     code := *lr.Code
     state := *lr.State
-    
+
     // Validate state (CSRF protection)
     if !validateState(state) {
         return nil, errors.New("invalid state")
     }
-    
+
     // Exchange code for tokens
     oauth2Config := getOAuth2Config()
     token, err := oauth2Config.Exchange(context.Background(), code)
     if err != nil {
         return nil, err
     }
-    
+
     // Extract id_token
     rawIDToken, ok := token.Extra("id_token").(string)
     if !ok {
         return nil, errors.New("no id_token in response")
     }
-    
+
     // Verify id_token
     idToken, err := verifyIDToken(rawIDToken)
     if err != nil {
         return nil, err
     }
-    
+
     // Extract user info
     var claims struct {
         Email         string `json:"email"`
@@ -407,19 +407,19 @@ func getLoginOauth2AuthResponse(lr *models.LoginOauth2AuthRequest) (*models.Logi
     if err := idToken.Claims(&claims); err != nil {
         return nil, err
     }
-    
+
     // Get MinIO STS credentials for OIDC user
     stsCredentials, err := getSTSCredentialsForOIDC(rawIDToken)
     if err != nil {
         return nil, err
     }
-    
+
     // Generate Console JWT
     token, err := generateJWT(stsCredentials)
     if err != nil {
         return nil, err
     }
-    
+
     return &models.LoginResponse{
         SessionID: token,
     }, nil
@@ -476,21 +476,21 @@ func authenticateLDAP(username, password string) (*credentials.Value, error) {
     // LDAP server configuration
     ldapServer := getLDAPServer()
     ldapBaseDN := getLDAPBaseDN()
-    
+
     // Connect to LDAP
     conn, err := ldap.Dial("tcp", ldapServer)
     if err != nil {
         return nil, err
     }
     defer conn.Close()
-    
+
     // Bind with user credentials
     userDN := fmt.Sprintf("uid=%s,%s", username, ldapBaseDN)
     err = conn.Bind(userDN, password)
     if err != nil {
         return nil, errors.New("invalid credentials")
     }
-    
+
     // Search for user groups
     searchRequest := ldap.NewSearchRequest(
         ldapBaseDN,
@@ -501,18 +501,18 @@ func authenticateLDAP(username, password string) (*credentials.Value, error) {
         []string{"memberOf"},
         nil,
     )
-    
+
     result, err := conn.Search(searchRequest)
     if err != nil {
         return nil, err
     }
-    
+
     // Get MinIO STS credentials for LDAP user
     stsCredentials, err := getSTSCredentialsForLDAP(userDN)
     if err != nil {
         return nil, err
     }
-    
+
     return stsCredentials, nil
 }
 ```
@@ -560,7 +560,7 @@ func getPublicObjectsResponse(principal *models.Principal, params object.ListObj
     if err != nil {
         return nil, err
     }
-    
+
     // List objects (only works if bucket is public)
     objects, err := client.listObjects(ctx, bucketName, minio.ListObjectsOptions{
         Prefix:    prefix,
@@ -569,7 +569,7 @@ func getPublicObjectsResponse(principal *models.Principal, params object.ListObj
     if err != nil {
         return nil, err
     }
-    
+
     return &models.ListObjectsResponse{
         Objects: objects,
     }, nil
@@ -642,9 +642,9 @@ func getPublicObjectsResponse(principal *models.Principal, params object.ListObj
 
 const usePermission = (resource: string, action: string) => {
   const permissions = useSelector(selectUserPermissions);
-  
+
   // Check if user has permission for resource:action
-  return permissions.some(p => 
+  return permissions.some(p =>
     p.resource === resource && p.actions.includes(action)
   );
 };
@@ -656,11 +656,11 @@ const BucketActions = () => {
       <SecureComponent resource="buckets" action="read">
         <ListBucketsButton />
       </SecureComponent>
-      
+
       <SecureComponent resource="buckets" action="create">
         <CreateBucketButton />
       </SecureComponent>
-      
+
       <SecureComponent resource="buckets" action="delete">
         <DeleteBucketButton />
       </SecureComponent>
@@ -733,4 +733,3 @@ if len(password) < 8 {
 - **[05-functional-modules.md](05-functional-modules.md)** - Функциональные модули
 - **[10-patterns-best-practices.md](10-patterns-best-practices.md)** - Security patterns
 - **[08-testing.md](08-testing.md)** - SSO integration tests
-

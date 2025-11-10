@@ -7,12 +7,15 @@
 ## 📜 История и мотивация
 
 ### Предыстория
+
 MinIO - это high-performance объектное хранилище, совместимое с Amazon S3 API. Изначально MinIO Console был частью open-source экосистемы, но со временем некоторые ключевые функции были перенесены под коммерческую лицензию.
 
 ### Цель OpenMaxIO
+>
 > "OpenMaxIO brings back what was removed and keeps it open for good."
 
 OpenMaxIO был создан в ответ на удаление ключевых функций из open-source дистрибутива MinIO. Цель проекта:
+
 - Сохранить полностью открытое, полностью функциональное хранилище
 - Остаться верным оригинальному духу минимализма, производительности и свободы
 - Поддерживать community-driven подход к развитию
@@ -20,6 +23,7 @@ OpenMaxIO был создан в ответ на удаление ключевы
 ## 🏗️ Что предоставляет проект?
 
 ### Основной функционал
+
 1. **Web UI для MinIO Server** - управление через браузер
 2. **Object Browser** - просмотр, загрузка, скачивание файлов
 3. **Bucket Management** - создание, настройка, удаление buckets
@@ -30,6 +34,7 @@ OpenMaxIO был создан в ответ на удаление ключевы
 8. **Encryption & Compliance** - WORM, encryption, retention
 
 ### Целевая аудитория
+
 - **DevOps инженеры** - развертывание и управление хранилищем
 - **Backend разработчики** - интеграция с S3-совместимым API
 - **Data Engineers** - работа с большими объемами данных
@@ -39,6 +44,7 @@ OpenMaxIO был создан в ответ на удаление ключевы
 ## 🛠️ Технологический стек
 
 ### Backend
+
 ```
 Язык: C++20
 Основные библиотеки:
@@ -52,6 +58,7 @@ OpenMaxIO был создан в ответ на удаление ключевы
 ```
 
 ### Frontend
+
 ```
 Язык: TypeScript
 Framework: React 18.3.1
@@ -62,6 +69,7 @@ HTTP Client: Superagent
 ```
 
 ### API
+
 ```
 Спецификация: OpenAPI 2.0 (Swagger)
 Формат: JSON
@@ -70,6 +78,7 @@ HTTP Client: Superagent
 ```
 
 ### Build & Deploy
+
 ```
 Build System: CMake 3.20+
 Package Manager (Backend): vcpkg / Conan
@@ -125,6 +134,7 @@ openmaxio-object-browser/
 ## 📊 Ключевые метрики
 
 ### Размер кодовой базы
+
 - **Backend (Go)**: ~50+ файлов в `api/`, ~20 packages в `pkg/`
 - **Models**: 153+ сгенерированных моделей
 - **Frontend (TS/React)**: Полноценное SPA приложение
@@ -132,6 +142,7 @@ openmaxio-object-browser/
 - **Тесты**: Unit, Integration, E2E, Replication, SSO
 
 ### Функциональная сложность
+
 - **Методы аутентификации**: 4 (Form, OAuth2, LDAP, Anonymous)
 - **Типы нотификаций**: 10+ (Webhook, AMQP, Redis, Kafka, etc.)
 - **Операции с объектами**: 20+ (Upload, Download, Copy, Move, Tag, etc.)
@@ -140,6 +151,7 @@ openmaxio-object-browser/
 ## 🎓 Что вы узнаете, изучив этот проект?
 
 ### Backend разработка на C++
+
 - ✅ Современный C++20 (concepts, coroutines, ranges)
 - ✅ REST API design с Swagger/OpenAPI
 - ✅ Асинхронное программирование (Boost.Asio, coroutines)
@@ -152,6 +164,7 @@ openmaxio-object-browser/
 - ✅ Testing (Google Test, Catch2, mocking)
 
 ### Frontend разработка
+
 - ✅ React + TypeScript production app
 - ✅ Redux state management
 - ✅ React Router для SPA
@@ -162,6 +175,7 @@ openmaxio-object-browser/
 - ✅ Component-based architecture
 
 ### DevOps & Infrastructure
+
 - ✅ Docker контейнеризация
 - ✅ Multi-stage builds
 - ✅ TLS/SSL configuration
@@ -171,6 +185,7 @@ openmaxio-object-browser/
 - ✅ High availability patterns
 
 ### Security
+
 - ✅ OAuth2/OIDC integration
 - ✅ LDAP/Active Directory
 - ✅ IAM policies (AWS-compatible)
@@ -179,6 +194,7 @@ openmaxio-object-browser/
 - ✅ Audit logging
 
 ### Software Architecture
+
 - ✅ Clean Architecture principles
 - ✅ Monorepo structure (backend + frontend)
 - ✅ API-first development
@@ -189,6 +205,7 @@ openmaxio-object-browser/
 ## 🔗 Связь с MinIO экосистемой
 
 ### MinIO Server
+
 **OpenMaxIO Object Browser** - это UI для управления **MinIO Server**. Они работают как отдельные процессы:
 
 ```
@@ -206,9 +223,11 @@ openmaxio-object-browser/
 ```
 
 ### MinIO Client (mc)
+
 Object Browser использует библиотеку `github.com/minio/mc/cmd` для некоторых операций, что обеспечивает консистентность с CLI инструментом `mc`.
 
 ### KES (Key Encryption Service)
+
 Для enterprise-grade encryption интегрируется с MinIO KES через `github.com/minio/kes`.
 
 ## 📄 Лицензия
@@ -216,6 +235,7 @@ Object Browser использует библиотеку `github.com/minio/mc/cm
 **AGPL-3.0-or-later** (GNU Affero General Public License v3.0)
 
 ### Что это означает?
+
 - ✅ Свободное использование
 - ✅ Свободное изменение
 - ✅ Свободное распространение
@@ -225,6 +245,7 @@ Object Browser использует библиотеку `github.com/minio/mc/cm
 ## 🚀 Кто использует?
 
 ### Use Cases
+
 1. **Private Cloud Storage** - альтернатива S3 для on-premise
 2. **Backup & Archive** - долгосрочное хранение данных
 3. **Data Lakes** - хранилище для аналитики и ML
@@ -233,6 +254,7 @@ Object Browser использует библиотеку `github.com/minio/mc/cm
 6. **Disaster Recovery** - geo-репликация для DR
 
 ### Типы организаций
+
 - Компании с требованиями к data sovereignty
 - Финансовые организации (compliance)
 - Healthcare (HIPAA)
@@ -243,6 +265,7 @@ Object Browser использует библиотеку `github.com/minio/mc/cm
 ## 🎯 Следующие шаги
 
 После прочтения этого обзора переходите к:
+
 1. **[01-architecture.md](01-architecture.md)** - понять общую архитектуру
 2. **[13-practical-exercises.md](13-practical-exercises.md)** - запустить локально
 3. **[14-learning-roadmap.md](14-learning-roadmap.md)** - план обучения
@@ -250,4 +273,3 @@ Object Browser использует библиотеку `github.com/minio/mc/cm
 ---
 
 **Совет**: Держите этот обзор в голове, когда будете погружаться в детали архитектуры. Понимание "зачем" помогает лучше понять "как".
-

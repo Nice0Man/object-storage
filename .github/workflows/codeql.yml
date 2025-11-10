@@ -46,7 +46,7 @@ jobs:
         set(CMAKE_CXX_STANDARD 20)
         EOF
         fi
-        
+
         cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
         cmake --build build || echo "Build not ready for CodeQL"
 
@@ -54,4 +54,3 @@ jobs:
       uses: github/codeql-action/analyze@v2
       with:
         category: "/language:${{matrix.language}}"
-

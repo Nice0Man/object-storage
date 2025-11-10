@@ -63,4 +63,3 @@ indent_size = 2
 [*.{xml,svg}]
 indent_style = space
 indent_size = 2
-

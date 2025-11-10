@@ -63,12 +63,12 @@ const MainRouter = () => {
     <Routes>
       {/* Public routes */}
       <Route path="/login" element={<LoginPage />} />
-      
+
       {/* Protected routes */}
       <Route element={<ProtectedRoutes />}>
         <Route path="/console/*" element={<Console />} />
       </Route>
-      
+
       {/* Default redirect */}
       <Route path="*" element={<Navigate to="/console" replace />} />
     </Routes>
@@ -85,11 +85,11 @@ import { selectIsLoggedIn } from './systemSlice';
 
 const ProtectedRoutes = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
-  
+
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return <Outlet />;
 };
 ```
@@ -238,11 +238,11 @@ npx swagger-typescript-api \
 // api/consoleApi.ts (generated)
 export class ConsoleApi {
   http: HttpClient;
-  
+
   constructor(http: HttpClient) {
     this.http = http;
   }
-  
+
   // Auth endpoints
   login = (data: LoginRequest, params?: RequestParams) =>
     this.http.request<void, ApiError>({
@@ -252,7 +252,7 @@ export class ConsoleApi {
       type: ContentType.Json,
       ...params,
     });
-  
+
   logout = (data: LogoutRequest, params?: RequestParams) =>
     this.http.request<void, ApiError>({
       path: `/api/v1/logout`,
@@ -260,7 +260,7 @@ export class ConsoleApi {
       body: data,
       ...params,
     });
-  
+
   sessionCheck = (params?: RequestParams) =>
     this.http.request<SessionResponse, ApiError>({
       path: `/api/v1/session`,
@@ -268,7 +268,7 @@ export class ConsoleApi {
       secure: true,
       ...params,
     });
-  
+
   // Bucket endpoints
   listBuckets = (params?: RequestParams) =>
     this.http.request<ListBucketsResponse, ApiError>({
@@ -277,7 +277,7 @@ export class ConsoleApi {
       secure: true,
       ...params,
     });
-  
+
   makeBucket = (data: MakeBucketRequest, params?: RequestParams) =>
     this.http.request<MakeBucketsResponse, ApiError>({
       path: `/api/v1/buckets`,
@@ -287,7 +287,7 @@ export class ConsoleApi {
       type: ContentType.Json,
       ...params,
     });
-  
+
   // ... сотни других методов
 }
 ```
@@ -302,7 +302,7 @@ const BucketsList = () => {
   const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [loading, setLoading] = useState(true);
   const api = new ConsoleApi(/* http client */);
-  
+
   useEffect(() => {
     const fetchBuckets = async () => {
       try {
@@ -315,10 +315,10 @@ const BucketsList = () => {
         setLoading(false);
       }
     };
-    
+
     fetchBuckets();
   }, []);
-  
+
   return (
     <div>
       {loading ? (
@@ -391,7 +391,7 @@ const BucketCard = styled.div`
   border-radius: 8px;
   padding: 16px;
   cursor: pointer;
-  
+
   &:hover {
     background: #f5f5f5;
   }
@@ -408,39 +408,39 @@ export class WebSocketClient {
   private ws: WebSocket | null = null;
   private url: string;
   private reconnectInterval: number = 5000;
-  
+
   constructor(url: string) {
     this.url = url;
   }
-  
+
   connect(onMessage: (data: any) => void) {
     this.ws = new WebSocket(this.url);
-    
+
     this.ws.onopen = () => {
       console.log('WebSocket connected');
     };
-    
+
     this.ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       onMessage(data);
     };
-    
+
     this.ws.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
-    
+
     this.ws.onclose = () => {
       console.log('WebSocket closed, reconnecting...');
       setTimeout(() => this.connect(onMessage), this.reconnectInterval);
     };
   }
-  
+
   send(data: any) {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(data));
     }
   }
-  
+
   disconnect() {
     this.ws?.close();
   }
@@ -453,19 +453,19 @@ export class WebSocketClient {
 const LogsViewer = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const wsClient = useRef<WebSocketClient | null>(null);
-  
+
   useEffect(() => {
     wsClient.current = new WebSocketClient('ws://localhost:9090/ws/console');
-    
+
     wsClient.current.connect((data) => {
       setLogs((prev) => [...prev, data.message]);
     });
-    
+
     return () => {
       wsClient.current?.disconnect();
     };
   }, []);
-  
+
   return (
     <div className="logs-container">
       {logs.map((log, index) => (
@@ -486,28 +486,28 @@ import { useDropzone } from 'react-dropzone';
 
 const ObjectUpload = ({ bucketName }: { bucketName: string }) => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  
+
   const onDrop = async (files: File[]) => {
     for (const file of files) {
       const formData = new FormData();
       formData.append('file', file);
-      
+
       try {
         const xhr = new XMLHttpRequest();
-        
+
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             const progress = (event.loaded / event.total) * 100;
             setUploadProgress(progress);
           }
         };
-        
+
         xhr.onload = () => {
           if (xhr.status === 200) {
             console.log('Upload successful');
           }
         };
-        
+
         xhr.open('POST', `/api/v1/buckets/${bucketName}/objects/upload`);
         xhr.setRequestHeader('Authorization', `Bearer ${getToken()}`);
         xhr.send(formData);
@@ -516,9 +516,9 @@ const ObjectUpload = ({ bucketName }: { bucketName: string }) => {
       }
     }
   };
-  
+
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
-  
+
   return (
     <div {...getRootProps()} className="dropzone">
       <input {...getInputProps()} />
@@ -546,7 +546,7 @@ const downloadObject = async (bucketName: string, objectPath: string) => {
         },
       }
     );
-    
+
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -576,18 +576,18 @@ interface ObjectsListProps {
 
 const ObjectsList = ({ objects, hasMore, loadMore }: ObjectsListProps) => {
   const isItemLoaded = (index: number) => !hasMore || index < objects.length;
-  
+
   const loadMoreItems = () => {
     if (hasMore) {
       loadMore();
     }
   };
-  
+
   const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => {
     if (!isItemLoaded(index)) {
       return <div style={style}>Loading...</div>;
     }
-    
+
     const object = objects[index];
     return (
       <div style={style} className="object-row">
@@ -597,7 +597,7 @@ const ObjectsList = ({ objects, hasMore, loadMore }: ObjectsListProps) => {
       </div>
     );
   };
-  
+
   return (
     <InfiniteLoader
       isItemLoaded={isItemLoaded}
@@ -634,14 +634,14 @@ interface SecureComponentProps {
   };
 }
 
-const SecureComponent = ({ 
-  resource, 
-  action, 
-  children, 
-  errorProps 
+const SecureComponent = ({
+  resource,
+  action,
+  children,
+  errorProps
 }: SecureComponentProps) => {
   const hasPermission = usePermission(resource, action);
-  
+
   if (!hasPermission) {
     return errorProps ? (
       <div className="no-permission">
@@ -649,7 +649,7 @@ const SecureComponent = ({
       </div>
     ) : null;
   }
-  
+
   return <>{children}</>;
 };
 
@@ -678,7 +678,7 @@ test('renders login form', () => {
       </BrowserRouter>
     </Provider>
   );
-  
+
   expect(screen.getByLabelText(/access key/i)).toBeInTheDocument();
   expect(screen.getByLabelText(/secret key/i)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /login/i })).toBeInTheDocument();
@@ -686,15 +686,15 @@ test('renders login form', () => {
 
 test('submits login form', async () => {
   render(<LoginPage />);
-  
+
   const accessKeyInput = screen.getByLabelText(/access key/i);
   const secretKeyInput = screen.getByLabelText(/secret key/i);
   const submitButton = screen.getByRole('button', { name: /login/i });
-  
+
   fireEvent.change(accessKeyInput, { target: { value: 'minioadmin' } });
   fireEvent.change(secretKeyInput, { target: { value: 'minioadmin' } });
   fireEvent.click(submitButton);
-  
+
   // Assertions...
 });
 ```
@@ -707,11 +707,11 @@ import { test, expect } from '@playwright/test';
 
 test('user can login', async ({ page }) => {
   await page.goto('http://localhost:5005/login');
-  
+
   await page.fill('[name="accessKey"]', 'minioadmin');
   await page.fill('[name="secretKey"]', 'minioadmin');
   await page.click('button[type="submit"]');
-  
+
   await expect(page).toHaveURL(/.*console/);
   await expect(page.locator('.dashboard')).toBeVisible();
 });
@@ -728,6 +728,7 @@ yarn start    # Runs on port 5005 with proxy to backend
 ```
 
 **package.json:**
+
 ```json
 {
   "proxy": "http://localhost:9090/",
@@ -744,6 +745,7 @@ yarn build    # Creates optimized build in build/
 ```
 
 **Результат:**
+
 ```
 build/
 ├── index.html
@@ -775,4 +777,3 @@ var Assets embed.FS
 - **[04-authentication-authorization.md](04-authentication-authorization.md)** - Аутентификация на frontend
 - **[06-websocket-architecture.md](06-websocket-architecture.md)** - Детали WebSocket
 - **[09-api-specification.md](09-api-specification.md)** - API спецификация
-

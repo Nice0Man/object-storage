@@ -124,10 +124,10 @@ int main() {
     // Configure logging
     spdlog::set_level(spdlog::level::debug);
     spdlog::info("Starting Object Storage Console");
-    
+
     // Load configuration
     drogon::app().loadConfigFile("config.json");
-    
+
     // Configure server
     drogon::app()
         .setLogPath("./logs")
@@ -136,7 +136,7 @@ int main() {
         .setThreadNum(4)
         .enableRunAsDaemon()
         .run();
-    
+
     return 0;
 }
 ```
@@ -203,10 +203,10 @@ public:
     ADD_METHOD_TO(HealthController::health, "/api/v1/health", Get);
     ADD_METHOD_TO(HealthController::version, "/api/v1/version", Get);
     METHOD_LIST_END
-    
+
     void health(const HttpRequestPtr& req,
                 std::function<void(const HttpResponsePtr&)>&& callback);
-    
+
     void version(const HttpRequestPtr& req,
                  std::function<void(const HttpResponsePtr&)>&& callback);
 };
@@ -227,12 +227,12 @@ void HealthController::health(
     std::function<void(const HttpResponsePtr&)>&& callback
 ) {
     spdlog::debug("Health check request from {}", req->getPeerAddr().toIp());
-    
+
     json response = {
         {"status", "healthy"},
         {"timestamp", std::chrono::system_clock::now().time_since_epoch().count()}
     };
-    
+
     auto resp = HttpResponse::newHttpJsonResponse(response);
     resp->setStatusCode(k200OK);
     callback(resp);
@@ -247,7 +247,7 @@ void HealthController::version(
         {"build", __DATE__ " " __TIME__},
         {"compiler", "GCC " __VERSION__}
     };
-    
+
     auto resp = HttpResponse::newHttpJsonResponse(response);
     callback(resp);
 }
@@ -292,12 +292,12 @@ class JWTService {
     std::string secret_;
     std::string issuer_;
     int expirationHours_;
-    
+
 public:
-    JWTService(const std::string& secret, 
+    JWTService(const std::string& secret,
                const std::string& issuer = "console",
                int expirationHours = 12);
-    
+
     std::string generateToken(const Principal& principal);
     std::optional<Principal> validateToken(const std::string& token);
 };
@@ -313,7 +313,7 @@ public:
 
 namespace auth {
 
-JWTService::JWTService(const std::string& secret, 
+JWTService::JWTService(const std::string& secret,
                        const std::string& issuer,
                        int expirationHours)
     : secret_(secret), issuer_(issuer), expirationHours_(expirationHours) {}
@@ -321,7 +321,7 @@ JWTService::JWTService(const std::string& secret,
 std::string JWTService::generateToken(const Principal& principal) {
     auto now = std::chrono::system_clock::now();
     auto exp = now + std::chrono::hours{expirationHours_};
-    
+
     auto token = jwt::create()
         .set_issuer(issuer_)
         .set_type("JWT")
@@ -331,7 +331,7 @@ std::string JWTService::generateToken(const Principal& principal) {
         .set_payload_claim("username", jwt::claim(principal.username))
         .set_payload_claim("roles", jwt::claim(principal.roles))
         .sign(jwt::algorithm::hs256{secret_});
-    
+
     spdlog::debug("Generated JWT for user: {}", principal.username);
     return token;
 }
@@ -339,24 +339,24 @@ std::string JWTService::generateToken(const Principal& principal) {
 std::optional<Principal> JWTService::validateToken(const std::string& token) {
     try {
         auto decoded = jwt::decode(token);
-        
+
         auto verifier = jwt::verify()
             .allow_algorithm(jwt::algorithm::hs256{secret_})
             .with_issuer(issuer_);
-        
+
         verifier.verify(decoded);
-        
+
         Principal principal;
         principal.userId = decoded.get_payload_claim("userId").as_string();
         principal.username = decoded.get_payload_claim("username").as_string();
-        
+
         auto roles = decoded.get_payload_claim("roles");
         for (const auto& role : roles.as_array()) {
             principal.roles.push_back(role.as_string());
         }
-        
+
         return principal;
-        
+
     } catch (const std::exception& e) {
         spdlog::error("JWT validation failed: {}", e.what());
         return std::nullopt;
@@ -377,18 +377,18 @@ namespace api {
 
 class AuthController : public HttpController<AuthController> {
     std::shared_ptr<auth::JWTService> jwtService_;
-    
+
 public:
     AuthController();
-    
+
     METHOD_LIST_BEGIN
     ADD_METHOD_TO(AuthController::login, "/api/v1/login", Post);
     ADD_METHOD_TO(AuthController::logout, "/api/v1/logout", Post);
     METHOD_LIST_END
-    
+
     void login(const HttpRequestPtr& req,
                std::function<void(const HttpResponsePtr&)>&& callback);
-    
+
     void logout(const HttpRequestPtr& req,
                 std::function<void(const HttpResponsePtr&)>&& callback);
 };
@@ -421,13 +421,13 @@ void AuthController::login(
         callback(resp);
         return;
     }
-    
+
     std::string username = (*jsonBody)["username"].asString();
     std::string password = (*jsonBody)["password"].asString();
-    
+
     // TODO: Validate credentials against database
     // For demo, accept any non-empty credentials
-    
+
     if (username.empty() || password.empty()) {
         json error = {{"message", "Invalid credentials"}};
         auto resp = HttpResponse::newHttpJsonResponse(error);
@@ -435,31 +435,31 @@ void AuthController::login(
         callback(resp);
         return;
     }
-    
+
     // Generate JWT
     auth::Principal principal{
         .userId = "user123",
         .username = username,
         .roles = {"user"}
     };
-    
+
     std::string token = jwtService_->generateToken(principal);
-    
+
     // Return token
     json response = {
         {"token", token},
         {"expiresIn", 43200}  // 12 hours in seconds
     };
-    
+
     auto resp = HttpResponse::newHttpJsonResponse(response);
-    
+
     // Also set as cookie
     Cookie cookie("token", token);
     cookie.setPath("/");
     cookie.setHttpOnly(true);
     cookie.setMaxAge(43200);
     resp->addCookie(cookie);
-    
+
     callback(resp);
 }
 
@@ -469,12 +469,12 @@ void AuthController::logout(
 ) {
     // Clear cookie
     auto resp = HttpResponse::newHttpResponse();
-    
+
     Cookie cookie("token", "");
     cookie.setPath("/");
     cookie.setMaxAge(0);
     resp->addCookie(cookie);
-    
+
     resp->setStatusCode(k200OK);
     callback(resp);
 }
@@ -513,19 +513,19 @@ namespace api {
 class LogStreamController : public drogon::WebSocketController<LogStreamController> {
     std::set<drogon::WebSocketConnectionPtr> connections_;
     std::mutex connectionsMutex_;
-    
+
 public:
     void handleNewMessage(const drogon::WebSocketConnectionPtr& conn,
                          std::string&& message,
                          const drogon::WebSocketMessageType& type) override;
-    
+
     void handleConnectionClosed(const drogon::WebSocketConnectionPtr& conn) override;
-    
+
     void handleNewConnection(const HttpRequestPtr& req,
                             const drogon::WebSocketConnectionPtr& conn) override;
-    
+
     void broadcastLog(const std::string& logMessage);
-    
+
     WS_PATH_LIST_BEGIN
     WS_PATH_ADD("/ws/logs", Get);
     WS_PATH_LIST_END
@@ -550,10 +550,10 @@ void LogStreamController::handleNewConnection(
     const drogon::WebSocketConnectionPtr& conn
 ) {
     spdlog::info("New WebSocket connection from {}", req->getPeerAddr().toIp());
-    
+
     std::lock_guard lock(connectionsMutex_);
     connections_.insert(conn);
-    
+
     // Send welcome message
     json welcome = {
         {"type", "connected"},
@@ -568,7 +568,7 @@ void LogStreamController::handleNewMessage(
     const drogon::WebSocketMessageType& type
 ) {
     spdlog::debug("Received WebSocket message: {}", message);
-    
+
     // Echo back
     conn->send(message);
 }
@@ -577,7 +577,7 @@ void LogStreamController::handleConnectionClosed(
     const drogon::WebSocketConnectionPtr& conn
 ) {
     spdlog::info("WebSocket connection closed");
-    
+
     std::lock_guard lock(connectionsMutex_);
     connections_.erase(conn);
 }
@@ -588,7 +588,7 @@ void LogStreamController::broadcastLog(const std::string& logMessage) {
         {"timestamp", std::chrono::system_clock::now().time_since_epoch().count()},
         {"message", logMessage}
     };
-    
+
     std::lock_guard lock(connectionsMutex_);
     for (const auto& conn : connections_) {
         conn->send(message.dump());
@@ -609,26 +609,26 @@ void LogStreamController::broadcastLog(const std::string& logMessage) {
 <body>
     <h1>Real-time Logs</h1>
     <div id="logs" style="font-family: monospace; white-space: pre;"></div>
-    
+
     <script>
         const ws = new WebSocket('ws://localhost:9090/ws/logs');
         const logsDiv = document.getElementById('logs');
-        
+
         ws.onopen = () => {
             console.log('Connected to log stream');
         };
-        
+
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             const logLine = `[${new Date(data.timestamp).toISOString()}] ${data.message}\n`;
             logsDiv.textContent += logLine;
             logsDiv.scrollTop = logsDiv.scrollHeight;
         };
-        
+
         ws.onerror = (error) => {
             console.error('WebSocket error:', error);
         };
-        
+
         ws.onclose = () => {
             console.log('Disconnected from log stream');
         };
@@ -671,7 +671,7 @@ using namespace auth;
 class JWTServiceTest : public ::testing::Test {
 protected:
     std::unique_ptr<JWTService> service;
-    
+
     void SetUp() override {
         service = std::make_unique<JWTService>("test-secret");
     }
@@ -683,13 +683,13 @@ TEST_F(JWTServiceTest, GenerateAndValidateToken) {
         .username = "testuser",
         .roles = {"admin", "user"}
     };
-    
+
     std::string token = service->generateToken(principal);
-    
+
     ASSERT_FALSE(token.empty());
-    
+
     auto validated = service->validateToken(token);
-    
+
     ASSERT_TRUE(validated.has_value());
     EXPECT_EQ(validated->userId, "user123");
     EXPECT_EQ(validated->username, "testuser");
@@ -698,25 +698,25 @@ TEST_F(JWTServiceTest, GenerateAndValidateToken) {
 
 TEST_F(JWTServiceTest, InvalidTokenReturnsNullopt) {
     auto result = service->validateToken("invalid.token.here");
-    
+
     EXPECT_FALSE(result.has_value());
 }
 
 TEST_F(JWTServiceTest, TokenExpirationCheck) {
     // Create service with 0-hour expiration
     JWTService shortService("test-secret", "console", 0);
-    
+
     Principal principal{
         .userId = "user123",
         .username = "testuser",
         .roles = {}
     };
-    
+
     std::string token = shortService.generateToken(principal);
-    
+
     // Wait for expiration
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    
+
     auto result = shortService.validateToken(token);
     EXPECT_FALSE(result.has_value());
 }
@@ -733,13 +733,16 @@ ctest --output-on-failure
 ## 🎯 Дополнительные упражнения
 
 ### 1. Добавить Middleware для аутентификации
+
 ### 2. Реализовать CRUD для Buckets
+
 ### 3. Добавить rate limiting
+
 ### 4. Реализовать file upload/download
+
 ### 5. Добавить интеграционные тесты
 
 ## 🚀 Следующие шаги
 
 - **[14-learning-roadmap.md](14-learning-roadmap.md)** - Дорожная карта обучения
 - **[12-advanced-topics.md](12-advanced-topics.md)** - Продвинутые темы
-

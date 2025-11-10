@@ -32,22 +32,22 @@
 func getListBucketsResponse(session *models.Principal, params bucket.ListBucketsParams) (*models.ListBucketsResponse, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
     defer cancel()
-    
+
     mClient, err := newMinioClient(session)
     if err != nil {
         return nil, err
     }
-    
+
     buckets, err := mClient.listBucketsWithContext(ctx)
     if err != nil {
         return nil, err
     }
-    
+
     var bucketList []*models.Bucket
     for _, bucket := range buckets {
         // Get bucket size and object count (parallel)
         size, objectsCount := getBucketStats(ctx, mClient, bucket.Name)
-        
+
         bucketList = append(bucketList, &models.Bucket{
             Name:         swag.String(bucket.Name),
             CreationDate: bucket.CreationDate.Format(time.RFC3339),
@@ -55,7 +55,7 @@ func getListBucketsResponse(session *models.Principal, params bucket.ListBuckets
             Objects:      objectsCount,
         })
     }
-    
+
     return &models.ListBucketsResponse{
         Buckets: bucketList,
         Total:   int64(len(bucketList)),
@@ -66,17 +66,17 @@ func getListBucketsResponse(session *models.Principal, params bucket.ListBuckets
 func createBucket(session *models.Principal, params bucket.MakeBucketParams) error {
     ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
     defer cancel()
-    
+
     mClient, err := newMinioClient(session)
     if err != nil {
         return err
     }
-    
+
     // Validate bucket name
     if !isValidBucketName(*params.Body.Name) {
         return errors.New("invalid bucket name")
     }
-    
+
     // Create bucket
     err = mClient.makeBucketWithContext(
         ctx,
@@ -87,7 +87,7 @@ func createBucket(session *models.Principal, params bucket.MakeBucketParams) err
     if err != nil {
         return err
     }
-    
+
     // Set bucket policy if provided
     if params.Body.Policy != nil {
         err = mClient.setBucketPolicyWithContext(ctx, *params.Body.Name, *params.Body.Policy)
@@ -95,7 +95,7 @@ func createBucket(session *models.Principal, params bucket.MakeBucketParams) err
             return err
         }
     }
-    
+
     return nil
 }
 ```
@@ -107,11 +107,11 @@ func createBucket(session *models.Principal, params bucket.MakeBucketParams) err
 const BucketsList = () => {
   const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     fetchBuckets();
   }, []);
-  
+
   const fetchBuckets = async () => {
     try {
       setLoading(true);
@@ -124,7 +124,7 @@ const BucketsList = () => {
       setLoading(false);
     }
   };
-  
+
   return (
     <div>
       <Button onClick={() => setShowCreateModal(true)}>
@@ -143,6 +143,7 @@ const BucketsList = () => {
 ### Bucket Features
 
 #### 1. Versioning
+
 ```go
 // Enable versioning
 func setBucketVersioning(ctx context.Context, client MinioClient, bucketName string, enabled bool) error {
@@ -152,12 +153,13 @@ func setBucketVersioning(ctx context.Context, client MinioClient, bucketName str
     if !enabled {
         config.Status = "Suspended"
     }
-    
+
     return client.setBucketVersioning(ctx, bucketName, config)
 }
 ```
 
 #### 2. Object Locking (WORM)
+
 ```go
 // Set object locking
 func setObjectLocking(ctx context.Context, client MinioClient, bucketName string, mode string, days int) error {
@@ -165,15 +167,16 @@ func setObjectLocking(ctx context.Context, client MinioClient, bucketName string
     if mode == "compliance" {
         retentionMode = minio.Compliance
     }
-    
+
     validity := uint(days)
     unit := minio.Days
-    
+
     return client.setObjectLockConfig(ctx, bucketName, &retentionMode, &validity, &unit)
 }
 ```
 
 #### 3. Encryption
+
 ```go
 // Set bucket encryption
 func setBucketEncryption(ctx context.Context, client MinioClient, bucketName, algorithm string) error {
@@ -186,7 +189,7 @@ func setBucketEncryption(ctx context.Context, client MinioClient, bucketName, al
             },
         },
     }
-    
+
     return client.setBucketEncryption(ctx, bucketName, config)
 }
 ```
@@ -216,32 +219,33 @@ func setBucketEncryption(ctx context.Context, client MinioClient, bucketName, al
 ### Backend Implementation: api/user_objects.go
 
 #### List Objects
+
 ```go
 func listObjects(session *models.Principal, params object.ListObjectsParams) (*models.ListObjectsResponse, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
     defer cancel()
-    
+
     mClient, err := newMinioClient(session)
     if err != nil {
         return nil, err
     }
-    
+
     // List options
     opts := minio.ListObjectsOptions{
         Prefix:    params.Prefix,
         Recursive: params.Recursive != nil && *params.Recursive,
         WithVersions: params.WithVersions != nil && *params.WithVersions,
     }
-    
+
     // List objects
     objectCh := mClient.listObjects(ctx, params.BucketName, opts)
-    
+
     var objects []*models.BucketObject
     for object := range objectCh {
         if object.Err != nil {
             return nil, object.Err
         }
-        
+
         objects = append(objects, &models.BucketObject{
             Name:         swag.String(object.Key),
             Size:         object.Size,
@@ -251,7 +255,7 @@ func listObjects(session *models.Principal, params object.ListObjectsParams) (*m
             IsLatest:     object.IsLatest,
         })
     }
-    
+
     return &models.ListObjectsResponse{
         Objects: objects,
         Total:   int64(len(objects)),
@@ -260,28 +264,29 @@ func listObjects(session *models.Principal, params object.ListObjectsParams) (*m
 ```
 
 #### Upload Object
+
 ```go
 func uploadObject(session *models.Principal, params object.UploadObjectParams) error {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
     defer cancel()
-    
+
     mClient, err := newMinioClient(session)
     if err != nil {
         return err
     }
-    
+
     // Parse multipart form
     err = params.HTTPRequest.ParseMultipartForm(10 << 20) // 10 MB
     if err != nil {
         return err
     }
-    
+
     file, handler, err := params.HTTPRequest.FormFile("file")
     if err != nil {
         return err
     }
     defer file.Close()
-    
+
     // Upload options
     opts := minio.PutObjectOptions{
         ContentType: handler.Header.Get("Content-Type"),
@@ -289,7 +294,7 @@ func uploadObject(session *models.Principal, params object.UploadObjectParams) e
             "uploaded-by": session.AccountAccessKey,
         },
     }
-    
+
     // Upload to MinIO
     _, err = mClient.putObject(
         ctx,
@@ -299,33 +304,34 @@ func uploadObject(session *models.Principal, params object.UploadObjectParams) e
         handler.Size,
         opts,
     )
-    
+
     return err
 }
 ```
 
 #### Download Object
+
 ```go
 func downloadObject(session *models.Principal, params object.DownloadObjectParams) (io.ReadCloser, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
     defer cancel()
-    
+
     mClient, err := newMinioClient(session)
     if err != nil {
         return nil, err
     }
-    
+
     // Get object
     opts := minio.GetObjectOptions{}
     if params.VersionID != nil {
         opts.VersionID = *params.VersionID
     }
-    
+
     object, err := mClient.getObject(ctx, params.BucketName, params.Prefix, opts)
     if err != nil {
         return nil, err
     }
-    
+
     return object, nil
 }
 ```
@@ -333,17 +339,18 @@ func downloadObject(session *models.Principal, params object.DownloadObjectParam
 ### Frontend Implementation
 
 #### Upload with Progress
+
 ```tsx
 const ObjectUpload = ({ bucketName, prefix }: Props) => {
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
-  
+
   const uploadFile = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      
+
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
           const progress = (event.loaded / event.total) * 100;
@@ -353,7 +360,7 @@ const ObjectUpload = ({ bucketName, prefix }: Props) => {
           }));
         }
       };
-      
+
       xhr.onload = () => {
         if (xhr.status === 200) {
           resolve(xhr.response);
@@ -361,15 +368,15 @@ const ObjectUpload = ({ bucketName, prefix }: Props) => {
           reject(new Error('Upload failed'));
         }
       };
-      
+
       xhr.onerror = () => reject(new Error('Network error'));
-      
+
       xhr.open('POST', `/api/v1/buckets/${bucketName}/objects/upload?prefix=${prefix}`);
       xhr.setRequestHeader('Authorization', `Bearer ${getToken()}`);
       xhr.send(formData);
     });
   };
-  
+
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: async (files) => {
       for (const file of files) {
@@ -381,7 +388,7 @@ const ObjectUpload = ({ bucketName, prefix }: Props) => {
       }
     },
   });
-  
+
   return (
     <div {...getRootProps()}>
       <input {...getInputProps()} />
@@ -424,13 +431,13 @@ func addUser(ctx context.Context, client AdminClient, accessKey, secretKey strin
     if len(accessKey) < 3 || len(secretKey) < 8 {
         return errors.New("invalid credentials format")
     }
-    
+
     // Create user in MinIO
     err := client.addUser(ctx, accessKey, secretKey)
     if err != nil {
         return err
     }
-    
+
     return nil
 }
 
@@ -446,7 +453,7 @@ func updateUserGroups(ctx context.Context, client AdminClient, username string, 
     if err != nil {
         return err
     }
-    
+
     for _, group := range existingGroups {
         err = client.updateGroupMembers(ctx, madmin.GroupAddRemove{
             Group:   group,
@@ -457,7 +464,7 @@ func updateUserGroups(ctx context.Context, client AdminClient, username string, 
             return err
         }
     }
-    
+
     // Add to new groups
     for _, group := range groups {
         err = client.updateGroupMembers(ctx, madmin.GroupAddRemove{
@@ -468,7 +475,7 @@ func updateUserGroups(ctx context.Context, client AdminClient, username string, 
             return err
         }
     }
-    
+
     return nil
 }
 ```
@@ -507,18 +514,18 @@ func addPolicy(ctx context.Context, client AdminClient, policyName, policyJSON s
     if err != nil {
         return errors.New("invalid policy JSON")
     }
-    
+
     // Validate policy structure
     if policy.Version != "2012-10-17" {
         return errors.New("invalid policy version")
     }
-    
+
     // Create policy in MinIO
     err = client.addCannedPolicy(ctx, policyName, policyJSON)
     if err != nil {
         return err
     }
-    
+
     return nil
 }
 ```
@@ -526,6 +533,7 @@ func addPolicy(ctx context.Context, client AdminClient, policyName, policyJSON s
 ### Policy Examples
 
 #### Read-Only Policy
+
 ```json
 {
   "Version": "2012-10-17",
@@ -546,6 +554,7 @@ func addPolicy(ctx context.Context, client AdminClient, policyName, policyJSON s
 ```
 
 #### Read-Write Policy
+
 ```json
 {
   "Version": "2012-10-17",
@@ -585,7 +594,7 @@ func getConfig(ctx context.Context, client AdminClient) ([]byte, error) {
     if err != nil {
         return nil, err
     }
-    
+
     return config, nil
 }
 
@@ -596,12 +605,12 @@ func setConfig(ctx context.Context, client AdminClient, configData []byte) error
     if err != nil {
         return err
     }
-    
+
     if restart {
         // Notify that server restart is required
         logger.Info("Server restart required for configuration changes")
     }
-    
+
     return nil
 }
 ```
@@ -611,6 +620,7 @@ func setConfig(ctx context.Context, client AdminClient, configData []byte) error
 ### Notification Targets
 
 Поддерживаемые targets:
+
 - **Webhook** - HTTP callback
 - **AMQP** - RabbitMQ, etc.
 - **Redis** - Pub/Sub
@@ -654,4 +664,3 @@ config := notification.Configuration{
 - **[06-websocket-architecture.md](06-websocket-architecture.md)** - WebSocket для real-time
 - **[12-advanced-topics.md](12-advanced-topics.md)** - Site replication, monitoring
 - **[13-practical-exercises.md](13-practical-exercises.md)** - Практика
-

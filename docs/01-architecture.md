@@ -62,16 +62,19 @@
 ## 🎨 Архитектурный стиль
 
 ### Monolithic SPA + API
+
 Проект использует архитектуру **Monolithic SPA** с четким разделением:
+
 - **Backend**: Stateless REST API + WebSocket
 - **Frontend**: Standalone SPA (React)
 - **Deployment**: Single binary с embedded UI
 
 ### Преимущества данного подхода
-✅ **Простота развертывания** - один бинарник  
-✅ **Консистентность** - UI всегда совместим с API  
-✅ **Производительность** - нет network overhead между UI и API  
-✅ **Версионирование** - единая версия проекта  
+
+✅ **Простота развертывания** - один бинарник
+✅ **Консистентность** - UI всегда совместим с API
+✅ **Производительность** - нет network overhead между UI и API
+✅ **Версионирование** - единая версия проекта
 
 ## 🔄 Request Flow
 
@@ -311,6 +314,7 @@ Standard HTTP codes:
 ```
 
 ### API Versioning
+
 - **Path-based versioning**: `/api/v1/...`
 - Allows multiple API versions simultaneously
 - Easy migration path for clients
@@ -340,9 +344,11 @@ console (binary)
 ### Runtime Dependencies
 
 **Required:**
+
 - MinIO Server (v1.0.0+)
 
 **Optional:**
+
 - KES (Key Encryption Service) - для enterprise encryption
 - OpenLDAP / Active Directory - для LDAP auth
 - Identity Provider (Dex, Okta, etc.) - для OAuth2/OIDC
@@ -351,6 +357,7 @@ console (binary)
 ### Deployment Topologies
 
 #### 1. Standalone (Development)
+
 ```
 ┌─────────────────┐
 │  Console Server │
@@ -365,6 +372,7 @@ console (binary)
 ```
 
 #### 2. Production (Reverse Proxy)
+
 ```
 ┌─────────────┐
 │   Browser   │
@@ -382,6 +390,7 @@ console (binary)
 ```
 
 #### 3. Kubernetes
+
 ```
 ┌─────────────────────────────────────┐
 │         Kubernetes Cluster          │
@@ -400,6 +409,7 @@ console (binary)
 ## 🔧 Configuration Architecture
 
 ### Configuration Sources (Priority order)
+
 1. **Command-line flags** (highest priority)
 2. **Environment variables**
 3. **Config files** (future feature)
@@ -436,17 +446,18 @@ CONSOLE_LDAP_ENABLED        // Enable LDAP auth
 ## 🎯 Design Principles
 
 ### 1. Interface Segregation
+
 ```go
 // Вместо одного большого интерфейса
 type MinioClient interface {
     // Bucket operations
     listBucketsWithContext(...)
     makeBucketWithContext(...)
-    
+
     // Object operations
     listObjects(...)
     putObject(...)
-    
+
     // Admin operations
     // ... и т.д.
 }
@@ -458,6 +469,7 @@ type MockMinioClient struct {
 ```
 
 ### 2. Dependency Injection
+
 ```go
 // Handlers принимают dependencies
 func getBucketHandler(client MinioClient) http.HandlerFunc {
@@ -468,11 +480,13 @@ func getBucketHandler(client MinioClient) http.HandlerFunc {
 ```
 
 ### 3. Single Responsibility
+
 - Каждый handler отвечает за одну операцию
 - Каждый package имеет четкую зону ответственности
 - Модели отделены от бизнес-логики
 
 ### 4. Code Generation
+
 - Models генерируются из Swagger → консистентность
 - TypeScript API генерируется из Swagger → type safety
 - Меньше ручного кода → меньше ошибок
@@ -480,9 +494,10 @@ func getBucketHandler(client MinioClient) http.HandlerFunc {
 ## 📊 Data Flow
 
 ### Read Operation (Get Object)
+
 ```
-User clicks "Download" 
-  → Redux action 
+User clicks "Download"
+  → Redux action
   → API call /api/v1/buckets/{bucket}/objects/download?prefix={path}
   → Handler validates JWT
   → Extract STS credentials from JWT
@@ -493,8 +508,9 @@ User clicks "Download"
 ```
 
 ### Write Operation (Upload Object)
+
 ```
-User drags file 
+User drags file
   → React component captures file
   → Redux action with File object
   → API call POST /api/v1/buckets/{bucket}/objects/upload
@@ -510,6 +526,7 @@ User drags file
 ## 🔍 Observability
 
 ### Logging
+
 ```
 pkg/logger/
   - Structured logging
@@ -518,11 +535,13 @@ pkg/logger/
 ```
 
 ### Monitoring
+
 - Health check endpoint: `/api/v1/health`
 - Prometheus metrics (через MinIO Server)
 - Real-time log streaming via WebSocket
 
 ### Profiling
+
 - CPU profiling
 - Memory profiling
 - Goroutine profiling
@@ -531,7 +550,7 @@ pkg/logger/
 ## 🚀 Следующие шаги
 
 После понимания общей архитектуры переходите к:
+
 - **[02-backend-deep-dive.md](02-backend-deep-dive.md)** - детальный разбор backend
 - **[03-frontend-architecture.md](03-frontend-architecture.md)** - детальный разбор frontend
 - **[04-authentication-authorization.md](04-authentication-authorization.md)** - система безопасности
-

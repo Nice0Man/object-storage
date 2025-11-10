@@ -27,6 +27,7 @@
 ### Неделя 1: Основы Modern C++ и Setup
 
 #### Цели
+
 - Изучить C++11/14/17/20 features
 - Настроить окружение разработки
 - Понять структуру проекта
@@ -34,6 +35,7 @@
 #### Задачи
 
 **День 1-2: Установка окружения**
+
 ```bash
 # Установить необходимые инструменты
 - Компилятор (GCC 11+ или Clang 14+)
@@ -43,6 +45,7 @@
 ```
 
 **День 3-4: Modern C++ features**
+
 - Smart pointers (unique_ptr, shared_ptr, weak_ptr)
 - Move semantics и rvalue references
 - Lambda expressions
@@ -51,6 +54,7 @@
 - nullptr
 
 **Код для практики:**
+
 ```cpp
 // Smart pointers
 auto ptr = std::make_unique<MyClass>();
@@ -67,6 +71,7 @@ for (const auto& val : vec) {
 ```
 
 **День 5-7: Структура проекта**
+
 - Читать [00-overview.md](00-overview.md)
 - Читать [01-architecture.md](01-architecture.md)
 - Настроить [13-practical-exercises.md#setup](13-practical-exercises.md) - Упражнение 1
@@ -79,6 +84,7 @@ for (const auto& val : vec) {
 ### Неделя 2: Drogon Framework Deep Dive
 
 #### Цели
+
 - Освоить Drogon framework
 - Понять асинхронное программирование
 - Создать первые REST endpoints
@@ -86,6 +92,7 @@ for (const auto& val : vec) {
 #### Задачи
 
 **День 1-2: Drogon основы**
+
 ```cpp
 // Простой контроллер
 class HelloController : public HttpController<HelloController> {
@@ -93,7 +100,7 @@ public:
     METHOD_LIST_BEGIN
     ADD_METHOD_TO(HelloController::hello, "/hello", Get);
     METHOD_LIST_END
-    
+
     void hello(const HttpRequestPtr& req,
                std::function<void(const HttpResponsePtr&)>&& callback) {
         json response = {{"message", "Hello World"}};
@@ -104,11 +111,13 @@ public:
 ```
 
 **День 3-4: Middleware и фильтры**
+
 - Создать authentication middleware
 - Logging middleware
 - CORS middleware
 
 **День 5-7: Асинхронность с callbacks**
+
 ```cpp
 void asyncOperation(
     const HttpRequestPtr& req,
@@ -130,6 +139,7 @@ void asyncOperation(
 ### Неделя 3: C++20 Coroutines и Async Programming
 
 #### Цели
+
 - Освоить C++20 coroutines
 - Понять async/await pattern
 - Реализовать асинхронные операции
@@ -137,6 +147,7 @@ void asyncOperation(
 #### Задачи
 
 **День 1-3: Coroutines теория**
+
 ```cpp
 // Coroutine basics
 Task<int> asyncCompute() {
@@ -153,6 +164,7 @@ Task<void> caller() {
 ```
 
 **День 4-5: Promise и Future**
+
 ```cpp
 std::future<int> asyncCalculation() {
     return std::async(std::launch::async, []() {
@@ -165,6 +177,7 @@ int result = asyncCalculation().get();
 ```
 
 **День 6-7: Практика**
+
 - Реализовать async HTTP client
 - Параллельные запросы с coroutines
 - Error handling в async code
@@ -177,6 +190,7 @@ int result = asyncCalculation().get();
 ### Неделя 4: JWT Authentication и Security
 
 #### Цели
+
 - Реализовать JWT authentication
 - Понять криптографию (OpenSSL)
 - Secure coding practices
@@ -184,6 +198,7 @@ int result = asyncCalculation().get();
 #### Задачи
 
 **День 1-2: JWT библиотека**
+
 ```cpp
 #include <jwt-cpp/jwt.h>
 
@@ -195,11 +210,13 @@ auto token = jwt::create()
 ```
 
 **День 3-4: OpenSSL криптография**
+
 - AES encryption/decryption
 - PBKDF2 key derivation
 - TLS/SSL certificates
 
 **День 5-7: Реализация auth системы**
+
 - Login endpoint
 - Token validation middleware
 - Password hashing (bcrypt/scrypt)
@@ -208,6 +225,7 @@ auto token = jwt::create()
 [13-practical-exercises.md#упражнение-3](13-practical-exercises.md) - JWT Authentication
 
 **Читать:**
+
 - [04-authentication-authorization.md](04-authentication-authorization.md)
 
 ---
@@ -215,6 +233,7 @@ auto token = jwt::create()
 ### Неделя 5: WebSocket и Real-time Communication
 
 #### Цели
+
 - Освоить WebSocket protocol
 - Реализовать real-time features
 - Broadcasting messages
@@ -222,6 +241,7 @@ auto token = jwt::create()
 #### Задачи
 
 **День 1-2: WebSocket basics**
+
 ```cpp
 class WsController : public WebSocketController<WsController> {
 public:
@@ -229,13 +249,13 @@ public:
                             const WebSocketConnectionPtr& conn) override {
         conn->send("Welcome!");
     }
-    
+
     void handleNewMessage(const WebSocketConnectionPtr& conn,
                          std::string&& message,
                          const WebSocketMessageType& type) override {
         conn->send(message);  // Echo
     }
-    
+
     WS_PATH_LIST_BEGIN
     WS_PATH_ADD("/ws/echo", Get);
     WS_PATH_LIST_END
@@ -243,11 +263,13 @@ public:
 ```
 
 **День 3-5: Broadcasting и connection management**
+
 - Connection pool
 - Broadcast to all clients
 - Room-based messaging
 
 **День 6-7: Практика**
+
 - Real-time log streaming
 - Live metrics dashboard
 - Chat application
@@ -256,6 +278,7 @@ public:
 [13-practical-exercises.md#упражнение-4](13-practical-exercises.md) - WebSocket Logs
 
 **Читать:**
+
 - [06-websocket-architecture.md](06-websocket-architecture.md)
 
 ---
@@ -263,6 +286,7 @@ public:
 ### Неделя 6: Testing и Quality Assurance
 
 #### Цели
+
 - Освоить Google Test
 - Написать unit tests
 - Integration testing
@@ -270,6 +294,7 @@ public:
 #### Задачи
 
 **День 1-2: Google Test framework**
+
 ```cpp
 #include <gtest/gtest.h>
 
@@ -291,6 +316,7 @@ TEST_F(MyFixture, UsesFixture) {
 ```
 
 **День 3-4: Mocking с GMock**
+
 ```cpp
 class MockClient : public ObjectStorageClient {
 public:
@@ -302,13 +328,14 @@ TEST(ServiceTest, ListBuckets) {
     MockClient mockClient;
     EXPECT_CALL(mockClient, listBuckets())
         .WillOnce(Return(std::vector<Bucket>{}));
-    
+
     Service service(&mockClient);
     // Test logic
 }
 ```
 
 **День 5-7: TDD практика**
+
 - Написать тесты для auth service
 - Тесты для API controllers
 - Integration tests
@@ -317,6 +344,7 @@ TEST(ServiceTest, ListBuckets) {
 [13-practical-exercises.md#упражнение-5](13-practical-exercises.md) - Unit Testing
 
 **Читать:**
+
 - [08-testing.md](08-testing.md)
 
 ---
@@ -324,6 +352,7 @@ TEST(ServiceTest, ListBuckets) {
 ### Неделя 7: Advanced C++ Patterns
 
 #### Цели
+
 - Template metaprogramming
 - Design patterns
 - Performance optimization
@@ -331,6 +360,7 @@ TEST(ServiceTest, ListBuckets) {
 #### Задачи
 
 **День 1-2: Templates**
+
 ```cpp
 // Template class
 template<typename T>
@@ -355,6 +385,7 @@ void print(Args... args) {
 ```
 
 **День 3-4: Design Patterns**
+
 - Singleton
 - Factory
 - Observer
@@ -362,11 +393,13 @@ void print(Args... args) {
 - Repository
 
 **День 5-7: Performance**
+
 - Profiling с perf
 - Memory optimization
 - Lock-free structures
 
 **Читать:**
+
 - [10-patterns-best-practices.md](10-patterns-best-practices.md)
 - [12-advanced-topics.md](12-advanced-topics.md)
 
@@ -375,11 +408,13 @@ void print(Args... args) {
 ### Неделя 8: Финальный проект
 
 #### Цель
+
 Создать полноценное приложение, объединяющее все изученное.
 
 #### Проект: Mini Object Storage Console
 
 **Функции:**
+
 1. ✅ JWT authentication
 2. ✅ CRUD операции для buckets/objects
 3. ✅ WebSocket для real-time updates
@@ -391,6 +426,7 @@ void print(Args... args) {
 9. ✅ Docker deployment
 
 **Архитектура:**
+
 ```
 src/
 ├── main.cpp
@@ -413,6 +449,7 @@ src/
 ```
 
 **Checklist:**
+
 - [ ] Настроен CMake проект
 - [ ] Установлены зависимости через vcpkg
 - [ ] Реализованы все контроллеры
@@ -430,7 +467,7 @@ src/
 
 1. **"Effective Modern C++"** - Scott Meyers
    - C++11/14 best practices
-   
+
 2. **"C++ Concurrency in Action"** - Anthony Williams
    - Multithreading и async
 
@@ -464,17 +501,17 @@ src/
 
 ## 🎯 Критерии успеха
 
-### После 8 недель вы должны уметь:
+### После 8 недель вы должны уметь
 
-✅ Писать современный C++20 код  
-✅ Создавать high-performance веб-приложения  
-✅ Использовать async/await с coroutines  
-✅ Реализовывать secure authentication  
-✅ Работать с WebSocket  
-✅ Писать comprehensive tests  
-✅ Применять design patterns  
-✅ Оптимизировать performance  
-✅ Deploy приложения в production  
+✅ Писать современный C++20 код
+✅ Создавать high-performance веб-приложения
+✅ Использовать async/await с coroutines
+✅ Реализовывать secure authentication
+✅ Работать с WebSocket
+✅ Писать comprehensive tests
+✅ Применять design patterns
+✅ Оптимизировать performance
+✅ Deploy приложения в production
 
 ---
 
@@ -514,4 +551,3 @@ src/
 ---
 
 **Удачи в изучении современной C++ разработки! 🚀**
-

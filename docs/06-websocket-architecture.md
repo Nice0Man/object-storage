@@ -3,6 +3,7 @@
 ## 🔌 Обзор WebSocket в Console
 
 OpenMaxIO Object Browser использует WebSocket для **real-time коммуникации**:
+
 - Real-time log streaming
 - Bucket event notifications
 - Live metrics updates
@@ -41,6 +42,7 @@ OpenMaxIO Object Browser использует WebSocket для **real-time ко�
 **Purpose:** Real-time log streaming from MinIO server
 
 **Flow:**
+
 ```
 Client connects to /ws/console
   ↓
@@ -58,6 +60,7 @@ Browser displays logs in real-time
 **Purpose:** Real-time bucket event notifications
 
 **Events:**
+
 - Object created (`s3:ObjectCreated:*`)
 - Object removed (`s3:ObjectRemoved:*`)
 - Object accessed (`s3:ObjectAccessed:*`)
@@ -99,12 +102,12 @@ func upgradeToWebSocket(w http.ResponseWriter, r *http.Request) (*websocket.Conn
             return true
         },
     }
-    
+
     conn, err := upgrader.Upgrade(w, r, nil)
     if err != nil {
         return nil, err
     }
-    
+
     return conn, nil
 }
 ```
@@ -120,7 +123,7 @@ func wsConsoleLogsHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
-    
+
     // Upgrade to WebSocket
     conn, err := upgradeToWebSocket(w, r)
     if err != nil {
@@ -128,14 +131,14 @@ func wsConsoleLogsHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
     defer conn.Close()
-    
+
     // Create MinIO admin client
     adminClient, err := newAdminClient(session)
     if err != nil {
         logger.Error("Failed to create admin client: %v", err)
         return
     }
-    
+
     // Start trace
     ctx := r.Context()
     traceCh := adminClient.serverTrace(ctx, madmin.ServiceTraceOpts{
@@ -145,17 +148,17 @@ func wsConsoleLogsHandler(w http.ResponseWriter, r *http.Request) {
         Scanner:  true,
         Threshold: 100 * time.Millisecond,
     })
-    
+
     // Stream trace events to WebSocket
     for traceInfo := range traceCh {
         if traceInfo.Err != nil {
             logger.Error("Trace error: %v", traceInfo.Err)
             break
         }
-        
+
         // Format trace message
         message := formatTraceMessage(traceInfo)
-        
+
         // Send to WebSocket client
         err = conn.WriteJSON(message)
         if err != nil {
@@ -190,27 +193,27 @@ func wsWatchBucketHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
         return
     }
-    
+
     // Get bucket name from query params
     bucketName := r.URL.Query().Get("bucket")
     if bucketName == "" {
         http.Error(w, "Bucket name required", http.StatusBadRequest)
         return
     }
-    
+
     // Upgrade to WebSocket
     conn, err := upgradeToWebSocket(w, r)
     if err != nil {
         return
     }
     defer conn.Close()
-    
+
     // Create MinIO client
     mClient, err := newMinioClient(session)
     if err != nil {
         return
     }
-    
+
     // Listen for bucket notifications
     ctx := r.Context()
     eventCh := mClient.listenBucketNotification(
@@ -223,14 +226,14 @@ func wsWatchBucketHandler(w http.ResponseWriter, r *http.Request) {
             string(notification.ObjectRemovedAll),
         },
     )
-    
+
     // Stream events to WebSocket
     for notificationInfo := range eventCh {
         if notificationInfo.Err != nil {
             logger.Error("Notification error: %v", notificationInfo.Err)
             break
         }
-        
+
         // Format event
         for _, record := range notificationInfo.Records {
             event := map[string]interface{}{
@@ -242,7 +245,7 @@ func wsWatchBucketHandler(w http.ResponseWriter, r *http.Request) {
                 "etag":       record.S3.Object.ETag,
                 "versionId":  record.S3.Object.VersionID,
             }
-            
+
             // Send to client
             err = conn.WriteJSON(event)
             if err != nil {
@@ -273,26 +276,26 @@ export class WebSocketClient {
     private maxReconnectAttempts: number = 5;
     private reconnectAttempts: number = 0;
     private listeners: Map<string, Set<(data: any) => void>> = new Map();
-    
+
     constructor(url: string) {
         this.url = url;
     }
-    
+
     connect(): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
                 // Add token to URL
                 const token = localStorage.getItem('token');
                 const wsUrl = `${this.url}?token=${token}`;
-                
+
                 this.ws = new WebSocket(wsUrl);
-                
+
                 this.ws.onopen = () => {
                     console.log('WebSocket connected');
                     this.reconnectAttempts = 0;
                     resolve();
                 };
-                
+
                 this.ws.onmessage = (event) => {
                     try {
                         const message: WebSocketMessage = JSON.parse(event.data);
@@ -301,12 +304,12 @@ export class WebSocketClient {
                         console.error('Failed to parse WebSocket message:', error);
                     }
                 };
-                
+
                 this.ws.onerror = (error) => {
                     console.error('WebSocket error:', error);
                     reject(error);
                 };
-                
+
                 this.ws.onclose = (event) => {
                     console.log('WebSocket closed:', event.code, event.reason);
                     this.handleReconnect();
@@ -316,25 +319,25 @@ export class WebSocketClient {
             }
         });
     }
-    
+
     private handleMessage(message: WebSocketMessage) {
         const listeners = this.listeners.get(message.type);
         if (listeners) {
             listeners.forEach(listener => listener(message.data));
         }
-        
+
         // Also notify wildcard listeners
         const wildcardListeners = this.listeners.get('*');
         if (wildcardListeners) {
             wildcardListeners.forEach(listener => listener(message));
         }
     }
-    
+
     private handleReconnect() {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
             console.log(`Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-            
+
             setTimeout(() => {
                 this.connect().catch(err => {
                     console.error('Reconnect failed:', err);
@@ -344,21 +347,21 @@ export class WebSocketClient {
             console.error('Max reconnect attempts reached');
         }
     }
-    
+
     on(eventType: string, callback: (data: any) => void) {
         if (!this.listeners.has(eventType)) {
             this.listeners.set(eventType, new Set());
         }
         this.listeners.get(eventType)!.add(callback);
     }
-    
+
     off(eventType: string, callback: (data: any) => void) {
         const listeners = this.listeners.get(eventType);
         if (listeners) {
             listeners.delete(callback);
         }
     }
-    
+
     send(data: any) {
         if (this.ws?.readyState === WebSocket.OPEN) {
             this.ws.send(JSON.stringify(data));
@@ -366,14 +369,14 @@ export class WebSocketClient {
             console.error('WebSocket is not open');
         }
     }
-    
+
     disconnect() {
         if (this.ws) {
             this.ws.close();
             this.ws = null;
         }
     }
-    
+
     isConnected(): boolean {
         return this.ws?.readyState === WebSocket.OPEN;
     }
@@ -392,35 +395,35 @@ export const useWebSocket = (url: string) => {
     const [connected, setConnected] = useState(false);
     const [error, setError] = useState<Error | null>(null);
     const clientRef = useRef<WebSocketClient | null>(null);
-    
+
     useEffect(() => {
         // Create WebSocket client
         const client = new WebSocketClient(url);
         clientRef.current = client;
-        
+
         // Connect
         client.connect()
             .then(() => setConnected(true))
             .catch(err => setError(err));
-        
+
         // Cleanup on unmount
         return () => {
             client.disconnect();
         };
     }, [url]);
-    
+
     const subscribe = (eventType: string, callback: (data: any) => void) => {
         clientRef.current?.on(eventType, callback);
     };
-    
+
     const unsubscribe = (eventType: string, callback: (data: any) => void) => {
         clientRef.current?.off(eventType, callback);
     };
-    
+
     const send = (data: any) => {
         clientRef.current?.send(data);
     };
-    
+
     return {
         connected,
         error,
@@ -455,29 +458,29 @@ const LogsViewer = () => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [autoScroll, setAutoScroll] = useState(true);
     const logsEndRef = useRef<HTMLDivElement>(null);
-    
+
     const { connected, subscribe, unsubscribe } = useWebSocket(
         'ws://localhost:9090/ws/console'
     );
-    
+
     useEffect(() => {
         const handleLog = (log: LogEntry) => {
             setLogs(prev => [...prev, log].slice(-1000)); // Keep last 1000 logs
         };
-        
+
         subscribe('log', handleLog);
-        
+
         return () => {
             unsubscribe('log', handleLog);
         };
     }, [subscribe, unsubscribe]);
-    
+
     useEffect(() => {
         if (autoScroll) {
             logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
     }, [logs, autoScroll]);
-    
+
     return (
         <div className="logs-viewer">
             <div className="logs-header">
@@ -497,7 +500,7 @@ const LogsViewer = () => {
                     <button onClick={() => setLogs([])}>Clear</button>
                 </div>
             </div>
-            
+
             <div className="logs-container">
                 {logs.map((log, index) => (
                     <div key={index} className="log-entry">
@@ -526,36 +529,36 @@ const LogsViewer = () => {
 
 const BucketEventsWatcher = ({ bucketName }: { bucketName: string }) => {
     const [events, setEvents] = useState<BucketEvent[]>([]);
-    
+
     const { connected, subscribe, unsubscribe } = useWebSocket(
         `ws://localhost:9090/ws/watch?bucket=${bucketName}`
     );
-    
+
     useEffect(() => {
         const handleEvent = (event: BucketEvent) => {
             setEvents(prev => [event, ...prev].slice(0, 50)); // Keep last 50 events
-            
+
             // Show notification
             showNotification({
                 title: event.eventName,
                 message: `${event.object} (${formatBytes(event.size)})`,
             });
         };
-        
+
         subscribe('event', handleEvent);
-        
+
         return () => {
             unsubscribe('event', handleEvent);
         };
     }, [subscribe, unsubscribe, bucketName]);
-    
+
     return (
         <div className="bucket-events">
             <h3>Real-time Events for {bucketName}</h3>
             <div className="connection-status">
                 {connected ? '● Live' : '○ Disconnected'}
             </div>
-            
+
             <ul className="events-list">
                 {events.map((event, index) => (
                     <li key={index} className={`event event-${event.eventName}`}>
@@ -586,7 +589,7 @@ const BucketEventsWatcher = ({ bucketName }: { bucketName: string }) => {
 func getSessionFromRequest(r *http.Request) (*models.Principal, error) {
     // Try to get token from query parameter (for WebSocket)
     token := r.URL.Query().Get("token")
-    
+
     // Fallback to Authorization header
     if token == "" {
         authHeader := r.Header.Get("Authorization")
@@ -594,17 +597,17 @@ func getSessionFromRequest(r *http.Request) (*models.Principal, error) {
             token = strings.TrimPrefix(authHeader, "Bearer ")
         }
     }
-    
+
     if token == "" {
         return nil, errors.New("no token provided")
     }
-    
+
     // Validate JWT
     claims, err := auth.ParseClaimsFromToken(token)
     if err != nil {
         return nil, err
     }
-    
+
     return &models.Principal{
         STSAccessKeyID:     claims.STSAccessKeyID,
         STSSecretAccessKey: claims.STSSecretAccessKey,
@@ -619,19 +622,19 @@ func getSessionFromRequest(r *http.Request) (*models.Principal, error) {
 upgrader := websocket.Upgrader{
     CheckOrigin: func(r *http.Request) bool {
         origin := r.Header.Get("Origin")
-        
+
         // In production, validate against allowed origins
         allowedOrigins := []string{
             "http://localhost:9090",
             "https://console.example.com",
         }
-        
+
         for _, allowed := range allowedOrigins {
             if origin == allowed {
                 return true
             }
         }
-        
+
         return false
     },
 }
@@ -646,7 +649,7 @@ upgrader := websocket.Upgrader{
 go func() {
     ticker := time.NewTicker(30 * time.Second)
     defer ticker.Stop()
-    
+
     for {
         select {
         case <-ticker.C:
@@ -680,7 +683,7 @@ case <-ctx.Done():
 ```typescript
 this.ws.onerror = (error) => {
     console.error('WebSocket error:', error);
-    
+
     // Notify user
     showNotification({
         type: 'error',
@@ -694,4 +697,3 @@ this.ws.onerror = (error) => {
 - **[07-build-deployment.md](07-build-deployment.md)** - Build & Deployment
 - **[12-advanced-topics.md](12-advanced-topics.md)** - Advanced WebSocket usage
 - **[13-practical-exercises.md](13-practical-exercises.md)** - Практика с WebSocket
-

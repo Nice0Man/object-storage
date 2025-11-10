@@ -5,12 +5,14 @@
 ### Web Framework & HTTP
 
 #### 1. Drogon (Рекомендуется)
+
 ```cmake
 find_package(Drogon CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
 ```
 
 **Возможности:**
+
 - ✅ Высокая производительность (асинхронный I/O)
 - ✅ Встроенная поддержка WebSocket
 - ✅ ORM для баз данных
@@ -19,6 +21,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
 - ✅ JSON автоматическая сериализация
 
 **Альтернативы:**
+
 - **Oat++** - быстрый и современный
 - **Crow** - легковесный, похож на Flask
 - **Pistache** - REST-ориентированный
@@ -37,6 +40,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE rapidjson)
 ```
 
 **Пример использования:**
+
 ```cpp
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
@@ -60,6 +64,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE jwt-cpp::jwt-cpp)
 ```
 
 **Пример:**
+
 ```cpp
 #include <jwt-cpp/jwt.h>
 
@@ -91,6 +96,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Boost::log)
 ```
 
 **Пример:**
+
 ```cpp
 #include <spdlog/spdlog.h>
 
@@ -111,6 +117,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system)
 ```
 
 **Пример с coroutines (C++20):**
+
 ```cpp
 #include <coroutine>
 #include <drogon/HttpController.h>
@@ -118,7 +125,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Boost::system)
 Task<HttpResponsePtr> listBuckets(HttpRequestPtr req) {
     auto client = co_await createObjectStorageClient(req);
     auto buckets = co_await client->listBuckets();
-    
+
     json response = {{"buckets", buckets}};
     co_return HttpResponse::newHttpJsonResponse(response);
 }
@@ -150,21 +157,22 @@ target_link_libraries(${PROJECT_NAME} PRIVATE cryptopp::cryptopp)
 ```
 
 **Пример шифрования:**
+
 ```cpp
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 
 std::string encrypt(const std::string& plaintext, const std::string& key) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
-    
+
     unsigned char iv[16];
     RAND_bytes(iv, sizeof(iv));
-    
-    EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, 
+
+    EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr,
                        (unsigned char*)key.data(), iv);
-    
+
     // Encryption logic...
-    
+
     EVP_CIPHER_CTX_free(ctx);
     return encrypted;
 }
@@ -183,6 +191,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 ```
 
 **Пример:**
+
 ```cpp
 #include <cpr/cpr.h>
 
@@ -207,6 +216,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE websocketpp::websocketpp)
 ```
 
 **Пример WebSocket сервера:**
+
 ```cpp
 #include <drogon/WebSocketController.h>
 
@@ -217,11 +227,11 @@ public:
                          const WebSocketMessageType& type) override {
         // Handle incoming messages
     }
-    
+
     void handleConnectionClosed(const WebSocketConnectionPtr& conn) override {
         spdlog::info("WebSocket connection closed");
     }
-    
+
     WS_PATH_LIST_BEGIN
     WS_PATH_ADD("/ws/logs", Get);
     WS_PATH_LIST_END
@@ -241,6 +251,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Catch2::Catch2)
 ```
 
 **Пример теста:**
+
 ```cpp
 #include <gtest/gtest.h>
 
@@ -264,6 +275,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE toml11::toml11)
 ```
 
 **Пример:**
+
 ```cpp
 #include <yaml-cpp/yaml.h>
 
@@ -280,6 +292,7 @@ int port = config["server"]["port"].as<int>();
 ```
 
 **Пример:**
+
 ```cpp
 #include <BS_thread_pool.hpp>
 
@@ -307,13 +320,13 @@ for (auto& future : futures) {
 class ObjectStorageClient {
 public:
     virtual ~ObjectStorageClient() = default;
-    
+
     virtual Task<std::vector<Bucket>> listBuckets() = 0;
     virtual Task<void> createBucket(const std::string& name) = 0;
     virtual Task<void> deleteBucket(const std::string& name) = 0;
-    
+
     virtual Task<std::vector<Object>> listObjects(const std::string& bucket) = 0;
-    virtual Task<void> uploadObject(const std::string& bucket, 
+    virtual Task<void> uploadObject(const std::string& bucket,
                                     const std::string& key,
                                     std::istream& data) = 0;
     virtual Task<std::string> getPresignedUrl(const std::string& bucket,
@@ -335,20 +348,21 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${LDAP_LIBRARIES})
 ```
 
 **Пример:**
+
 ```cpp
 #include <ldap.h>
 
 bool authenticateLDAP(const std::string& username, const std::string& password) {
     LDAP* ld = nullptr;
-    
+
     int rc = ldap_initialize(&ld, "ldap://ldap.example.com:389");
     if (rc != LDAP_SUCCESS) {
         return false;
     }
-    
+
     std::string dn = fmt::format("uid={},dc=example,dc=org", username);
     rc = ldap_simple_bind_s(ld, dn.c_str(), password.c_str());
-    
+
     ldap_unbind_ext_s(ld, nullptr, nullptr);
     return rc == LDAP_SUCCESS;
 }
@@ -366,7 +380,7 @@ public:
             auth_endpoint_, client_id_, redirect_uri_, scope_
         );
     }
-    
+
     Task<TokenResponse> exchangeCodeForToken(const std::string& code) {
         auto response = co_await cpr::PostAsync(
             cpr::Url{token_endpoint_},
@@ -377,7 +391,7 @@ public:
                 {"grant_type", "authorization_code"}
             }
         );
-        
+
         json data = json::parse(response.text);
         co_return TokenResponse{
             .access_token = data["access_token"],
@@ -397,6 +411,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE redis++::redis++)
 ```
 
 **Пример:**
+
 ```cpp
 #include <sw/redis++/redis++.h>
 
@@ -404,10 +419,10 @@ using namespace sw::redis;
 
 class RedisCache {
     Redis redis_;
-    
+
 public:
     RedisCache(const std::string& uri) : redis_(uri) {}
-    
+
     std::optional<std::string> get(const std::string& key) {
         auto val = redis_.get(key);
         if (val) {
@@ -415,8 +430,8 @@ public:
         }
         return std::nullopt;
     }
-    
-    void set(const std::string& key, const std::string& value, 
+
+    void set(const std::string& key, const std::string& value,
              std::chrono::seconds ttl) {
         redis_.set(key, value, ttl);
     }
@@ -432,6 +447,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE prometheus-cpp::core)
 ```
 
 **Пример:**
+
 ```cpp
 #include <prometheus/registry.h>
 #include <prometheus/counter.h>
@@ -467,6 +483,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE=[vcpkg root]/scripts/buildsystems/vcpkg.cmake ..
 ```
 
 **vcpkg.json:**
+
 ```json
 {
   "name": "object-storage-console",
@@ -560,4 +577,3 @@ add_subdirectory(tests)
 - **[12-advanced-topics.md](12-advanced-topics.md)** - Продвинутые темы на C++
 - **[13-practical-exercises.md](13-practical-exercises.md)** - Практические упражнения
 - **[14-learning-roadmap.md](14-learning-roadmap.md)** - План обучения
-

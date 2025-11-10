@@ -12,4 +12,3 @@ missingIncludeSystem
 # Common false positives
 unmatchedSuppression
 unusedFunction:*/tests/*
-

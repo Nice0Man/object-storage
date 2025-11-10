@@ -4,9 +4,9 @@
 
 **Файл спецификации:** `swagger.yml` (2858 строк)
 
-**Версия:** OpenAPI 2.0 (Swagger)  
-**Base Path:** `/api/v1`  
-**Протоколы:** `http`, `https`, `ws` (WebSocket)  
+**Версия:** OpenAPI 2.0 (Swagger)
+**Base Path:** `/api/v1`
+**Протоколы:** `http`, `https`, `ws` (WebSocket)
 **Формат:** JSON
 
 ## 🔐 Security Definitions
@@ -166,6 +166,7 @@ security:
 ### Login
 
 **Request:**
+
 ```http
 POST /api/v1/login HTTP/1.1
 Content-Type: application/json
@@ -177,6 +178,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```http
 HTTP/1.1 204 No Content
 Set-Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; Path=/; HttpOnly
@@ -185,12 +187,14 @@ Set-Cookie: token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; Path=/; HttpOnly
 ### List Buckets
 
 **Request:**
+
 ```http
 GET /api/v1/buckets HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Response:**
+
 ```json
 {
   "buckets": [
@@ -208,6 +212,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### Create Bucket
 
 **Request:**
+
 ```http
 POST /api/v1/buckets HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -224,6 +229,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "bucketName": "new-bucket"
@@ -233,6 +239,7 @@ Content-Type: application/json
 ### Upload Object
 
 **Request:**
+
 ```http
 POST /api/v1/buckets/my-bucket/objects/upload?prefix=folder/file.txt HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -247,6 +254,7 @@ Content-Type: text/plain
 ```
 
 **Response:**
+
 ```http
 HTTP/1.1 200 OK
 ```
@@ -254,12 +262,14 @@ HTTP/1.1 200 OK
 ### List Objects
 
 **Request:**
+
 ```http
 GET /api/v1/buckets/my-bucket/objects?prefix=folder/&recursive=true HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Response:**
+
 ```json
 {
   "objects": [
@@ -279,12 +289,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### Get Presigned URL
 
 **Request:**
+
 ```http
 GET /api/v1/buckets/my-bucket/objects/share?prefix=file.txt&expires=3600 HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Response:**
+
 ```json
 {
   "url": "http://localhost:9000/my-bucket/file.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...",
@@ -295,6 +307,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ### Create User
 
 **Request:**
+
 ```http
 POST /api/v1/users HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -309,6 +322,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```http
 HTTP/1.1 201 Created
 ```
@@ -316,6 +330,7 @@ HTTP/1.1 201 Created
 ### Create Policy
 
 **Request:**
+
 ```http
 POST /api/v1/policies HTTP/1.1
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -337,6 +352,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```http
 HTTP/1.1 201 Created
 ```
@@ -344,12 +360,14 @@ HTTP/1.1 201 Created
 ## 🔄 Pagination
 
 **Query Parameters:**
+
 ```
 ?limit=20     # Items per page
 ?offset=0     # Starting offset
 ```
 
 **Example:**
+
 ```http
 GET /api/v1/users?limit=20&offset=40 HTTP/1.1
 ```
@@ -357,6 +375,7 @@ GET /api/v1/users?limit=20&offset=40 HTTP/1.1
 ## 🔍 Filtering
 
 **Example:**
+
 ```http
 GET /api/v1/buckets/my-bucket/objects?prefix=folder/&recursive=true&with-versions=true
 ```
@@ -403,6 +422,7 @@ swagger generate server \
 ```
 
 **Генерируется:**
+
 - `models/*.go` - 153+ моделей
 - `api/operations/` - Handler interfaces
 - `api/server.go` - HTTP server setup
@@ -418,6 +438,7 @@ npx swagger-typescript-api \
 ```
 
 **Генерируется:**
+
 - `consoleApi.ts` - Type-safe API client
 - Все модели с TypeScript types
 - HTTP client wrapper
@@ -465,6 +486,7 @@ module.exports = {
 ### Viewing Swagger UI
 
 **Option 1:** Swagger Editor
+
 ```bash
 # Open in browser
 https://editor.swagger.io/
@@ -473,6 +495,7 @@ https://editor.swagger.io/
 ```
 
 **Option 2:** Local Swagger UI
+
 ```bash
 # Install swagger-ui
 npm install -g swagger-ui-watcher
@@ -482,6 +505,7 @@ swagger-ui-watcher swagger.yml
 ```
 
 **Option 3:** ReDoc
+
 ```bash
 npx @redocly/cli preview-docs swagger.yml
 ```
@@ -502,6 +526,7 @@ npx @redocly/cli preview-docs swagger.yml
 ```
 
 **Usage:**
+
 ```javascript
 const ws = new WebSocket('ws://localhost:9090/ws/console?token=...');
 ws.onmessage = (event) => {
@@ -528,4 +553,3 @@ ws.onmessage = (event) => {
 - **[10-patterns-best-practices.md](10-patterns-best-practices.md)** - API design patterns
 - **[11-dependencies-integrations.md](11-dependencies-integrations.md)** - SDK integrations
 - **[13-practical-exercises.md](13-practical-exercises.md)** - Практика с API
-

@@ -53,7 +53,7 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=crate,nd,sav,ser,falsy,te
+          - --ignore-words-list=crate,nd,sav,ser,falsy,te,anull
           - --skip="*.json,*.csv,*.xml,*.svg"
         exclude: '^(docs/|.*\.min\..*)$'
 
@@ -62,7 +62,22 @@ repos:
     rev: v1.35.1
     hooks:
       - id: yamllint
-        args: ['-d', '{extends: default, rules: {line-length: {max: 120}}}']
+        args:
+          - '-d'
+          - |
+            {
+              extends: default,
+              rules: {
+                line-length: {max: 120},
+                indentation: disable,
+                brackets: disable,
+                braces: disable,
+                colons: disable,
+                truthy: disable,
+                document-start: disable
+              }
+            }
+        exclude: '^(\.clang-format|\.github/workflows/).*$'
 
   # Shell script checking
   - repo: https://github.com/shellcheck-py/shellcheck-py

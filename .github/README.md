@@ -65,7 +65,9 @@ vcpkg install llvm cppcheck
 ### GitHub Actions Workflows
 
 #### `.github/workflows/ci.yml`
+
 Основной CI pipeline:
+
 - ✅ Lint проверки (clang-format, clang-tidy, cppcheck)
 - ✅ Markdown linting
 - ✅ Multi-platform build (Linux, macOS, Windows)
@@ -74,7 +76,9 @@ vcpkg install llvm cppcheck
 - ✅ Documentation checks
 
 #### `.github/workflows/codeql.yml`
+
 Security scanning с CodeQL:
+
 - 🔒 Static security analysis
 - 🔒 Vulnerability detection
 - 🔒 Weekly scheduled scans
@@ -82,7 +86,9 @@ Security scanning с CodeQL:
 ### Pre-commit Configuration
 
 #### `.pre-commit-config.yaml`
+
 Автоматические проверки перед коммитом:
+
 - Formatting (clang-format)
 - CMake formatting
 - Markdown linting
@@ -94,14 +100,18 @@ Security scanning с CodeQL:
 ### Code Style
 
 #### `.clang-format`
+
 C++ code formatting (Based on Mozilla style):
+
 - Indent: 4 spaces
 - Line length: 120
 - Modern C++20 features
 - Automatic include sorting
 
 #### `.clang-tidy`
+
 Static analysis checks:
+
 - Bugprone patterns
 - Modern C++ practices
 - Performance optimizations
@@ -109,7 +119,9 @@ Static analysis checks:
 - Security best practices
 
 #### `.editorconfig`
+
 Universal editor settings:
+
 - UTF-8 encoding
 - LF line endings
 - Consistent indentation
@@ -289,4 +301,3 @@ git commit --no-verify -m "emergency fix"
 ---
 
 **Вопросы?** Создайте issue в репозитории.
-

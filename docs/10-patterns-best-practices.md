@@ -15,12 +15,14 @@ External Services (MinIO Server)
 ```
 
 **Преимущества:**
+
 - ✅ Separation of Concerns
 - ✅ Testability
 - ✅ Maintainability
 - ✅ Flexibility
 
 **Пример реализации:**
+
 ```go
 // Presentation Layer
 func (h *BucketHandler) ListBucketsHandler(params bucket.ListBucketsParams, principal *models.Principal) middleware.Responder {
@@ -39,13 +41,13 @@ func (s *BucketService) ListBuckets(ctx context.Context, principal *models.Princ
     if err := s.validatePrincipal(principal); err != nil {
         return nil, err
     }
-    
+
     // Business logic
     buckets, err := s.repository.List(ctx, principal)
     if err != nil {
         return nil, err
     }
-    
+
     // Transform
     return s.transformBuckets(buckets), nil
 }
@@ -92,6 +94,7 @@ func (r *minioBucketRepository) List(ctx context.Context, principal *models.Prin
 ```
 
 **Преимущества:**
+
 - ✅ Abstraction over data source
 - ✅ Easy to mock for testing
 - ✅ Swap implementations
@@ -113,11 +116,11 @@ func NewContainer() *Container {
     // Repositories
     bucketRepo := NewBucketRepository(clientFactory)
     objectRepo := NewObjectRepository(clientFactory)
-    
+
     // Services
     bucketService := NewBucketService(bucketRepo)
     objectService := NewObjectService(objectRepo)
-    
+
     return &Container{
         BucketService: bucketService,
         ObjectService: objectService,
@@ -161,7 +164,7 @@ func (f *minioClientFactory) CreateMinioClient(principal *models.Principal) (Min
         principal.STSSecretAccessKey,
         principal.STSSessionToken,
     )
-    
+
     client, err := minio.New(f.endpoint, &minio.Options{
         Creds:  creds,
         Secure: f.secure,
@@ -169,7 +172,7 @@ func (f *minioClientFactory) CreateMinioClient(principal *models.Principal) (Min
     if err != nil {
         return nil, err
     }
-    
+
     return &minioClient{client: client}, nil
 }
 ```
@@ -239,18 +242,18 @@ func validateBucketName(name string) error {
     if len(name) < 3 || len(name) > 63 {
         return errors.New("bucket name must be between 3 and 63 characters")
     }
-    
+
     // Only lowercase, numbers, hyphens
     matched, _ := regexp.MatchString("^[a-z0-9][a-z0-9-]*[a-z0-9]$", name)
     if !matched {
         return errors.New("invalid bucket name format")
     }
-    
+
     // No consecutive hyphens
     if strings.Contains(name, "--") {
         return errors.New("bucket name cannot contain consecutive hyphens")
     }
-    
+
     return nil
 }
 
@@ -270,7 +273,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
     // Always use context with timeout
     ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
     defer cancel()
-    
+
     // Pass context to all operations
     result, err := performOperation(ctx)
     if err != nil {
@@ -281,7 +284,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
-    
+
     json.NewEncoder(w).Encode(result)
 }
 ```
@@ -303,20 +306,20 @@ func generateSecureJWT(credentials *credentials.Value) (string, error) {
         STSSecretAccessKey: credentials.SecretAccessKey,
         STSSessionToken:    credentials.SessionToken,
     }
-    
+
     // 2. Encrypt sensitive fields
     encryptedClaims, err := encryptClaims(claims)
     if err != nil {
         return "", err
     }
-    
+
     // 3. Sign JWT
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, encryptedClaims)
     tokenString, err := token.SignedString(getJWTSecret())
     if err != nil {
         return "", err
     }
-    
+
     return tokenString, nil
 }
 
@@ -324,7 +327,7 @@ func generateSecureJWT(credentials *credentials.Value) (string, error) {
 func rotateJWTSecret() {
     ticker := time.NewTicker(24 * time.Hour)
     defer ticker.Stop()
-    
+
     for range ticker.C {
         newSecret := generateRandomSecret()
         updateJWTSecret(newSecret)
@@ -355,13 +358,13 @@ func NewRateLimiter(r rate.Limit, b int) *RateLimiter {
 func (rl *RateLimiter) getLimiter(ip string) *rate.Limiter {
     rl.mu.Lock()
     defer rl.mu.Unlock()
-    
+
     limiter, exists := rl.requests[ip]
     if !exists {
         limiter = rate.NewLimiter(rl.rate, rl.burst)
         rl.requests[ip] = limiter
     }
-    
+
     return limiter
 }
 
@@ -369,12 +372,12 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         ip := getClientIP(r)
         limiter := rl.getLimiter(ip)
-        
+
         if !limiter.Allow() {
             http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
             return
         }
-        
+
         next.ServeHTTP(w, r)
     })
 }
@@ -408,7 +411,7 @@ func (p *ClientPool) Get(principal *models.Principal) (MinioClient, error) {
     if client := p.pool.Get(); client != nil {
         return client.(MinioClient), nil
     }
-    
+
     // Create new client
     return p.factory.CreateMinioClient(principal)
 }
@@ -438,29 +441,29 @@ func NewCache(ttl time.Duration) *Cache {
         data: make(map[string]CacheEntry),
         ttl:  ttl,
     }
-    
+
     // Cleanup expired entries
     go c.cleanup()
-    
+
     return c
 }
 
 func (c *Cache) Get(key string) (interface{}, bool) {
     c.mu.RLock()
     defer c.mu.RUnlock()
-    
+
     entry, exists := c.data[key]
     if !exists || time.Now().After(entry.Expiration) {
         return nil, false
     }
-    
+
     return entry.Value, true
 }
 
 func (c *Cache) Set(key string, value interface{}) {
     c.mu.Lock()
     defer c.mu.Unlock()
-    
+
     c.data[key] = CacheEntry{
         Value:      value,
         Expiration: time.Now().Add(c.ttl),
@@ -470,7 +473,7 @@ func (c *Cache) Set(key string, value interface{}) {
 func (c *Cache) cleanup() {
     ticker := time.NewTicker(time.Minute)
     defer ticker.Stop()
-    
+
     for range ticker.C {
         c.mu.Lock()
         now := time.Now()
@@ -491,15 +494,15 @@ func (c *Cache) cleanup() {
 func getBucketsWithStats(ctx context.Context, client MinioClient, buckets []minio.BucketInfo) []BucketWithStats {
     results := make([]BucketWithStats, len(buckets))
     var wg sync.WaitGroup
-    
+
     for i, bucket := range buckets {
         wg.Add(1)
         go func(index int, b minio.BucketInfo) {
             defer wg.Done()
-            
+
             // Get bucket size and object count
             size, count := getBucketStats(ctx, client, b.Name)
-            
+
             results[index] = BucketWithStats{
                 BucketInfo:   b,
                 Size:         size,
@@ -507,7 +510,7 @@ func getBucketsWithStats(ctx context.Context, client MinioClient, buckets []mini
             }
         }(i, bucket)
     }
-    
+
     wg.Wait()
     return results
 }
@@ -519,25 +522,25 @@ func getBucketsWithStats(ctx context.Context, client MinioClient, buckets []mini
 // Stream object download без загрузки в память
 func streamObjectDownload(w http.ResponseWriter, r *http.Request, client MinioClient, bucket, object string) error {
     ctx := r.Context()
-    
+
     // Get object
     obj, err := client.getObject(ctx, bucket, object, minio.GetObjectOptions{})
     if err != nil {
         return err
     }
     defer obj.Close()
-    
+
     // Get object info for headers
     stat, err := obj.Stat()
     if err != nil {
         return err
     }
-    
+
     // Set headers
     w.Header().Set("Content-Type", stat.ContentType)
     w.Header().Set("Content-Length", fmt.Sprintf("%d", stat.Size))
     w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", object))
-    
+
     // Stream content
     _, err = io.Copy(w, obj)
     return err
@@ -555,12 +558,12 @@ func getUserInfo(ctx context.Context, username string) (*UserInfo, error) {
     if err != nil {
         return nil, fmt.Errorf("failed to fetch user %s: %w", username, err)
     }
-    
+
     groups, err := fetchUserGroups(ctx, username)
     if err != nil {
         return nil, fmt.Errorf("failed to fetch groups for user %s: %w", username, err)
     }
-    
+
     return &UserInfo{
         User:   user,
         Groups: groups,
@@ -622,7 +625,7 @@ func TestValidateBucketName(t *testing.T) {
         {"too long", strings.Repeat("a", 64), true},
         {"consecutive hyphens", "bucket--name", true},
     }
-    
+
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             err := validateBucketName(tt.bucketName)
@@ -648,7 +651,7 @@ func createTestServer(t *testing.T) *httptest.Server {
 func TestWithCleanup(t *testing.T) {
     server := createTestServer(t)
     defer server.Close()
-    
+
     // Test logic
 }
 ```
@@ -689,7 +692,7 @@ const useAPI = (apiCall) => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+
     const execute = async (...args) => {
         try {
             setLoading(true);
@@ -704,7 +707,7 @@ const useAPI = (apiCall) => {
             setLoading(false);
         }
     };
-    
+
     return { data, loading, error, execute };
 };
 
@@ -712,14 +715,14 @@ const useAPI = (apiCall) => {
 const BucketsList = () => {
     const api = new ConsoleApi();
     const { data: buckets, loading, error, execute } = useAPI(api.listBuckets);
-    
+
     useEffect(() => {
         execute();
     }, []);
-    
+
     if (loading) return <Loading />;
     if (error) return <Error message={error.message} />;
-    
+
     return <BucketGrid buckets={buckets} />;
 };
 ```
@@ -732,16 +735,16 @@ class ErrorBoundary extends React.Component {
         super(props);
         this.state = { hasError: false, error: null };
     }
-    
+
     static getDerivedStateFromError(error) {
         return { hasError: true, error };
     }
-    
+
     componentDidCatch(error, errorInfo) {
         console.error('Error caught by boundary:', error, errorInfo);
         // Log to error tracking service
     }
-    
+
     render() {
         if (this.state.hasError) {
             return (
@@ -754,7 +757,7 @@ class ErrorBoundary extends React.Component {
                 </div>
             );
         }
-        
+
         return this.props.children;
     }
 }
@@ -770,4 +773,3 @@ class ErrorBoundary extends React.Component {
 - **[11-dependencies-integrations.md](11-dependencies-integrations.md)** - Интеграции
 - **[12-advanced-topics.md](12-advanced-topics.md)** - Продвинутые темы
 - **[13-practical-exercises.md](13-practical-exercises.md)** - Практика
-

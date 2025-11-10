@@ -111,4 +111,3 @@ DeriveLineEnding: false
 InsertTrailingCommas: None
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 1
-
