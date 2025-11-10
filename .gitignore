@@ -1,41 +1,116 @@
-# Prerequisites
-*.d
+# Build directories
+build/
+cmake-build-*/
+out/
+bin/
+lib/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+_deps/
+compile_commands.json
+
+# vcpkg
+vcpkg/
+vcpkg_installed/
+.vcpkg-root
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
 # Compiled Object files
-*.slo
-*.lo
 *.o
 *.obj
+*.lo
+*.slo
+*.ko
 
 # Precompiled Headers
 *.gch
 *.pch
 
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
 # Compiled Dynamic libraries
 *.so
+*.so.*
 *.dylib
 *.dll
 
-# Fortran module files
-*.mod
-*.smod
-
 # Compiled Static libraries
-*.lai
-*.la
 *.a
 *.lib
+*.la
 
 # Executables
 *.exe
 *.out
 *.app
+console
+object-storage-console
 
-# debug information files
-*.dwo
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+*.coverage
+htmlcov/
+
+# Sanitizer outputs
+*.asan
+*.tsan
+*.ubsan
+
+# Test outputs
+Testing/
+test_results/
+*.log
+
+# Package managers
+node_modules/
+web-app/node_modules/
+web-app/build/
+web-app/dist/
+web-app/.cache/
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Documentation
+docs/html/
+docs/latex/
+docs/doxygen/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*

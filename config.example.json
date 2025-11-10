@@ -1,0 +1,42 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 9090,
+    "threads": 0,
+    "enable_ssl": true,
+    "ssl_cert": "/path/to/cert.pem",
+    "ssl_key": "/path/to/key.pem",
+    "log_level": "info",
+    "log_path": "logs/"
+  },
+  "s3": {
+    "endpoint": "s3.amazonaws.com",
+    "access_key": "YOUR_ACCESS_KEY",
+    "secret_key": "YOUR_SECRET_KEY",
+    "region": "us-east-1",
+    "use_ssl": true,
+    "timeout_ms": 30000
+  },
+  "auth": {
+    "jwt_secret": "CHANGE-THIS-TO-A-RANDOM-SECRET-KEY",
+    "token_expiry_hours": 24,
+    "refresh_token_expiry_hours": 168,
+    "enable_ldap": false,
+    "ldap_server": "ldap.example.com",
+    "ldap_port": 389
+  },
+  "features": {
+    "enable_upload": true,
+    "enable_download": true,
+    "enable_delete": true,
+    "enable_versioning": true,
+    "max_upload_size_mb": 100,
+    "enable_sharing": true
+  },
+  "ui": {
+    "theme": "light",
+    "items_per_page": 50,
+    "enable_dark_mode": true,
+    "show_hidden_files": false
+  }
+}
