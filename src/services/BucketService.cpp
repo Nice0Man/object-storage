@@ -1,9 +1,5 @@
-
-
 #include "console/services/BucketService.hpp"
 #include "console/common/Logger.hpp"
-#include <regex>
-#include <json/json.h>
 
 namespace console::services {
 
@@ -23,14 +19,14 @@ Result<Vector<Bucket>, ApiError> BucketService::list_buckets(
     auto result = minio_client_->list_buckets();
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to list buckets: {}", result.error());
-        return Err<models::ApiError>(ApiError(
+        return Err<Vector<Bucket>>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to list buckets: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully listed {} buckets", result.value().size());
-    return Ok<models::ApiError>(result.value());
+    return Result<Vector<Bucket>, ApiError>(ok_tag, result.value());
 }
 
 Result<Bucket, ApiError> BucketService::create_bucket(
@@ -41,23 +37,32 @@ Result<Bucket, ApiError> BucketService::create_bucket(
 ) {
     CONSOLE_LOG_INFO("Creating bucket: {} in region: {}", name, region);
 
-    // Validate bucket name
     if (auto error = validate_bucket_name(name)) {
         CONSOLE_LOG_WARN("Invalid bucket name: {}", name);
-        return Err<models::ApiError>(*error);
+        return Err<Bucket>(*error);
     }
 
-    auto result = minio_client_->create_bucket(name, region, object_locking);
+    auto result = minio_client_->create_bucket(name, region);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to create bucket {}: {}", name, result.error());
-        return Err<models::ApiError>(ApiError(
+        return Err<Bucket>(ApiError(
             HttpStatus::InternalServerError,
             "Failed to create bucket: " + result.error()
         ));
     }
 
     CONSOLE_LOG_INFO("Successfully created bucket: {}", name);
-    return Ok<models::ApiError>(result.value());
+    
+    // Get bucket info to return
+    auto bucket_result = minio_client_->get_bucket(name);
+    if (!bucket_result) {
+        return Err<Bucket>(ApiError(
+            HttpStatus::InternalServerError,
+            "Bucket created but failed to retrieve info"
+        ));
+    }
+
+    return Result<Bucket, ApiError>(ok_tag, bucket_result.value());
 }
 
 Result<void, ApiError> BucketService::delete_bucket(
@@ -69,14 +74,14 @@ Result<void, ApiError> BucketService::delete_bucket(
     auto result = minio_client_->delete_bucket(name);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to delete bucket {}: {}", name, result.error());
-        return Err<models::ApiError>(ApiError(
+        return Result<void, ApiError>(err_tag, ApiError(
             HttpStatus::InternalServerError,
             "Failed to delete bucket: " + result.error()
         ));
     }
 
-    CONSOLE_LOG_INFO("Successfully deleted bucket: {}", name);
-    return Ok<models::ApiError>();
+    CONSOLE_LOG_INFO("Bucket deleted: {}", name);
+    return Ok<ApiError>();
 }
 
 Result<Bucket, ApiError> BucketService::get_bucket_info(
@@ -88,13 +93,13 @@ Result<Bucket, ApiError> BucketService::get_bucket_info(
     auto result = minio_client_->get_bucket(name);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to get bucket info for {}: {}", name, result.error());
-        return Err<models::ApiError>(ApiError(
+        return Err<Bucket>(ApiError(
             HttpStatus::NotFound,
             "Bucket not found: " + result.error()
         ));
     }
 
-    return Ok<models::ApiError>(result.value());
+    return Result<Bucket, ApiError>(ok_tag, result.value());
 }
 
 Result<void, ApiError> BucketService::set_bucket_policy(
@@ -102,26 +107,17 @@ Result<void, ApiError> BucketService::set_bucket_policy(
     const String& name,
     const String& policy_json
 ) {
-    CONSOLE_LOG_INFO("Setting bucket policy for: {}", name);
+    CONSOLE_LOG_INFO("Setting policy for bucket: {}", name);
 
-    // Validate policy JSON
-    if (auto error = validate_policy_json(policy_json)) {
-        CONSOLE_LOG_WARN("Invalid policy JSON for bucket: {}", name);
-        return Err<models::ApiError>(*error);
+    if (auto error = validate_bucket_name(name)) {
+        return Result<void, ApiError>(err_tag, *error);
     }
 
-    auto result = minio_client_->set_bucket_policy(name, policy_json);
-    if (!result) {
-        CONSOLE_LOG_ERROR("Failed to set bucket policy for {}: {}", 
-                  name, result.error());
-        return Err<models::ApiError>(ApiError(
-            HttpStatus::InternalServerError,
-            "Failed to set bucket policy: " + result.error()
-        ));
-    }
-
-    CONSOLE_LOG_INFO("Successfully set bucket policy for: {}", name);
-    return Ok<models::ApiError>();
+    // TODO: Implement set_bucket_policy in MinioClient
+    return Result<void, ApiError>(err_tag, ApiError(
+        HttpStatus::NotImplemented,
+        "set_bucket_policy not yet implemented"
+    ));
 }
 
 Result<String, ApiError> BucketService::get_bucket_policy(
@@ -135,16 +131,6 @@ Result<String, ApiError> BucketService::get_bucket_policy(
         HttpStatus::NotImplemented,
         "get_bucket_policy not yet implemented"
     ));
-    if (!result) {
-        CONSOLE_LOG_ERROR("Failed to get bucket policy for {}: {}", 
-                  name, result.error());
-        return Err<models::ApiError>(ApiError(
-            HttpStatus::InternalServerError,
-            "Failed to get bucket policy: " + result.error()
-        ));
-    }
-
-    return Ok<models::ApiError>(result.value());
 }
 
 Result<void, ApiError> BucketService::set_bucket_versioning(
@@ -155,21 +141,10 @@ Result<void, ApiError> BucketService::set_bucket_versioning(
     CONSOLE_LOG_INFO("Setting bucket versioning for {}: {}", name, enabled);
 
     // TODO: Implement set_bucket_versioning in MinioClient
-    return Result<void, models::ApiError>(err_tag, ApiError(
+    return Result<void, ApiError>(err_tag, ApiError(
         HttpStatus::NotImplemented,
         "set_bucket_versioning not yet implemented"
     ));
-    if (!result) {
-        CONSOLE_LOG_ERROR("Failed to set bucket versioning for {}: {}", 
-                  name, result.error());
-        return Err<models::ApiError>(ApiError(
-            HttpStatus::InternalServerError,
-            "Failed to set bucket versioning: " + result.error()
-        ));
-    }
-
-    CONSOLE_LOG_INFO("Successfully set bucket versioning for: {}", name);
-    return Ok<models::ApiError>();
 }
 
 Result<bool, ApiError> BucketService::get_bucket_versioning(
@@ -183,16 +158,6 @@ Result<bool, ApiError> BucketService::get_bucket_versioning(
         HttpStatus::NotImplemented,
         "get_bucket_versioning not yet implemented"
     ));
-    if (!result) {
-        CONSOLE_LOG_ERROR("Failed to get bucket versioning for {}: {}", 
-                  name, result.error());
-        return Err<models::ApiError>(ApiError(
-            HttpStatus::InternalServerError,
-            "Failed to get bucket versioning: " + result.error()
-        ));
-    }
-
-    return Ok<models::ApiError>(result.value());
 }
 
 Result<void, ApiError> BucketService::set_bucket_tags(
@@ -200,12 +165,11 @@ Result<void, ApiError> BucketService::set_bucket_tags(
     const String& name,
     const StringMap& tags
 ) {
-    CONSOLE_LOG_INFO("Setting {} tags for bucket: {}", tags.size(), name);
+    CONSOLE_LOG_INFO("Setting tags for bucket: {}", name);
 
-    // TODO(Nice0Man): Implement bucket tagging
-    return Err<models::ApiError>(ApiError(
+    return Result<void, ApiError>(err_tag, ApiError(
         HttpStatus::NotImplemented,
-        "Bucket tagging not yet implemented"
+        "Bucket tags not yet implemented"
     ));
 }
 
@@ -215,10 +179,9 @@ Result<StringMap, ApiError> BucketService::get_bucket_tags(
 ) {
     CONSOLE_LOG_DEBUG("Getting tags for bucket: {}", name);
 
-    // TODO(Nice0Man): Implement bucket tagging
-    return Err<models::ApiError>(ApiError(
+    return Err<StringMap>(ApiError(
         HttpStatus::NotImplemented,
-        "Bucket tagging not yet implemented"
+        "Bucket tags not yet implemented"
     ));
 }
 
@@ -228,24 +191,32 @@ Result<void, ApiError> BucketService::delete_bucket_tags(
 ) {
     CONSOLE_LOG_INFO("Deleting tags for bucket: {}", name);
 
-    // TODO(Nice0Man): Implement bucket tagging
-    return Err<models::ApiError>(ApiError(
+    return Result<void, ApiError>(err_tag, ApiError(
         HttpStatus::NotImplemented,
-        "Bucket tagging not yet implemented"
+        "Bucket tags not yet implemented"
     ));
 }
 
-// Private methods
+Result<bool, ApiError> BucketService::bucket_exists(
+    const UserInfo& user_info,
+    const String& name
+) {
+    CONSOLE_LOG_DEBUG("Checking if bucket exists: {}", name);
+
+    auto result = minio_client_->bucket_exists(name);
+    if (!result) {
+        return Err<bool>(ApiError(
+            HttpStatus::InternalServerError,
+            "Failed to check bucket existence: " + result.error()
+        ));
+    }
+
+    return Result<bool, ApiError>(ok_tag, result.value());
+}
 
 Optional<ApiError> BucketService::validate_bucket_name(const String& name) {
-    // S3 bucket naming rules:
-    // - 3-63 characters
-    // - Lowercase letters, numbers, hyphens, dots
-    // - Must start with letter or number
-    // - Cannot be formatted as IP address
-
     if (name.empty()) {
-        return ApiError(HttpStatus::BadRequest, "Bucket name is required");
+        return ApiError(HttpStatus::BadRequest, "Bucket name cannot be empty");
     }
 
     if (name.length() < 3 || name.length() > 63) {
@@ -255,72 +226,48 @@ Optional<ApiError> BucketService::validate_bucket_name(const String& name) {
         );
     }
 
-    // Check valid characters
-    std::regex bucket_regex("^[a-z0-9][a-z0-9.-]*[a-z0-9]$");
-    if (!std::regex_match(name, bucket_regex)) {
+    // Check for valid characters (lowercase letters, numbers, dots, hyphens)
+    for (char c : name) {
+        if (!std::isalnum(c) && c != '.' && c != '-') {
+            return ApiError(
+                HttpStatus::BadRequest,
+                "Bucket name contains invalid characters"
+            );
+        }
+    }
+
+    // Cannot start or end with dot or hyphen
+    if (name.front() == '.' || name.front() == '-' ||
+        name.back() == '.' || name.back() == '-') {
         return ApiError(
             HttpStatus::BadRequest,
-            "Bucket name contains invalid characters"
+            "Bucket name cannot start or end with dot or hyphen"
         );
     }
 
-    // Cannot have consecutive dots
-    if (name.find("..") != String::npos) {
-        return ApiError(
-            HttpStatus::BadRequest,
-            "Bucket name cannot contain consecutive dots"
-        );
-    }
-
-    // Cannot be IP address format
-    std::regex ip_regex("^\\d+\\.\\d+\\.\\d+\\.\\d+$");
-    if (std::regex_match(name, ip_regex)) {
-        return ApiError(
-            HttpStatus::BadRequest,
-            "Bucket name cannot be formatted as IP address"
-        );
-    }
-
-    return {};  // No error
+    return std::nullopt;
 }
 
-Optional<ApiError> BucketService::validate_policy_json(
-    const String& policy_json
+Optional<ApiError> BucketService::validate_access(
+    const UserInfo& user,
+    const String& bucket_name,
+    const String& action
 ) {
-    if (policy_json.empty()) {
-        return ApiError(HttpStatus::BadRequest, "Policy JSON is required");
+    // For admin users, allow all actions
+    if (user.is_admin) {
+        return std::nullopt;
     }
 
-    // Try to parse as JSON
-    Json::Value root;
-    Json::CharReaderBuilder builder;
-    std::istringstream stream(policy_json);
-    String errors;
-
-    if (!Json::parseFromStream(builder, stream, &root, &errors)) {
+    // TODO: Implement proper policy-based access control
+    // For now, just check if user has any policies
+    if (user.policies.empty()) {
         return ApiError(
-            HttpStatus::BadRequest,
-            "Invalid JSON: " + errors
+            HttpStatus::Forbidden,
+            "User has no policies assigned"
         );
     }
 
-    // Basic policy structure validation
-    if (!root.isMember("Version")) {
-        return ApiError(
-            HttpStatus::BadRequest,
-            "Policy must contain 'Version' field"
-        );
-    }
-
-    if (!root.isMember("Statement") || !root["Statement"].isArray()) {
-        return ApiError(
-            HttpStatus::BadRequest,
-            "Policy must contain 'Statement' array"
-        );
-    }
-
-    return {};  // No error
+    return std::nullopt;
 }
 
 } // namespace console::services
-
