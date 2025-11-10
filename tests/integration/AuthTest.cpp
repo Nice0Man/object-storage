@@ -1,18 +1,21 @@
+// Copyright 2025 OpenMaxIO Contributors
+// Licensed under AGPL-3.0
+//
 #include <gtest/gtest.h>
 
-// TODO: Implement integration tests for authentication
+// TODO(Nice0Man): Implement integration tests for authentication
 
 TEST(AuthIntegrationTest, LoginSuccess) {
-    // TODO: Test successful login
+    // TODO(Nice0Man): Test successful login
     EXPECT_TRUE(true);
 }
 
 TEST(AuthIntegrationTest, LoginFailure) {
-    // TODO: Test failed login
+    // TODO(Nice0Man): Test failed login
     EXPECT_TRUE(true);
 }
 
 TEST(AuthIntegrationTest, TokenValidation) {
-    // TODO: Test JWT token validation
+    // TODO(Nice0Man): Test JWT token validation
     EXPECT_TRUE(true);
 }

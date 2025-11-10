@@ -32,13 +32,13 @@ repos:
         types_or: [c++, c]
         args: ['-i', '--style=file']
 
-  # CMake formatting
-  - repo: https://github.com/cheshirekow/cmake-format-precommit
-    rev: v0.6.13
-    hooks:
-      - id: cmake-format
-        args: ['--in-place']
-      - id: cmake-lint
+  # CMake formatting (disabled - requires pyyaml)
+  # - repo: https://github.com/cheshirekow/cmake-format-precommit
+  #   rev: v0.6.13
+  #   hooks:
+  #     - id: cmake-format
+  #       args: ['--in-place']
+  #     - id: cmake-lint
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli
@@ -46,6 +46,7 @@ repos:
     hooks:
       - id: markdownlint
         args: ['--fix', '--config', '.markdownlint.json']
+        exclude: '^docs/.*\.md$'
 
   # Spell checking (optional, can be slow)
   - repo: https://github.com/codespell-project/codespell

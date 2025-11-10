@@ -1,3 +1,6 @@
+// Copyright 2025 OpenMaxIO Contributors
+// Licensed under AGPL-3.0
+//
 #include "console/api/HealthController.hpp"
 
 #include "console/common/Logger.hpp"
@@ -17,7 +20,7 @@ HealthController::health(const drogon::HttpRequestPtr& req,
     response["service"] = "object-storage-console";
     response["timestamp"] = static_cast<Json::Int64>(std::chrono::system_clock::now().time_since_epoch().count());
 
-    // TODO: Add checks for S3 connectivity, database, etc.
+    // TODO(Nice0Man): Add checks for S3 connectivity, database, etc.
     Json::Value checks;
     checks["s3"] = "ok";
     checks["storage"] = "ok";

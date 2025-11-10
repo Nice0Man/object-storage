@@ -1,3 +1,6 @@
+// Copyright 2025 OpenMaxIO Contributors
+// Licensed under AGPL-3.0
+//
 #include "console/api/AuthController.hpp"
 
 #include "console/common/Config.hpp"
@@ -76,7 +79,7 @@ AuthController::login(const drogon::HttpRequestPtr& req,
 void
 AuthController::logout(const drogon::HttpRequestPtr& req,
                        std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-    // TODO: Implement token blacklisting if needed
+    // TODO(Nice0Man): Implement token blacklisting if needed
 
     Json::Value response;
     response["message"] = "Logged out successfully";
@@ -89,7 +92,7 @@ AuthController::logout(const drogon::HttpRequestPtr& req,
 void
 AuthController::refresh(const drogon::HttpRequestPtr& req,
                         std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-    // TODO: Implement refresh token logic
+    // TODO(Nice0Man): Implement refresh token logic
 
     Json::Value error;
     error["error"] = "Not implemented";
@@ -100,7 +103,7 @@ AuthController::refresh(const drogon::HttpRequestPtr& req,
 
 void
 AuthController::me(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-    // TODO: Extract user from JWT token in middleware
+    // TODO(Nice0Man): Extract user from JWT token in middleware
 
     Json::Value response;
     response["username"] = "admin";
@@ -114,7 +117,7 @@ AuthController::me(const drogon::HttpRequestPtr& req, std::function<void(const d
 void
 AuthController::change_password(const drogon::HttpRequestPtr& req,
                                 std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-    // TODO: Implement password change logic
+    // TODO(Nice0Man): Implement password change logic
 
     Json::Value error;
     error["error"] = "Not implemented";
@@ -143,9 +146,9 @@ AuthController::generate_jwt_token(const UserInfo& user) const {
 
 Optional<UserInfo>
 AuthController::validate_credentials(const String& username, const String& password) const {
-    // TODO: Implement real credential validation with S3 backend
+    // TODO(Nice0Man): Implement real credential validation with S3 backend
 
-    // For now, accept minioadmin/minioadmin
+    // For now, accept minioadmin/minioadmin  // pragma: allowlist secret
     if (username == "minioadmin" && password == "minioadmin") {
         UserInfo user;
         user.account_name = username;

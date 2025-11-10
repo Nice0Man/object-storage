@@ -1,3 +1,6 @@
+// Copyright 2025 OpenMaxIO Contributors
+// Licensed under AGPL-3.0
+//
 #include "console/api/BucketsController.hpp"
 
 #include "console/common/Logger.hpp"
@@ -11,7 +14,7 @@ BucketsController::list(const drogon::HttpRequestPtr& req,
                         std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
     LOG_DEBUG("List buckets requested");
 
-    // TODO: Implement S3 client integration
+    // TODO(Nice0Man): Implement S3 client integration
 
     Json::Value response;
     response["buckets"] = Json::arrayValue;
@@ -34,7 +37,7 @@ BucketsController::get(const drogon::HttpRequestPtr& req,
                        const String& bucket_name) {
     LOG_DEBUG("Get bucket info: {}", bucket_name);
 
-    // TODO: Implement S3 client integration
+    // TODO(Nice0Man): Implement S3 client integration
 
     Json::Value response;
     response["name"] = bucket_name;
@@ -64,7 +67,7 @@ BucketsController::create(const drogon::HttpRequestPtr& req,
     String bucket_name = (*json)["name"].asString();
     LOG_INFO("Creating bucket: {}", bucket_name);
 
-    // TODO: Implement S3 client integration
+    // TODO(Nice0Man): Implement S3 client integration
 
     Json::Value response;
     response["success"] = true;
@@ -82,7 +85,7 @@ BucketsController::remove(const drogon::HttpRequestPtr& req,
                           const String& bucket_name) {
     LOG_INFO("Deleting bucket: {}", bucket_name);
 
-    // TODO: Implement S3 client integration
+    // TODO(Nice0Man): Implement S3 client integration
 
     Json::Value response;
     response["success"] = true;
@@ -98,7 +101,7 @@ BucketsController::getPolicy(const drogon::HttpRequestPtr& req,
                              const String& bucket_name) {
     LOG_DEBUG("Get bucket policy: {}", bucket_name);
 
-    // TODO: Implement S3 client integration
+    // TODO(Nice0Man): Implement S3 client integration
 
     Json::Value response;
     response["bucket"] = bucket_name;
@@ -114,7 +117,7 @@ BucketsController::setPolicy(const drogon::HttpRequestPtr& req,
                              const String& bucket_name) {
     LOG_INFO("Set bucket policy: {}", bucket_name);
 
-    // TODO: Implement S3 client integration
+    // TODO(Nice0Man): Implement S3 client integration
 
     Json::Value response;
     response["success"] = true;
