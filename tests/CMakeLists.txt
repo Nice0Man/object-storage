@@ -17,6 +17,9 @@ set(UNIT_TEST_SOURCES
     unit/ConfigTest.cpp
     unit/LoggerTest.cpp
     unit/TypesTest.cpp
+    unit/JWTTest.cpp
+    unit/ModelsTest.cpp
+    unit/ServicesTest.cpp
 )
 
 set(INTEGRATION_TEST_SOURCES
