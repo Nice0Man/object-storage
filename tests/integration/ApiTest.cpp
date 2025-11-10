@@ -1,5 +1,4 @@
-// Copyright 2025 OpenMaxIO Contributors
-// Licensed under AGPL-3.0
+
 //
 #include <gtest/gtest.h>
 

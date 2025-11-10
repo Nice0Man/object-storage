@@ -57,8 +57,7 @@ pre-commit install
 ```bash
 # Создать header файл
 cat > copyright_header.txt << 'EOF'
-// Copyright 2025 OpenMaxIO Contributors
-// Licensed under AGPL-3.0
+
 //
 EOF
 
@@ -174,8 +173,7 @@ Checks: '-build/c++11'
 #!/bin/bash
 
 # Copyright headers
-HEADER="// Copyright 2025 OpenMaxIO Contributors
-// Licensed under AGPL-3.0
+HEADER="
 //
 "
 

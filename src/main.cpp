@@ -1,5 +1,4 @@
-// Copyright 2025 OpenMaxIO Contributors
-// Licensed under AGPL-3.0
+
 //
 #include "console/common/Config.hpp"
 #include "console/common/Logger.hpp"
@@ -39,11 +38,11 @@ print_banner() {
     std::cout << R"(
     ╔═══════════════════════════════════════════════════════════╗
     ║                                                           ║
-    ║     OpenMaxIO Object Browser                             ║
-    ║     S3-Compatible Web Console                            ║
+    ║     Object Storage Console                                ║
+    ║     S3-Compatible Web Console                             ║
     ║                                                           ║
-    ║     Version: 1.0.0                                       ║
-    ║     Built with C++20 & Drogon Framework                  ║
+    ║     Version: 1.0.0                                        ║
+    ║     Built with C++20 & Drogon Framework                   ║
     ║                                                           ║
     ╚═══════════════════════════════════════════════════════════╝
 )" << std::endl;
