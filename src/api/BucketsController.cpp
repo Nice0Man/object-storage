@@ -11,7 +11,7 @@ namespace console::api {
 void
 BucketsController::list(const drogon::HttpRequestPtr& req,
                         std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
-    LOG_DEBUG("List buckets requested");
+    CONSOLE_LOG_DEBUG("List buckets requested");
 
     // TODO(Nice0Man): Implement S3 client integration
 
@@ -34,7 +34,7 @@ void
 BucketsController::get(const drogon::HttpRequestPtr& req,
                        std::function<void(const drogon::HttpResponsePtr&)>&& callback,
                        const String& bucket_name) {
-    LOG_DEBUG("Get bucket info: {}", bucket_name);
+    CONSOLE_LOG_DEBUG("Get bucket info: {}", bucket_name);
 
     // TODO(Nice0Man): Implement S3 client integration
 
@@ -64,7 +64,7 @@ BucketsController::create(const drogon::HttpRequestPtr& req,
     }
 
     String bucket_name = (*json)["name"].asString();
-    LOG_INFO("Creating bucket: {}", bucket_name);
+    CONSOLE_LOG_INFO("Creating bucket: {}", bucket_name);
 
     // TODO(Nice0Man): Implement S3 client integration
 
@@ -82,7 +82,7 @@ void
 BucketsController::remove(const drogon::HttpRequestPtr& req,
                           std::function<void(const drogon::HttpResponsePtr&)>&& callback,
                           const String& bucket_name) {
-    LOG_INFO("Deleting bucket: {}", bucket_name);
+    CONSOLE_LOG_INFO("Deleting bucket: {}", bucket_name);
 
     // TODO(Nice0Man): Implement S3 client integration
 
@@ -98,7 +98,7 @@ void
 BucketsController::getPolicy(const drogon::HttpRequestPtr& req,
                              std::function<void(const drogon::HttpResponsePtr&)>&& callback,
                              const String& bucket_name) {
-    LOG_DEBUG("Get bucket policy: {}", bucket_name);
+    CONSOLE_LOG_DEBUG("Get bucket policy: {}", bucket_name);
 
     // TODO(Nice0Man): Implement S3 client integration
 
@@ -114,7 +114,7 @@ void
 BucketsController::setPolicy(const drogon::HttpRequestPtr& req,
                              std::function<void(const drogon::HttpResponsePtr&)>&& callback,
                              const String& bucket_name) {
-    LOG_INFO("Set bucket policy: {}", bucket_name);
+    CONSOLE_LOG_INFO("Set bucket policy: {}", bucket_name);
 
     // TODO(Nice0Man): Implement S3 client integration
 

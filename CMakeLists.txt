@@ -122,10 +122,30 @@ endif()
 
 find_package(Drogon CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(jwt-cpp CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
+
+# jwt-cpp is header-only, fetch from GitHub if not found
+find_package(jwt-cpp CONFIG QUIET)
+if(NOT jwt-cpp_FOUND)
+    message(STATUS "jwt-cpp not found, fetching from GitHub...")
+    include(FetchContent)
+    
+    FetchContent_Declare(
+        jwt-cpp
+        GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git
+        GIT_TAG v0.7.0
+        GIT_SHALLOW TRUE
+    )
+    
+    set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(JWT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    
+    FetchContent_MakeAvailable(jwt-cpp)
+    
+    message(STATUS "jwt-cpp fetched successfully")
+endif()
 
 # ============================================================================
 # Project Structure

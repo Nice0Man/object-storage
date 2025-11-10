@@ -34,7 +34,7 @@ JWT::initialize(const String& secret, const String& encryption_passphrase, const
     encryption_salt_ = encryption_salt;
     initialized_ = true;
 
-    LOG_INFO("JWT manager initialized");
+    CONSOLE_LOG_INFO("JWT manager initialized");
 }
 
 Result<String, String>
@@ -52,7 +52,7 @@ JWT::generate_token(const JWTClaims& claims) {
 
         return Result<String, String>(token);
     } catch (const std::exception& e) {
-        LOG_ERROR("Failed to generate JWT token: {}", e.what());
+        CONSOLE_LOG_ERROR("Failed to generate JWT token: {}", e.what());
         return Result<String, String>(String("Failed to generate token: ") + e.what());
     }
 }
@@ -83,10 +83,10 @@ JWT::validate_token(const String& token) {
 
         return Result<JWTClaims, String>(claims);
     } catch (const jwt::token_verification_exception& e) {
-        LOG_WARN("Token verification failed: {}", e.what());
+        CONSOLE_LOG_WARN("Token verification failed: {}", e.what());
         return Result<JWTClaims, String>(String("Token verification failed: ") + e.what());
     } catch (const std::exception& e) {
-        LOG_ERROR("Failed to validate token: {}", e.what());
+        CONSOLE_LOG_ERROR("Failed to validate token: {}", e.what());
         return Result<JWTClaims, String>(String("Failed to validate token: ") + e.what());
     }
 }

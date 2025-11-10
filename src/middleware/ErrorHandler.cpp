@@ -1,5 +1,5 @@
 #include "console/middleware/ErrorHandler.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 #include <json/json.h>
 
 namespace console::middleware {
@@ -17,7 +17,7 @@ void ErrorHandler::doFilter(
         fccb();
     } catch (const ApiException& ex) {
         // Structured API error
-        LOG_ERROR("API error in {}: {} - {}", 
+        CONSOLE_LOG_ERROR("API error in {}: {} - {}", 
                   req->getPath(),
                   static_cast<int>(ex.error().status()),
                   ex.error().message());
@@ -26,14 +26,14 @@ void ErrorHandler::doFilter(
         fcb(resp);
     } catch (const std::exception& ex) {
         // Generic C++ exception
-        LOG_ERROR("Unhandled exception in {}: {}", 
+        CONSOLE_LOG_ERROR("Unhandled exception in {}: {}", 
                   req->getPath(), ex.what());
         
         auto resp = create_error_response(ex);
         fcb(resp);
     } catch (...) {
         // Unknown error
-        LOG_ERROR("Unknown error in {}", req->getPath());
+        CONSOLE_LOG_ERROR("Unknown error in {}", req->getPath());
         
         auto resp = create_internal_error_response();
         fcb(resp);

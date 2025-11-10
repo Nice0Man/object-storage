@@ -1,5 +1,5 @@
 #include "console/middleware/RequestLogger.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 #include <sstream>
 #include <iomanip>
 
@@ -39,7 +39,7 @@ void RequestLogger::doFilter(
         }
 
         // Log request details
-        LOG_INFO("{} {} {} - Status: {} - Duration: {}ms - User: {} - Size: {} bytes - IP: {}",
+        CONSOLE_LOG_INFO("{} {} {} - Status: {} - Duration: {}ms - User: {} - Size: {} bytes - IP: {}",
                  req->getMethodString(),
                  req->getPath(),
                  req->getQuery().empty() ? "" : "?" + req->getQuery(),
@@ -59,7 +59,7 @@ void RequestLogger::doFilter(
     // Note: The above won't work as expected with Drogon's filter chain
     // In practice, we'd need to wrap the response or use Drogon's advice mechanism
     // For now, just log the request start
-    LOG_DEBUG("Request started: {} {} from {}",
+    CONSOLE_LOG_DEBUG("Request started: {} {} from {}",
               req->getMethodString(),
               req->getPath(),
               get_client_ip(req));

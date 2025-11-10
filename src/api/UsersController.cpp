@@ -1,5 +1,5 @@
 #include "console/api/UsersController.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 #include <json/json.h>
 
 namespace console::api {
@@ -341,7 +341,7 @@ UserInfo UsersController::get_user_from_request(
     try {
         return req->attributes()->get<UserInfo>("user_info");
     } catch (...) {
-        LOG_ERROR("No user_info found in request attributes");
+        CONSOLE_LOG_ERROR("No user_info found in request attributes");
         return UserInfo{};
     }
 }

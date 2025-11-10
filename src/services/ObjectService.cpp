@@ -1,15 +1,14 @@
 #include "console/services/ObjectService.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 
 namespace console::services {
 
 using namespace console::models;
-using namespace console::utils;
 
 ObjectService::ObjectService(
     std::shared_ptr<clients::IMinioClient> minio_client
 ) : minio_client_(minio_client) {
-    LOG_INFO("ObjectService initialized");
+    CONSOLE_LOG_INFO("ObjectService initialized");
 }
 
 Result<Vector<Object>, ApiError> ObjectService::list_objects(
@@ -19,7 +18,7 @@ Result<Vector<Object>, ApiError> ObjectService::list_objects(
     bool recursive,
     int max_keys
 ) {
-    LOG_DEBUG("Listing objects in bucket: {} with prefix: {}", 
+    CONSOLE_LOG_DEBUG("Listing objects in bucket: {} with prefix: {}", 
               bucket_name, prefix);
 
     auto result = minio_client_->list_objects(
@@ -29,7 +28,7 @@ Result<Vector<Object>, ApiError> ObjectService::list_objects(
     );
 
     if (!result) {
-        LOG_ERROR("Failed to list objects in bucket {}: {}", 
+        CONSOLE_LOG_ERROR("Failed to list objects in bucket {}: {}", 
                   bucket_name, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
@@ -43,7 +42,7 @@ Result<Vector<Object>, ApiError> ObjectService::list_objects(
         objects.resize(max_keys);
     }
 
-    LOG_INFO("Listed {} objects from bucket: {}", objects.size(), bucket_name);
+    CONSOLE_LOG_INFO("Listed {} objects from bucket: {}", objects.size(), bucket_name);
     return Ok(objects);
 }
 
@@ -52,7 +51,7 @@ Result<Object, ApiError> ObjectService::get_object_info(
     const String& bucket_name,
     const String& object_key
 ) {
-    LOG_DEBUG("Getting object info: {} from bucket: {}", 
+    CONSOLE_LOG_DEBUG("Getting object info: {} from bucket: {}", 
               object_key, bucket_name);
 
     if (auto error = validate_object_key(object_key)) {
@@ -61,7 +60,7 @@ Result<Object, ApiError> ObjectService::get_object_info(
 
     auto result = minio_client_->get_object_info(bucket_name, object_key);
     if (!result) {
-        LOG_ERROR("Failed to get object info for {}/{}: {}", 
+        CONSOLE_LOG_ERROR("Failed to get object info for {}/{}: {}", 
                   bucket_name, object_key, result.error());
         return Err(ApiError(
             HttpStatus::NotFound,
@@ -77,7 +76,7 @@ Result<ByteArray, ApiError> ObjectService::download_object(
     const String& bucket_name,
     const String& object_key
 ) {
-    LOG_INFO("Downloading object: {} from bucket: {}", 
+    CONSOLE_LOG_INFO("Downloading object: {} from bucket: {}", 
              object_key, bucket_name);
 
     if (auto error = validate_object_key(object_key)) {
@@ -86,7 +85,7 @@ Result<ByteArray, ApiError> ObjectService::download_object(
 
     auto result = minio_client_->download_object(bucket_name, object_key);
     if (!result) {
-        LOG_ERROR("Failed to download object {}/{}: {}", 
+        CONSOLE_LOG_ERROR("Failed to download object {}/{}: {}", 
                   bucket_name, object_key, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
@@ -94,7 +93,7 @@ Result<ByteArray, ApiError> ObjectService::download_object(
         ));
     }
 
-    LOG_INFO("Successfully downloaded object: {} ({} bytes)", 
+    CONSOLE_LOG_INFO("Successfully downloaded object: {} ({} bytes)", 
              object_key, result.value().size());
     return Ok(result.value());
 }
@@ -107,7 +106,7 @@ Result<Object, ApiError> ObjectService::upload_object(
     const String& content_type,
     const StringMap& metadata
 ) {
-    LOG_INFO("Uploading object: {} to bucket: {} ({} bytes)", 
+    CONSOLE_LOG_INFO("Uploading object: {} to bucket: {} ({} bytes)", 
              object_key, bucket_name, data.size());
 
     if (auto error = validate_object_key(object_key)) {
@@ -131,7 +130,7 @@ Result<Object, ApiError> ObjectService::upload_object(
     );
 
     if (!result) {
-        LOG_ERROR("Failed to upload object {}/{}: {}", 
+        CONSOLE_LOG_ERROR("Failed to upload object {}/{}: {}", 
                   bucket_name, object_key, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
@@ -139,7 +138,7 @@ Result<Object, ApiError> ObjectService::upload_object(
         ));
     }
 
-    LOG_INFO("Successfully uploaded object: {}", object_key);
+    CONSOLE_LOG_INFO("Successfully uploaded object: {}", object_key);
     return Ok(result.value());
 }
 
@@ -148,7 +147,7 @@ Result<void, ApiError> ObjectService::delete_object(
     const String& bucket_name,
     const String& object_key
 ) {
-    LOG_INFO("Deleting object: {} from bucket: {}", object_key, bucket_name);
+    CONSOLE_LOG_INFO("Deleting object: {} from bucket: {}", object_key, bucket_name);
 
     if (auto error = validate_object_key(object_key)) {
         return Err(*error);
@@ -156,7 +155,7 @@ Result<void, ApiError> ObjectService::delete_object(
 
     auto result = minio_client_->delete_object(bucket_name, object_key);
     if (!result) {
-        LOG_ERROR("Failed to delete object {}/{}: {}", 
+        CONSOLE_LOG_ERROR("Failed to delete object {}/{}: {}", 
                   bucket_name, object_key, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
@@ -164,7 +163,7 @@ Result<void, ApiError> ObjectService::delete_object(
         ));
     }
 
-    LOG_INFO("Successfully deleted object: {}", object_key);
+    CONSOLE_LOG_INFO("Successfully deleted object: {}", object_key);
     return Ok();
 }
 
@@ -173,7 +172,7 @@ Result<Json::Value, ApiError> ObjectService::delete_objects(
     const String& bucket_name,
     const Vector<String>& object_keys
 ) {
-    LOG_INFO("Batch deleting {} objects from bucket: {}", 
+    CONSOLE_LOG_INFO("Batch deleting {} objects from bucket: {}", 
              object_keys.size(), bucket_name);
 
     Json::Value result;
@@ -196,7 +195,7 @@ Result<Json::Value, ApiError> ObjectService::delete_objects(
     result["deleted_count"] = result["deleted"].size();
     result["error_count"] = result["errors"].size();
 
-    LOG_INFO("Batch delete completed: {} deleted, {} errors", 
+    CONSOLE_LOG_INFO("Batch delete completed: {} deleted, {} errors", 
              result["deleted_count"].asInt(), 
              result["error_count"].asInt());
 
@@ -210,7 +209,7 @@ Result<Object, ApiError> ObjectService::copy_object(
     const String& dest_bucket,
     const String& dest_key
 ) {
-    LOG_INFO("Copying object: {}/{} to {}/{}", 
+    CONSOLE_LOG_INFO("Copying object: {}/{} to {}/{}", 
              source_bucket, source_key, dest_bucket, dest_key);
 
     if (auto error = validate_object_key(source_key)) {
@@ -233,7 +232,7 @@ Result<void, ApiError> ObjectService::set_object_metadata(
     const String& object_key,
     const StringMap& metadata
 ) {
-    LOG_INFO("Setting metadata for object: {}/{}", bucket_name, object_key);
+    CONSOLE_LOG_INFO("Setting metadata for object: {}/{}", bucket_name, object_key);
 
     // TODO(Nice0Man): Implement metadata update via MinIO API
     return Err(ApiError(
@@ -248,7 +247,7 @@ Result<void, ApiError> ObjectService::set_object_tags(
     const String& object_key,
     const StringMap& tags
 ) {
-    LOG_INFO("Setting tags for object: {}/{}", bucket_name, object_key);
+    CONSOLE_LOG_INFO("Setting tags for object: {}/{}", bucket_name, object_key);
 
     // TODO(Nice0Man): Implement object tagging
     return Err(ApiError(
@@ -262,7 +261,7 @@ Result<StringMap, ApiError> ObjectService::get_object_tags(
     const String& bucket_name,
     const String& object_key
 ) {
-    LOG_DEBUG("Getting tags for object: {}/{}", bucket_name, object_key);
+    CONSOLE_LOG_DEBUG("Getting tags for object: {}/{}", bucket_name, object_key);
 
     // TODO(Nice0Man): Implement object tagging
     return Err(ApiError(
@@ -277,7 +276,7 @@ Result<String, ApiError> ObjectService::generate_presigned_url(
     const String& object_key,
     int expiry_seconds
 ) {
-    LOG_INFO("Generating presigned URL for: {}/{} (expiry: {}s)", 
+    CONSOLE_LOG_INFO("Generating presigned URL for: {}/{} (expiry: {}s)", 
              bucket_name, object_key, expiry_seconds);
 
     if (auto error = validate_object_key(object_key)) {

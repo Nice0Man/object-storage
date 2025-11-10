@@ -1,5 +1,5 @@
 #include "console/middleware/AuthMiddleware.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 #include <json/json.h>
 
 namespace console::middleware {
@@ -21,7 +21,7 @@ void AuthMiddleware::doFilter(
     auto token_opt = extract_token(req);
 
     if (!token_opt) {
-        LOG_WARN("No authentication token provided for {}", 
+        CONSOLE_LOG_WARN("No authentication token provided for {}", 
                  req->getPath());
         send_unauthorized(std::move(fcb), "No token provided");
         return;
@@ -32,7 +32,7 @@ void AuthMiddleware::doFilter(
     auto user_info_opt = JWT::validate_token(*token_opt, jwt_secret);
 
     if (!user_info_opt) {
-        LOG_WARN("Invalid or expired token for {}", req->getPath());
+        CONSOLE_LOG_WARN("Invalid or expired token for {}", req->getPath());
         send_unauthorized(std::move(fcb), "Invalid or expired token");
         return;
     }
@@ -46,7 +46,7 @@ void AuthMiddleware::doFilter(
     // Also store full UserInfo for handlers
     req->attributes()->insert("user_info", user_info);
 
-    LOG_DEBUG("Authenticated user: {} (admin: {})", 
+    CONSOLE_LOG_DEBUG("Authenticated user: {} (admin: {})", 
               user_info.access_key, user_info.is_admin);
 
     // Continue to next filter/handler

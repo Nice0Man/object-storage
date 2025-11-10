@@ -1,7 +1,7 @@
 #include "console/websocket/EventsController.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 #include "console/utils/JWT.hpp"
-#include "console/utils/Config.hpp"
+#include "console/common/Config.hpp"
 
 namespace console::websocket {
 
@@ -17,12 +17,12 @@ void EventsController::handleNewConnection(
     const drogon::HttpRequestPtr& req,
     const drogon::WebSocketConnectionPtr& conn
 ) {
-    LOG_INFO("New WebSocket connection from: {}", req->getPeerAddr().toIp());
+    CONSOLE_LOG_INFO("New WebSocket connection from: {}", req->getPeerAddr().toIp());
     
     // Authenticate connection
     UserInfo user_info;
     if (!authenticate_connection(req, user_info)) {
-        LOG_WARN("Unauthenticated WebSocket connection attempt");
+        CONSOLE_LOG_WARN("Unauthenticated WebSocket connection attempt");
         conn->shutdown();
         return;
     }
@@ -48,7 +48,7 @@ void EventsController::handleNewConnection(
     
     send_event(conn, welcome);
     
-    LOG_INFO("WebSocket connection established for user: {}", 
+    CONSOLE_LOG_INFO("WebSocket connection established for user: {}", 
              user_info.access_key);
 }
 
@@ -58,7 +58,7 @@ void EventsController::handleNewMessage(
     const drogon::WebSocketMessageType& type
 ) {
     if (type == drogon::WebSocketMessageType::Text) {
-        LOG_DEBUG("Received WebSocket message: {}", message);
+        CONSOLE_LOG_DEBUG("Received WebSocket message: {}", message);
         
         // Parse JSON message
         Json::Value json_message;
@@ -67,7 +67,7 @@ void EventsController::handleNewMessage(
         String errors;
         
         if (!Json::parseFromStream(builder, stream, &json_message, &errors)) {
-            LOG_WARN("Invalid JSON in WebSocket message: {}", errors);
+            CONSOLE_LOG_WARN("Invalid JSON in WebSocket message: {}", errors);
             
             Json::Value error;
             error["type"] = "error";
@@ -83,7 +83,7 @@ void EventsController::handleNewMessage(
 void EventsController::handleConnectionClosed(
     const drogon::WebSocketConnectionPtr& conn
 ) {
-    LOG_INFO("WebSocket connection closed");
+    CONSOLE_LOG_INFO("WebSocket connection closed");
     
     // Remove connection
     {
@@ -114,7 +114,7 @@ void EventsController::broadcast_event(const Json::Value& event) {
         }
     }
     
-    LOG_DEBUG("Broadcasted event type '{}' to {} connections", 
+    CONSOLE_LOG_DEBUG("Broadcasted event type '{}' to {} connections", 
               event_type, connections_.size());
 }
 
@@ -172,7 +172,7 @@ void EventsController::handle_client_message(
         send_event(conn, response);
         
     } else {
-        LOG_WARN("Unknown message type: {}", message_type);
+        CONSOLE_LOG_WARN("Unknown message type: {}", message_type);
         
         Json::Value error;
         error["type"] = "error";

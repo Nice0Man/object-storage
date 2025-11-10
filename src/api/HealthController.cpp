@@ -12,7 +12,7 @@ namespace console::api {
 void
 HealthController::health(const drogon::HttpRequestPtr& req,
                          std::function<void(const drogon::HttpResponsePtr&)>&& callback) const {
-    LOG_DEBUG("Health check requested from {}", req->getPeerAddr().toIp());
+    CONSOLE_LOG_DEBUG("Health check requested from {}", req->getPeerAddr().toIp());
 
     Json::Value response;
     response["status"] = "healthy";

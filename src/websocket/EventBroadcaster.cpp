@@ -1,6 +1,6 @@
 #include "console/websocket/EventBroadcaster.hpp"
 #include "console/websocket/EventsController.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 #include <chrono>
 
 namespace console::websocket {
@@ -18,7 +18,7 @@ void EventBroadcaster::broadcast_bucket_created(
     event["user"] = user;
     
     broadcast(event);
-    LOG_INFO("Broadcast: Bucket '{}' created by {}", bucket_name, user);
+    CONSOLE_LOG_INFO("Broadcast: Bucket '{}' created by {}", bucket_name, user);
 }
 
 void EventBroadcaster::broadcast_bucket_deleted(
@@ -30,7 +30,7 @@ void EventBroadcaster::broadcast_bucket_deleted(
     event["user"] = user;
     
     broadcast(event);
-    LOG_INFO("Broadcast: Bucket '{}' deleted by {}", bucket_name, user);
+    CONSOLE_LOG_INFO("Broadcast: Bucket '{}' deleted by {}", bucket_name, user);
 }
 
 void EventBroadcaster::broadcast_object_uploaded(
@@ -46,7 +46,7 @@ void EventBroadcaster::broadcast_object_uploaded(
     event["user"] = user;
     
     broadcast(event);
-    LOG_INFO("Broadcast: Object '{}' uploaded to '{}' by {}", 
+    CONSOLE_LOG_INFO("Broadcast: Object '{}' uploaded to '{}' by {}", 
              object_key, bucket_name, user);
 }
 
@@ -61,7 +61,7 @@ void EventBroadcaster::broadcast_object_deleted(
     event["user"] = user;
     
     broadcast(event);
-    LOG_INFO("Broadcast: Object '{}' deleted from '{}' by {}", 
+    CONSOLE_LOG_INFO("Broadcast: Object '{}' deleted from '{}' by {}", 
              object_key, bucket_name, user);
 }
 
@@ -93,7 +93,7 @@ void EventBroadcaster::broadcast_server_notification(
     event["message"] = message;
     
     broadcast(event);
-    LOG_INFO("Broadcast: Server notification [{}]: {}", level, message);
+    CONSOLE_LOG_INFO("Broadcast: Server notification [{}]: {}", level, message);
 }
 
 Json::Value EventBroadcaster::create_base_event(

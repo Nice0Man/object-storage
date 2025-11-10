@@ -1,36 +1,35 @@
 
 
 #include "console/services/BucketService.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 #include <regex>
 #include <json/json.h>
 
 namespace console::services {
 
 using namespace console::models;
-using namespace console::utils;
 
 BucketService::BucketService(
     std::shared_ptr<clients::IMinioClient> minio_client
 ) : minio_client_(minio_client) {
-    LOG_INFO("BucketService initialized");
+    CONSOLE_LOG_INFO("BucketService initialized");
 }
 
 Result<Vector<Bucket>, ApiError> BucketService::list_buckets(
     const UserInfo& user_info
 ) {
-    LOG_DEBUG("Listing buckets for user: {}", user_info.access_key);
+    CONSOLE_LOG_DEBUG("Listing buckets for user: {}", user_info.access_key);
 
     auto result = minio_client_->list_buckets();
     if (!result) {
-        LOG_ERROR("Failed to list buckets: {}", result.error());
+        CONSOLE_LOG_ERROR("Failed to list buckets: {}", result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
             "Failed to list buckets: " + result.error()
         ));
     }
 
-    LOG_INFO("Successfully listed {} buckets", result.value().size());
+    CONSOLE_LOG_INFO("Successfully listed {} buckets", result.value().size());
     return Ok(result.value());
 }
 
@@ -40,24 +39,24 @@ Result<Bucket, ApiError> BucketService::create_bucket(
     const String& region,
     bool object_locking
 ) {
-    LOG_INFO("Creating bucket: {} in region: {}", name, region);
+    CONSOLE_LOG_INFO("Creating bucket: {} in region: {}", name, region);
 
     // Validate bucket name
     if (auto error = validate_bucket_name(name)) {
-        LOG_WARN("Invalid bucket name: {}", name);
+        CONSOLE_LOG_WARN("Invalid bucket name: {}", name);
         return Err(*error);
     }
 
     auto result = minio_client_->create_bucket(name, region, object_locking);
     if (!result) {
-        LOG_ERROR("Failed to create bucket {}: {}", name, result.error());
+        CONSOLE_LOG_ERROR("Failed to create bucket {}: {}", name, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
             "Failed to create bucket: " + result.error()
         ));
     }
 
-    LOG_INFO("Successfully created bucket: {}", name);
+    CONSOLE_LOG_INFO("Successfully created bucket: {}", name);
     return Ok(result.value());
 }
 
@@ -65,18 +64,18 @@ Result<void, ApiError> BucketService::delete_bucket(
     const UserInfo& user_info,
     const String& name
 ) {
-    LOG_INFO("Deleting bucket: {}", name);
+    CONSOLE_LOG_INFO("Deleting bucket: {}", name);
 
     auto result = minio_client_->delete_bucket(name);
     if (!result) {
-        LOG_ERROR("Failed to delete bucket {}: {}", name, result.error());
+        CONSOLE_LOG_ERROR("Failed to delete bucket {}: {}", name, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
             "Failed to delete bucket: " + result.error()
         ));
     }
 
-    LOG_INFO("Successfully deleted bucket: {}", name);
+    CONSOLE_LOG_INFO("Successfully deleted bucket: {}", name);
     return Ok();
 }
 
@@ -84,11 +83,11 @@ Result<Bucket, ApiError> BucketService::get_bucket_info(
     const UserInfo& user_info,
     const String& name
 ) {
-    LOG_DEBUG("Getting bucket info: {}", name);
+    CONSOLE_LOG_DEBUG("Getting bucket info: {}", name);
 
     auto result = minio_client_->get_bucket_info(name);
     if (!result) {
-        LOG_ERROR("Failed to get bucket info for {}: {}", name, result.error());
+        CONSOLE_LOG_ERROR("Failed to get bucket info for {}: {}", name, result.error());
         return Err(ApiError(
             HttpStatus::NotFound,
             "Bucket not found: " + result.error()
@@ -103,17 +102,17 @@ Result<void, ApiError> BucketService::set_bucket_policy(
     const String& name,
     const String& policy_json
 ) {
-    LOG_INFO("Setting bucket policy for: {}", name);
+    CONSOLE_LOG_INFO("Setting bucket policy for: {}", name);
 
     // Validate policy JSON
     if (auto error = validate_policy_json(policy_json)) {
-        LOG_WARN("Invalid policy JSON for bucket: {}", name);
+        CONSOLE_LOG_WARN("Invalid policy JSON for bucket: {}", name);
         return Err(*error);
     }
 
     auto result = minio_client_->set_bucket_policy(name, policy_json);
     if (!result) {
-        LOG_ERROR("Failed to set bucket policy for {}: {}", 
+        CONSOLE_LOG_ERROR("Failed to set bucket policy for {}: {}", 
                   name, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
@@ -121,7 +120,7 @@ Result<void, ApiError> BucketService::set_bucket_policy(
         ));
     }
 
-    LOG_INFO("Successfully set bucket policy for: {}", name);
+    CONSOLE_LOG_INFO("Successfully set bucket policy for: {}", name);
     return Ok();
 }
 
@@ -129,11 +128,11 @@ Result<String, ApiError> BucketService::get_bucket_policy(
     const UserInfo& user_info,
     const String& name
 ) {
-    LOG_DEBUG("Getting bucket policy for: {}", name);
+    CONSOLE_LOG_DEBUG("Getting bucket policy for: {}", name);
 
     auto result = minio_client_->get_bucket_policy(name);
     if (!result) {
-        LOG_ERROR("Failed to get bucket policy for {}: {}", 
+        CONSOLE_LOG_ERROR("Failed to get bucket policy for {}: {}", 
                   name, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
@@ -149,11 +148,11 @@ Result<void, ApiError> BucketService::set_bucket_versioning(
     const String& name,
     bool enabled
 ) {
-    LOG_INFO("Setting bucket versioning for {}: {}", name, enabled);
+    CONSOLE_LOG_INFO("Setting bucket versioning for {}: {}", name, enabled);
 
     auto result = minio_client_->set_bucket_versioning(name, enabled);
     if (!result) {
-        LOG_ERROR("Failed to set bucket versioning for {}: {}", 
+        CONSOLE_LOG_ERROR("Failed to set bucket versioning for {}: {}", 
                   name, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
@@ -161,7 +160,7 @@ Result<void, ApiError> BucketService::set_bucket_versioning(
         ));
     }
 
-    LOG_INFO("Successfully set bucket versioning for: {}", name);
+    CONSOLE_LOG_INFO("Successfully set bucket versioning for: {}", name);
     return Ok();
 }
 
@@ -169,11 +168,11 @@ Result<bool, ApiError> BucketService::get_bucket_versioning(
     const UserInfo& user_info,
     const String& name
 ) {
-    LOG_DEBUG("Getting bucket versioning for: {}", name);
+    CONSOLE_LOG_DEBUG("Getting bucket versioning for: {}", name);
 
     auto result = minio_client_->get_bucket_versioning(name);
     if (!result) {
-        LOG_ERROR("Failed to get bucket versioning for {}: {}", 
+        CONSOLE_LOG_ERROR("Failed to get bucket versioning for {}: {}", 
                   name, result.error());
         return Err(ApiError(
             HttpStatus::InternalServerError,
@@ -189,7 +188,7 @@ Result<void, ApiError> BucketService::set_bucket_tags(
     const String& name,
     const StringMap& tags
 ) {
-    LOG_INFO("Setting {} tags for bucket: {}", tags.size(), name);
+    CONSOLE_LOG_INFO("Setting {} tags for bucket: {}", tags.size(), name);
 
     // TODO(Nice0Man): Implement bucket tagging
     return Err(ApiError(
@@ -202,7 +201,7 @@ Result<StringMap, ApiError> BucketService::get_bucket_tags(
     const UserInfo& user_info,
     const String& name
 ) {
-    LOG_DEBUG("Getting tags for bucket: {}", name);
+    CONSOLE_LOG_DEBUG("Getting tags for bucket: {}", name);
 
     // TODO(Nice0Man): Implement bucket tagging
     return Err(ApiError(
@@ -215,7 +214,7 @@ Result<void, ApiError> BucketService::delete_bucket_tags(
     const UserInfo& user_info,
     const String& name
 ) {
-    LOG_INFO("Deleting tags for bucket: {}", name);
+    CONSOLE_LOG_INFO("Deleting tags for bucket: {}", name);
 
     // TODO(Nice0Man): Implement bucket tagging
     return Err(ApiError(

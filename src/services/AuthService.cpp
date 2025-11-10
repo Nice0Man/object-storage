@@ -1,45 +1,44 @@
 
 
 #include "console/services/AuthService.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 #include <chrono>
 #include <regex>
 
 namespace console::services {
 
 using namespace console::models;
-using namespace console::utils;
 
 AuthService::AuthService(
     std::shared_ptr<clients::IMinioAdminClient> admin_client,
     std::shared_ptr<Config> config
 ) : admin_client_(admin_client), config_(config) {
-    LOG_INFO("AuthService initialized");
+    CONSOLE_LOG_INFO("AuthService initialized");
 }
 
 Result<Json::Value, ApiError> AuthService::login(
     const String& username,
     const String& password
 ) {
-    LOG_INFO("Login attempt for user: {}", username);
+    CONSOLE_LOG_INFO("Login attempt for user: {}", username);
 
     // Validate credentials format
     if (auto error = validate_credentials(username, password)) {
-        LOG_WARN("Invalid credentials format for user: {}", username);
+        CONSOLE_LOG_WARN("Invalid credentials format for user: {}", username);
         return Err(*error);
     }
 
     // Authenticate with MinIO and get STS credentials
     auto auth_result = authenticate_with_minio(username, password);
     if (!auth_result) {
-        LOG_ERROR("Authentication failed for user: {}", username);
+        CONSOLE_LOG_ERROR("Authentication failed for user: {}", username);
         return Err(auth_result.error());
     }
 
     // Generate JWT tokens
     auto tokens = generate_tokens(auth_result.value());
     
-    LOG_INFO("Login successful for user: {}", username);
+    CONSOLE_LOG_INFO("Login successful for user: {}", username);
     return Ok(tokens);
 }
 
@@ -56,7 +55,7 @@ Result<void, ApiError> AuthService::logout(const String& token) {
         token_blacklist_.insert(token);
     }
 
-    LOG_INFO("User logged out successfully");
+    CONSOLE_LOG_INFO("User logged out successfully");
     return Ok();
 }
 
@@ -88,7 +87,7 @@ Result<Json::Value, ApiError> AuthService::refresh_token(
     // Generate new tokens
     auto tokens = generate_tokens(*user_info_opt);
     
-    LOG_INFO("Token refreshed successfully for user: {}", 
+    CONSOLE_LOG_INFO("Token refreshed successfully for user: {}", 
              user_info_opt->access_key);
     return Ok(tokens);
 }

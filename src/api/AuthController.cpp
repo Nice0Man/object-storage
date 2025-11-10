@@ -37,7 +37,7 @@ AuthController::login(const drogon::HttpRequestPtr& req,
             return;
         }
 
-        LOG_INFO("Login attempt for user: {}", username);
+        CONSOLE_LOG_INFO("Login attempt for user: {}", username);
 
         // Validate credentials
         auto user = validate_credentials(username, password);
@@ -59,14 +59,14 @@ AuthController::login(const drogon::HttpRequestPtr& req,
         response["user"]["access_key"] = user->access_key;
         response["user"]["is_admin"] = user->is_admin;
 
-        LOG_INFO("User {} logged in successfully", username);
+        CONSOLE_LOG_INFO("User {} logged in successfully", username);
 
         auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
         resp->setStatusCode(drogon::k200OK);
         callback(resp);
 
     } catch (const std::exception& e) {
-        LOG_ERROR("Login error: {}", e.what());
+        CONSOLE_LOG_ERROR("Login error: {}", e.what());
         Json::Value error;
         error["error"] = "Internal server error";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(error);

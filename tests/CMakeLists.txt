@@ -75,12 +75,17 @@ gtest_discover_tests(integration_tests)
 # Test Configuration
 # ============================================================================
 
+# Register tests with CTest
+add_test(NAME unit_tests COMMAND unit_tests)
+add_test(NAME integration_tests COMMAND integration_tests)
+
 # Set test working directory
 set_tests_properties(
     unit_tests
     integration_tests
     PROPERTIES
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    TIMEOUT 120
 )
 
 # ============================================================================

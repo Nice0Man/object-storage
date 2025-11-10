@@ -1,5 +1,5 @@
 #include "console/api/ObjectsController.hpp"
-#include "console/utils/Logger.hpp"
+#include "console/common/Logger.hpp"
 #include <json/json.h>
 
 namespace console::api {
@@ -409,7 +409,7 @@ UserInfo ObjectsController::get_user_from_request(
     } catch (...) {
         // If no user in attributes, return empty UserInfo
         // This should not happen if AuthMiddleware is properly configured
-        LOG_ERROR("No user_info found in request attributes");
+        CONSOLE_LOG_ERROR("No user_info found in request attributes");
         return UserInfo{};
     }
 }

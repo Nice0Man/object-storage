@@ -21,7 +21,7 @@ std::atomic<bool> shutdown_requested{false};
 void
 signal_handler(int signal) {
     if (signal == SIGINT || signal == SIGTERM) {
-        LOG_INFO("Received shutdown signal ({})", signal);
+        CONSOLE_LOG_INFO("Received shutdown signal ({})", signal);
         shutdown_requested = true;
         app().quit();
     }
@@ -63,15 +63,15 @@ configure_drogon(const ServerConfig& config) {
     auto web_root = std::filesystem::current_path() / "web-app" / "build";
     if (std::filesystem::exists(web_root)) {
         app().setDocumentRoot(web_root.string());
-        LOG_INFO("Serving static files from: {}", web_root.string());
+        CONSOLE_LOG_INFO("Serving static files from: {}", web_root.string());
     } else {
-        LOG_WARN("Web app build directory not found: {}", web_root.string());
+        CONSOLE_LOG_WARN("Web app build directory not found: {}", web_root.string());
     }
 
     // Configure SSL if enabled
     if (config.enable_ssl && !config.ssl_cert.empty() && !config.ssl_key.empty()) {
         app().setSSLFiles(config.ssl_cert, config.ssl_key);
-        LOG_INFO("SSL enabled with cert: {}", config.ssl_cert);
+        CONSOLE_LOG_INFO("SSL enabled with cert: {}", config.ssl_cert);
     }
 
     // Enable compression
@@ -121,7 +121,7 @@ configure_drogon(const ServerConfig& config) {
 
 void
 register_routes() {
-    LOG_INFO("Registering API routes...");
+    CONSOLE_LOG_INFO("Registering API routes...");
 
     // Health check endpoint
     app().registerHandler("/api/v1/health",
@@ -176,7 +176,7 @@ register_routes() {
             callback(resp);
         });
 
-    LOG_INFO("Routes registered successfully");
+    CONSOLE_LOG_INFO("Routes registered successfully");
 }
 
 } // anonymous namespace
@@ -195,7 +195,7 @@ main(int argc, char* argv[]) {
                                 10 * 1024 * 1024, // 10MB
                                 5);
 
-        LOG_INFO("Starting OpenMaxIO Object Browser...");
+        CONSOLE_LOG_INFO("Starting OpenMaxIO Object Browser...");
 
         // Load configuration
         auto& config = Config::instance();
@@ -206,24 +206,24 @@ main(int argc, char* argv[]) {
         }
 
         if (std::filesystem::exists(config_path)) {
-            LOG_INFO("Loading configuration from: {}", config_path.string());
+            CONSOLE_LOG_INFO("Loading configuration from: {}", config_path.string());
             if (!config.load_from_file(config_path)) {
-                LOG_ERROR("Failed to load configuration");
+                CONSOLE_LOG_ERROR("Failed to load configuration");
                 for (const auto& error : config.validation_errors()) {
-                    LOG_ERROR("  - {}", error);
+                    CONSOLE_LOG_ERROR("  - {}", error);
                 }
                 return 1;
             }
         } else {
-            LOG_WARN("Configuration file not found, using defaults");
-            LOG_WARN("Create {} to customize settings", config_path.string());
+            CONSOLE_LOG_WARN("Configuration file not found, using defaults");
+            CONSOLE_LOG_WARN("Create {} to customize settings", config_path.string());
         }
 
         // Validate configuration
         if (!config.is_valid()) {
-            LOG_ERROR("Invalid configuration:");
+            CONSOLE_LOG_ERROR("Invalid configuration:");
             for (const auto& error : config.validation_errors()) {
-                LOG_ERROR("  - {}", error);
+                CONSOLE_LOG_ERROR("  - {}", error);
             }
             return 1;
         }
@@ -236,39 +236,39 @@ main(int argc, char* argv[]) {
         register_routes();
 
         // Print server info
-        LOG_INFO("════════════════════════════════════════════════════════");
-        LOG_INFO("Server Configuration:");
-        LOG_INFO("  Host:        {}", server_config.host);
-        LOG_INFO("  Port:        {}", server_config.port);
-        LOG_INFO("  Threads:     {}", server_config.threads);
-        LOG_INFO("  SSL:         {}", server_config.enable_ssl ? "enabled" : "disabled");
-        LOG_INFO("  Log Level:   {}", server_config.log_level);
-        LOG_INFO("════════════════════════════════════════════════════════");
+        CONSOLE_LOG_INFO("════════════════════════════════════════════════════════");
+        CONSOLE_LOG_INFO("Server Configuration:");
+        CONSOLE_LOG_INFO("  Host:        {}", server_config.host);
+        CONSOLE_LOG_INFO("  Port:        {}", server_config.port);
+        CONSOLE_LOG_INFO("  Threads:     {}", server_config.threads);
+        CONSOLE_LOG_INFO("  SSL:         {}", server_config.enable_ssl ? "enabled" : "disabled");
+        CONSOLE_LOG_INFO("  Log Level:   {}", server_config.log_level);
+        CONSOLE_LOG_INFO("════════════════════════════════════════════════════════");
 
         std::cout << "\n";
-        LOG_INFO("Server starting...");
-        LOG_INFO("Access the console at: http{}://{}:{}",
+        CONSOLE_LOG_INFO("Server starting...");
+        CONSOLE_LOG_INFO("Access the console at: http{}://{}:{}",
                  server_config.enable_ssl ? "s" : "",
                  server_config.host == "0.0.0.0" ? "localhost" : server_config.host,
                  server_config.port);
-        LOG_INFO("Press Ctrl+C to stop\n");
+        CONSOLE_LOG_INFO("Press Ctrl+C to stop\n");
 
         // Run the application
         app().run();
 
-        LOG_INFO("Server stopped");
+        CONSOLE_LOG_INFO("Server stopped");
         Logger::instance().flush();
 
         return 0;
 
     } catch (const std::exception& e) {
         std::cerr << "Fatal error: " << e.what() << std::endl;
-        LOG_CRITICAL("Fatal error: {}", e.what());
+        CONSOLE_LOG_CRITICAL("Fatal error: {}", e.what());
         Logger::instance().flush();
         return 1;
     } catch (...) {
         std::cerr << "Unknown fatal error occurred" << std::endl;
-        LOG_CRITICAL("Unknown fatal error occurred");
+        CONSOLE_LOG_CRITICAL("Unknown fatal error occurred");
         Logger::instance().flush();
         return 1;
     }
