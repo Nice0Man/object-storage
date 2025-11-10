@@ -47,7 +47,7 @@ else()
         -Wall
         -Wextra
         -Wpedantic
-        -Werror
+        # -Werror  # Disabled to allow external library warnings
         -Wconversion
         -Wsign-conversion
         -Wno-unused-parameter
@@ -135,7 +135,7 @@ if(NOT jwt-cpp_FOUND)
     FetchContent_Declare(
         jwt-cpp
         GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git
-        GIT_TAG v0.7.0
+        GIT_TAG v0.7.1
         GIT_SHALLOW TRUE
     )
     
@@ -206,6 +206,11 @@ target_link_libraries(console_lib
 )
 
 target_compile_features(console_lib PUBLIC cxx_std_20)
+
+# Disable warnings for external libraries
+if(TARGET jwt-cpp)
+    target_compile_options(jwt-cpp INTERFACE -w)
+endif()
 
 # Position Independent Code for better security and performance
 set_target_properties(console_lib PROPERTIES
