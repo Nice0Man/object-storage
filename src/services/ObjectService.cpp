@@ -146,7 +146,7 @@ Result<Object, ApiError> ObjectService::upload_object(
         ));
     }
 
-    return Ok<Object>(info_result.value());
+    return Result<Object, ApiError>(ok_tag, info_result.value());
 }
 
 Result<void, ApiError> ObjectService::delete_object(
@@ -219,7 +219,7 @@ Result<Object, ApiError> ObjectService::copy_object(
         ));
     }
 
-    return Ok<Object>(info_result.value());
+    return Result<Object, ApiError>(ok_tag, info_result.value());
 }
 
 Result<StringMap, ApiError> ObjectService::get_object_tags(
