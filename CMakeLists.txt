@@ -31,6 +31,9 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option(ENABLE_TSAN "Enable Thread Sanitizer" OFF)
 option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
+option(ENABLE_LTO "Enable Link Time Optimization" ON)
+option(ENABLE_UNITY_BUILD "Enable Unity/Jumbo builds" ON)
+option(ENABLE_STRIP "Strip symbols in Release" ON)
 
 # ============================================================================
 # Compiler Flags
@@ -54,9 +57,30 @@ endif()
 # Optimization flags
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     if(MSVC)
-        add_compile_options(/O2)
+        add_compile_options(/O2 /GL)
+        add_link_options(/LTCG)
     else()
-        add_compile_options(-O3 -march=native)
+        add_compile_options(
+            -O3
+            -march=native
+            -mtune=native
+            -ffast-math
+            -funroll-loops
+            -fomit-frame-pointer
+        )
+    endif()
+    
+    # Link Time Optimization
+    if(ENABLE_LTO)
+        include(CheckIPOSupported)
+        check_ipo_supported(RESULT lto_supported OUTPUT lto_error)
+        
+        if(lto_supported)
+            message(STATUS "LTO/IPO enabled")
+            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        else()
+            message(WARNING "LTO/IPO not supported: ${lto_error}")
+        endif()
     endif()
 endif()
 
@@ -135,6 +159,14 @@ list(FILTER CONSOLE_SOURCES EXCLUDE REGEX ".*main\\.cpp$")
 
 add_library(console_lib STATIC ${CONSOLE_SOURCES})
 
+# Unity/Jumbo builds for faster compilation
+if(ENABLE_UNITY_BUILD)
+    set_target_properties(console_lib PROPERTIES
+        UNITY_BUILD ON
+        UNITY_BUILD_BATCH_SIZE 16
+    )
+endif()
+
 target_include_directories(console_lib
     PUBLIC
         ${CONSOLE_INCLUDE_DIR}
@@ -155,6 +187,11 @@ target_link_libraries(console_lib
 
 target_compile_features(console_lib PUBLIC cxx_std_20)
 
+# Position Independent Code for better security and performance
+set_target_properties(console_lib PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+
 # ============================================================================
 # Executable Target
 # ============================================================================
@@ -166,10 +203,28 @@ target_link_libraries(console
         console_lib
 )
 
-# Set output directory
+# Set output directory and properties
 set_target_properties(console PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+# Strip symbols in Release builds for smaller binary
+if(CMAKE_BUILD_TYPE STREQUAL "Release" AND ENABLE_STRIP AND NOT MSVC)
+    add_custom_command(TARGET console POST_BUILD
+        COMMAND ${CMAKE_STRIP} --strip-unneeded $<TARGET_FILE:console>
+        COMMENT "Stripping symbols from release binary"
+    )
+endif()
+
+# Link everything statically for single binary deployment (optional)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(NOT MSVC AND NOT APPLE)
+        target_link_options(console PRIVATE
+            -static-libgcc
+            -static-libstdc++
+        )
+    endif()
+endif()
 
 # ============================================================================
 # Tests
@@ -205,6 +260,9 @@ message(STATUS "  Build type:        ${CMAKE_BUILD_TYPE}")
 message(STATUS "  C++ Standard:      ${CMAKE_CXX_STANDARD}")
 message(STATUS "  Compiler:          ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "  Build tests:       ${BUILD_TESTS}")
+message(STATUS "  LTO/IPO:           ${ENABLE_LTO}")
+message(STATUS "  Unity builds:      ${ENABLE_UNITY_BUILD}")
+message(STATUS "  Strip symbols:     ${ENABLE_STRIP}")
 message(STATUS "  Code coverage:     ${ENABLE_COVERAGE}")
 message(STATUS "  Address Sanitizer: ${ENABLE_ASAN}")
 message(STATUS "  Thread Sanitizer:  ${ENABLE_TSAN}")
