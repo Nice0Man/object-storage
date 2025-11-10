@@ -61,12 +61,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Lint Markdown files
-      uses: actionshub/markdownlint@main
+    - name: Use Node.js
+      uses: actions/setup-node@v4
       with:
-        path: docs
-        ignore: node_modules
-        config: .markdownlint.json
+        node-version: '20'
+
+    - name: Install markdownlint-cli
+      run: npm install -g markdownlint-cli
+
+    - name: Lint Markdown files
+      run: markdownlint -c .markdownlint.json docs/
 
   build-linux:
     name: Build on Linux
@@ -97,9 +101,11 @@ jobs:
           zlib1g-dev
 
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        doNotCache: true
+      run: |
+        if [ ! -d "vcpkg" ]; then
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          ./vcpkg/bootstrap-vcpkg.sh
+        fi
 
     - name: Configure CMake
       env:
@@ -143,9 +149,11 @@ jobs:
         brew install cmake ninja openssl
 
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        doNotCache: true
+      run: |
+        if [ ! -d "vcpkg" ]; then
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          ./vcpkg/bootstrap-vcpkg.sh
+        fi
 
     - name: Configure CMake
       run: |
@@ -177,9 +185,12 @@ jobs:
         submodules: recursive
 
     - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        doNotCache: true
+      run: |
+        if (!(Test-Path "vcpkg")) {
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          .\vcpkg\bootstrap-vcpkg.bat
+        }
+      shell: pwsh
 
     - name: Configure CMake
       run: |
