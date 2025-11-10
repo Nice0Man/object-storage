@@ -132,6 +132,7 @@ genhtml coverage.info --output-directory coverage
 ## 📚 Documentation
 
 ### Main Documentation
+
 - [Architecture Overview](docs/01-architecture.md)
 - [Backend Deep Dive](docs/02-backend-deep-dive.md)
 - [Frontend Architecture](docs/03-frontend-architecture.md)
@@ -140,6 +141,7 @@ genhtml coverage.info --output-directory coverage
 - [Testing Guide](docs/08-testing.md)
 
 ### Planning & Development
+
 - [Implementation Plan](stages/01-implementation-plan.md) - Roadmap and current progress (~40%)
 - [Pre-commit Fixes Guide](stages/02-fixes-guide.md) - Detailed guide for fixing linter issues
 - [Quick Fix Guide](stages/03-quick-fix.md) - Fast pre-commit problem resolution
