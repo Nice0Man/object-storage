@@ -1,0 +1,15 @@
+# Cppcheck suppressions
+# Format: [error id]:[filename]:[line]
+
+# Suppress missing includes from system headers
+missingIncludeSystem
+
+# Suppress warnings in third-party code
+*:*/third_party/*
+*:*/build/*
+*:*/vcpkg_installed/*
+
+# Common false positives
+unmatchedSuppression
+unusedFunction:*/tests/*
+
