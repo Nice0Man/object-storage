@@ -169,50 +169,33 @@ include_directories(
 )
 
 # ============================================================================
-# Source Files
+# Modular Library Structure
 # ============================================================================
 
-# Core sources
-file(GLOB_RECURSE CONSOLE_SOURCES
-    ${CONSOLE_SOURCE_DIR}/*.cpp
-)
-
-# Remove main.cpp from library sources (it will be in executable)
-list(FILTER CONSOLE_SOURCES EXCLUDE REGEX ".*main\\.cpp$")
-
-# ============================================================================
-# Library Target
-# ============================================================================
-
-add_library(console_lib STATIC ${CONSOLE_SOURCES})
+# Add source subdirectories with modular libraries
+add_subdirectory(src)
 
 # Unity/Jumbo builds for faster compilation
 if(ENABLE_UNITY_BUILD)
-    set_target_properties(console_lib PROPERTIES
-        UNITY_BUILD ON
-        UNITY_BUILD_BATCH_SIZE 16
+    # Apply to all console libraries
+    set_target_properties(
+        console_common
+        console_utils
+        console_models
+        console_storage
+        console_clients
+        console_services
+        console_api
+        console_middleware
+        console_filters
+        console_websocket
+        PROPERTIES
+            UNITY_BUILD ON
+            UNITY_BUILD_BATCH_SIZE 16
     )
 endif()
 
-target_include_directories(console_lib
-    PUBLIC
-        ${CONSOLE_INCLUDE_DIR}
-    PRIVATE
-        ${CONSOLE_SOURCE_DIR}
-)
-
-target_link_libraries(console_lib
-    PUBLIC
-        Drogon::Drogon
-        nlohmann_json::nlohmann_json
-        jwt-cpp::jwt-cpp
-        spdlog::spdlog
-        OpenSSL::SSL
-        OpenSSL::Crypto
-        Boost::system
-)
-
-target_compile_features(console_lib PUBLIC cxx_std_20)
+target_compile_features(console_lib INTERFACE cxx_std_20)
 
 # Disable warnings for external libraries
 if(TARGET jwt-cpp)
@@ -220,9 +203,13 @@ if(TARGET jwt-cpp)
 endif()
 
 # Position Independent Code for better security and performance
-set_target_properties(console_lib PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-)
+foreach(lib console_common console_utils console_models console_storage
+         console_clients console_services console_api console_middleware
+         console_filters console_websocket)
+    set_target_properties(${lib} PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+    )
+endforeach()
 
 # ============================================================================
 # Executable Target
