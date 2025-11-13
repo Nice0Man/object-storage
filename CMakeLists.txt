@@ -16,6 +16,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Export compile commands for clang-tidy
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Fix clock skew issues (common in WSL)
+set(CMAKE_USE_RELATIVE_PATHS TRUE)
+if(UNIX AND NOT APPLE)
+    # Touch dependency files to fix timestamp issues
+    execute_process(COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${CMAKE_BINARY_DIR}/CMakeFiles)
+endif()
+
 # Build type
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
