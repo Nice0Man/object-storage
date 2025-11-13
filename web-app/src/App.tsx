@@ -4,7 +4,7 @@ import store from "./store";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import "./i18n/config";
 import LoginPage from "./pages/LoginPage";
-import DashboardPage from "./pages/DashboardPage";
+import DashboardPage from "./pages/DashboardPage_new";
 import BucketsPage from "./pages/BucketsPage";
 import ObjectsPage from "./pages/ObjectsPage";
 import UsersPage from "./pages/UsersPage";

@@ -371,6 +371,31 @@ class ApiClient {
     const response = await this.client.get<ActivityStats>("/api/v1/stats/activity");
     return response.data;
   }
+
+  async getServerStats(): Promise<any> {
+    const response = await this.client.get("/api/v1/stats/servers");
+    return response.data;
+  }
+
+  async getDriveStats(): Promise<any> {
+    const response = await this.client.get("/api/v1/stats/drives");
+    return response.data;
+  }
+
+  async getPoolStats(): Promise<any> {
+    const response = await this.client.get("/api/v1/stats/pools");
+    return response.data;
+  }
+
+  async getApiErrorStats(): Promise<any> {
+    const response = await this.client.get("/api/v1/stats/api-errors");
+    return response.data;
+  }
+
+  async getDataThroughputStats(): Promise<any> {
+    const response = await this.client.get("/api/v1/stats/data-throughput");
+    return response.data;
+  }
 }
 
 // Export singleton instance

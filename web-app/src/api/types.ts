@@ -58,6 +58,84 @@ export interface ActivityStats {
   total_activity: number;
 }
 
+// Server and Drive Stats
+export interface ServerStatus {
+  id: string;
+  name: string;
+  status: "online" | "offline";
+  endpoint: string;
+  uptime?: number;
+}
+
+export interface DriveStatus {
+  id: string;
+  path: string;
+  status: "online" | "offline";
+  capacity: number;
+  used: number;
+  available: number;
+}
+
+export interface ServerStats {
+  servers: ServerStatus[];
+  online_count: number;
+  offline_count: number;
+  total_count: number;
+}
+
+export interface DriveStats {
+  drives: DriveStatus[];
+  online_count: number;
+  offline_count: number;
+  total_count: number;
+}
+
+// Pool Stats
+export interface PoolInfo {
+  id: string;
+  name: string;
+  capacity: number;
+  available: number;
+  used: number;
+  drives_count: number;
+  online_drives: number;
+  offline_drives: number;
+}
+
+// API Error Stats (24 hours)
+export interface ApiErrorData {
+  timestamp: number;
+  time: string;
+  count: number;
+  error_4xx: number;
+  error_5xx: number;
+}
+
+export interface ApiErrorStats {
+  data: ApiErrorData[];
+  total_errors: number;
+  error_rate: number;
+}
+
+// Data Throughput Stats (24 hours)
+export interface DataThroughputData {
+  timestamp: number;
+  time: string;
+  read_bytes: number;
+  write_bytes: number;
+  total_bytes: number;
+  read_mbps?: number;
+  write_mbps?: number;
+}
+
+export interface DataThroughputStats {
+  data: DataThroughputData[];
+  total_read: number;
+  total_write: number;
+  average_throughput: number;
+  peak_throughput: number;
+}
+
 // Authentication
 export interface LoginRequest {
   accessKey: string;

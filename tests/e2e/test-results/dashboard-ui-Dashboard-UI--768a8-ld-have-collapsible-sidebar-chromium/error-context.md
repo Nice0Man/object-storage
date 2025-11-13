@@ -1,0 +1,153 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - generic [ref=e8]: Object Storage Console
+        - button [ref=e9] [cursor=pointer]:
+          - img [ref=e10]
+      - separator [ref=e12]
+      - list [ref=e13]:
+        - listitem [ref=e14]:
+          - button "Dashboard" [ref=e15] [cursor=pointer]:
+            - img [ref=e17]
+            - generic [ref=e20]: Dashboard
+        - listitem [ref=e21]:
+          - button "Buckets" [ref=e22] [cursor=pointer]:
+            - img [ref=e24]
+            - generic [ref=e27]: Buckets
+        - listitem [ref=e28]:
+          - button "Objects" [ref=e29] [cursor=pointer]:
+            - img [ref=e31]
+            - generic [ref=e34]: Objects
+        - listitem [ref=e35]:
+          - button "Users" [ref=e36] [cursor=pointer]:
+            - img [ref=e38]
+            - generic [ref=e41]: Users
+        - listitem [ref=e42]:
+          - button "System Health" [ref=e43] [cursor=pointer]:
+            - img [ref=e45]
+            - generic [ref=e49]: System Health
+        - listitem [ref=e50]:
+          - button "Profile" [ref=e51] [cursor=pointer]:
+            - img [ref=e53]
+            - generic [ref=e56]: Profile
+      - separator [ref=e57]
+      - generic [ref=e59]:
+        - generic [ref=e60]:
+          - generic [ref=e61]: A
+          - paragraph [ref=e62]: Administrator
+        - generic [ref=e63]:
+          - button "Dark Mode" [ref=e64] [cursor=pointer]:
+            - img [ref=e65]
+          - button "Select Language" [ref=e67] [cursor=pointer]:
+            - img [ref=e68]
+        - button "Logout" [ref=e70] [cursor=pointer]:
+          - img [ref=e72]
+          - text: Logout
+  - main [ref=e74]:
+    - generic [ref=e76]:
+      - generic [ref=e77]:
+        - heading "Dashboard" [level=4] [ref=e78]
+        - paragraph [ref=e79]: Monitor and manage your S3-compatible object storage
+      - generic [ref=e80]:
+        - generic [ref=e83]:
+          - generic [ref=e84]:
+            - img [ref=e85]
+            - heading "Capacity" [level=6] [ref=e87]
+            - paragraph [ref=e88]: 10 TB
+          - generic [ref=e89]:
+            - progressbar [ref=e90]:
+              - img [ref=e91]
+            - progressbar [ref=e93]:
+              - img [ref=e94]
+            - generic [ref=e96]:
+              - heading "10" [level=3] [ref=e97]
+              - paragraph [ref=e98]: TB
+              - generic [ref=e99]: Available
+          - generic [ref=e100]:
+            - generic [ref=e101]:
+              - generic [ref=e102]:
+                - img [ref=e103]
+                - paragraph [ref=e105]: Object Data
+              - paragraph [ref=e106]: 0 Bytes
+            - generic [ref=e107]:
+              - generic [ref=e108]:
+                - img [ref=e109]
+                - paragraph [ref=e111]: Available
+              - paragraph [ref=e112]: 10 TB
+        - generic [ref=e115] [cursor=pointer]:
+          - img [ref=e118]
+          - heading "2" [level=4] [ref=e120]
+          - paragraph [ref=e121]: Total Buckets
+        - generic [ref=e124] [cursor=pointer]:
+          - img [ref=e127]
+          - heading "0" [level=4] [ref=e129]
+          - paragraph [ref=e130]: Total Objects
+        - generic [ref=e133] [cursor=pointer]:
+          - img [ref=e136]
+          - heading "1" [level=4] [ref=e138]
+          - paragraph [ref=e139]: Total Users
+        - generic [ref=e142]:
+          - img [ref=e145]
+          - heading "0 Bytes" [level=4] [ref=e147]
+          - paragraph [ref=e148]: Storage Used
+        - generic [ref=e151]:
+          - generic [ref=e152]:
+            - heading "Recent Activity" [level=6] [ref=e153]
+            - paragraph [ref=e154]: Latest buckets
+          - generic [ref=e155]:
+            - generic [ref=e157] [cursor=pointer]:
+              - generic [ref=e158]:
+                - img [ref=e159]
+                - generic [ref=e161]:
+                  - paragraph [ref=e162]: "121231"
+                  - generic [ref=e163]: 0 objects
+              - paragraph [ref=e164]: 0 Bytes
+            - generic [ref=e166] [cursor=pointer]:
+              - generic [ref=e167]:
+                - img [ref=e168]
+                - generic [ref=e170]:
+                  - paragraph [ref=e171]: mybucket
+                  - generic [ref=e172]: 0 objects
+              - paragraph [ref=e173]: 0 Bytes
+        - generic [ref=e176]:
+          - generic [ref=e177]:
+            - heading "Top Buckets" [level=6] [ref=e178]
+            - paragraph [ref=e179]: By Size
+          - generic [ref=e180]:
+            - generic [ref=e181] [cursor=pointer]:
+              - generic [ref=e182]:
+                - paragraph [ref=e183]: "121231"
+                - paragraph [ref=e184]: 0 Bytes
+              - generic [ref=e185]:
+                - progressbar [ref=e186]
+                - generic [ref=e188]: 0 objects
+            - generic [ref=e189] [cursor=pointer]:
+              - generic [ref=e190]:
+                - paragraph [ref=e191]: mybucket
+                - paragraph [ref=e192]: 0 Bytes
+              - generic [ref=e193]:
+                - progressbar [ref=e194]
+                - generic [ref=e196]: 0 objects
+        - generic [ref=e199]:
+          - heading "Quick Actions" [level=6] [ref=e200]
+          - generic [ref=e201]:
+            - generic [ref=e204] [cursor=pointer]:
+              - img [ref=e205]
+              - generic [ref=e207]:
+                - heading "Create Bucket" [level=6] [ref=e208]
+                - paragraph [ref=e209]: Start storing objects
+            - generic [ref=e212] [cursor=pointer]:
+              - img [ref=e213]
+              - generic [ref=e215]:
+                - heading "Upload Objects" [level=6] [ref=e216]
+                - paragraph [ref=e217]: Add files to storage
+            - generic [ref=e220] [cursor=pointer]:
+              - img [ref=e221]
+              - generic [ref=e223]:
+                - heading "Manage Users" [level=6] [ref=e224]
+                - paragraph [ref=e225]: Control access and permissions
+```

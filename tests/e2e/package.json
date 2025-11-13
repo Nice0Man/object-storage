@@ -3,8 +3,12 @@
   "version": "1.0.0",
   "description": "E2E tests for Object Storage Console",
   "scripts": {
-    "test:login": "node login-workflow.test.js",
-    "test:all": "node login-workflow.test.js"
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:dashboard": "playwright test dashboard-ui.test.js",
+    "test:login": "playwright test login-workflow.test.js",
+    "test:all": "playwright test"
   },
   "dependencies": {
     "axios": "^1.6.0"
