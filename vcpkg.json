@@ -21,8 +21,7 @@
     },
     {
       "name": "spdlog",
-      "version>=": "1.12.0",
-      "features": ["std-format"]
+      "version>=": "1.12.0"
     },
     {
       "name": "openssl",
