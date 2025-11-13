@@ -47,12 +47,6 @@ jobs:
           uuid-dev \
           zlib1g-dev
 
-    - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
-        vcpkgJsonGlob: 'vcpkg.json'
-
     - name: Cache vcpkg
       uses: actions/cache@v4
       with:
@@ -62,6 +56,15 @@ jobs:
         key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}
         restore-keys: |
           ${{ runner.os }}-vcpkg-
+
+    - name: Setup vcpkg
+      run: |
+        if [ ! -d "vcpkg" ]; then
+          git clone https://github.com/microsoft/vcpkg.git vcpkg
+          cd vcpkg
+          git checkout a42af01b72c28a8e1d7b48107b33e4f286a55ef6
+          ./bootstrap-vcpkg.sh
+        fi
 
     - name: Configure CMake
       run: |
@@ -113,6 +116,15 @@ jobs:
         name: backend-build
         path: |
           build/console_server
-          config.json
-          drogon_config.json
         retention-days: 7
+        if-no-files-found: warn
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          build/tests/test-results-*.xml
+        retention-days: 7
+        if-no-files-found: warn
