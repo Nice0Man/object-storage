@@ -502,8 +502,8 @@ AuthController::validate_token(const String& token) const {
 
         // Extract user information from claims
         UserInfo user;
-        user.account_name = decoded.get_payload_claim("username").as_string();
-        user.access_key = decoded.get_payload_claim("access_key").as_string();
+        user.account_name = decoded.get_payload_claim("account_name").as_string();
+        user.access_key = decoded.get_payload_claim("account_access_key").as_string();
 
         // Extract is_admin claim
         if (decoded.has_payload_claim("is_admin")) {

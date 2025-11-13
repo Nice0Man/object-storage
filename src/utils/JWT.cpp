@@ -280,9 +280,16 @@ JWT::extract_claims(const jwt::decoded_jwt<jwt::traits::kazuho_picojson>& decode
     // so we extract known custom fields explicitly
     if (decoded.has_payload_claim("is_admin")) {
         auto is_admin_claim = decoded.get_payload_claim("is_admin");
+        CONSOLE_LOG_INFO("extract_claims: found is_admin claim, type={}", static_cast<int>(is_admin_claim.get_type()));
         if (is_admin_claim.get_type() == jwt::json::type::string) {
             claims.custom_fields["is_admin"] = is_admin_claim.as_string();
+            CONSOLE_LOG_INFO("extract_claims: extracted is_admin as string: '{}'", is_admin_claim.as_string());
+        } else {
+            CONSOLE_LOG_WARN("extract_claims: is_admin claim is not a string, type={}",
+                             static_cast<int>(is_admin_claim.get_type()));
         }
+    } else {
+        CONSOLE_LOG_WARN("extract_claims: no is_admin claim found in token");
     }
 
     return claims;
@@ -578,6 +585,12 @@ JWT::claims_to_userinfo(const JWTClaims& claims) {
     // Check is_admin from custom fields
     auto it = claims.custom_fields.find("is_admin");
     user_info.is_admin = (it != claims.custom_fields.end() && it->second == "true");
+
+    CONSOLE_LOG_INFO("claims_to_userinfo: access_key={}, is_admin={} (custom_fields has is_admin: {}, value: '{}')",
+                     user_info.access_key,
+                     user_info.is_admin,
+                     (it != claims.custom_fields.end() ? "yes" : "no"),
+                     (it != claims.custom_fields.end() ? it->second : "N/A"));
 
     return user_info;
 }

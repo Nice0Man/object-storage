@@ -290,9 +290,17 @@ UsersController::remove_from_group(const drogon::HttpRequestPtr& req,
 UserInfo
 UsersController::get_user_from_request(const drogon::HttpRequestPtr& req) {
     try {
-        return req->attributes()->get<UserInfo>("user_info");
+        auto user_info = req->attributes()->get<UserInfo>("user_info");
+        CONSOLE_LOG_INFO("get_user_from_request: SUCCESS - extracted user '{}', access_key='{}', is_admin={}",
+                         user_info.account_name,
+                         user_info.access_key,
+                         user_info.is_admin);
+        return user_info;
+    } catch (const std::exception& e) {
+        CONSOLE_LOG_ERROR("No user_info found in request attributes: {}", e.what());
+        return UserInfo{};
     } catch (...) {
-        CONSOLE_LOG_ERROR("No user_info found in request attributes");
+        CONSOLE_LOG_ERROR("No user_info found in request attributes: unknown exception");
         return UserInfo{};
     }
 }

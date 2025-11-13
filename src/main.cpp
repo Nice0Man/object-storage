@@ -13,6 +13,10 @@
 #include "console/api/StatsController.hpp"
 #include "console/api/UsersController.hpp"
 
+// Register filters and middleware by including their headers
+#include "console/filters/AuthFilter.hpp" // Global namespace filter for Drogon
+#include "console/filters/CorsFilter.hpp"
+
 // Services
 #include "console/services/AuthService.hpp"
 #include "console/services/BucketService.hpp"
@@ -117,6 +121,10 @@ configure_drogon(const ServerConfig& config) {
 
     // Set idle connection timeout
     app().setIdleConnectionTimeout(60);
+
+    // Register global filters
+    CONSOLE_LOG_INFO("Registering filters...");
+    // Filters are registered automatically through HttpFilter template inheritance
 
     // Enable running location
     // Daemon mode disabled by default
