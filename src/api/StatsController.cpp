@@ -4,8 +4,8 @@
 #include "console/common/ServiceLocator.hpp"
 #include "console/services/BucketService.hpp"
 #include "console/services/UserService.hpp"
+#include "console/storage/DatabaseManager.hpp"
 
-#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <json/json.h>
@@ -214,28 +214,52 @@ StatsController::get_servers(const drogon::HttpRequestPtr& req,
     Json::Value response;
 
     try {
-        // Mock server data
+        auto db_manager = ServiceLocator::database();
+        if (!db_manager) {
+            Json::Value error;
+            error["error"] = "Database not available";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
+
+        auto servers_result = db_manager->list_servers();
+        if (!servers_result) {
+            CONSOLE_LOG_ERROR("Failed to get servers: {}", servers_result.error());
+            Json::Value error;
+            error["error"] = "Failed to retrieve server data";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
+
         Json::Value servers(Json::arrayValue);
+        int online_count = 0;
+        int offline_count = 0;
 
-        // Simulate some servers
-        int online_count = 10;
-        int offline_count = 7;
-        int total_count = 20;
+        for (const auto& server : servers_result.value()) {
+            Json::Value server_json;
+            server_json["id"] = server.id;
+            server_json["name"] = server.name;
+            server_json["status"] = server.status;
+            server_json["endpoint"] = server.endpoint;
+            server_json["uptime"] = static_cast<Json::Int64>(server.uptime);
 
-        for (int i = 0; i < total_count; i++) {
-            Json::Value server;
-            server["id"] = "server-" + std::to_string(i + 1);
-            server["name"] = "Server " + std::to_string(i + 1);
-            server["status"] = (i < online_count) ? "online" : "offline";
-            server["endpoint"] = "http://server-" + std::to_string(i + 1) + ".local:9000";
-            server["uptime"] = (i < online_count) ? 86400 + (i * 1000) : 0;
-            servers.append(server);
+            servers.append(server_json);
+
+            if (server.status == "online") {
+                online_count++;
+            } else {
+                offline_count++;
+            }
         }
 
         response["servers"] = servers;
         response["online_count"] = online_count;
         response["offline_count"] = offline_count;
-        response["total_count"] = total_count;
+        response["total_count"] = servers_result.value().size();
 
         auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
         callback(resp);
@@ -258,18 +282,44 @@ StatsController::get_drives(const drogon::HttpRequestPtr& req,
     Json::Value response;
 
     try {
-        // Mock drive data
+        auto db_manager = ServiceLocator::database();
+        if (!db_manager) {
+            Json::Value error;
+            error["error"] = "Database not available";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
+
+        auto drives_result = db_manager->list_drives();
+        if (!drives_result) {
+            CONSOLE_LOG_ERROR("Failed to get drives: {}", drives_result.error());
+            Json::Value error;
+            error["error"] = "Failed to retrieve drive data";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
+
         Json::Value drives(Json::arrayValue);
+        int online_count = 0;
+        int offline_count = 0;
 
-        int online_count = 1900;
-        int offline_count = 100;
-        int total_count = 2000;
+        // Don't send all drives for performance, just summary
+        for (const auto& drive : drives_result.value()) {
+            if (drive.status == "online") {
+                online_count++;
+            } else {
+                offline_count++;
+            }
+        }
 
-        // We don't list all drives, just provide summary
         response["drives"] = drives; // Empty for performance
         response["online_count"] = online_count;
         response["offline_count"] = offline_count;
-        response["total_count"] = total_count;
+        response["total_count"] = drives_result.value().size();
 
         auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
         callback(resp);
@@ -292,25 +342,39 @@ StatsController::get_pools(const drogon::HttpRequestPtr& req,
     Json::Value response(Json::arrayValue);
 
     try {
-        // Mock pool data
-        for (int i = 1; i <= 2; i++) {
-            Json::Value pool;
-            pool["id"] = "pool" + std::to_string(i);
-            pool["name"] = "Pool " + std::to_string(i);
+        auto db_manager = ServiceLocator::database();
+        if (!db_manager) {
+            Json::Value error;
+            error["error"] = "Database not available";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
 
-            // 5.25 EiB capacity
-            int64_t capacity = 5LL * 1024 * 1024 * 1024 * 1024 * 1024 + 256LL * 1024 * 1024 * 1024 * 1024;
-            int64_t used = (i == 1) ? (4LL * 1024 * 1024 * 1024 * 1024 * 1024 + 31LL * 1024 * 1024 * 1024 * 1024)
-                                    : (3LL * 1024 * 1024 * 1024 * 1024 * 1024 + 800LL * 1024 * 1024 * 1024 * 1024);
+        auto pools_result = db_manager->list_storage_pools();
+        if (!pools_result) {
+            CONSOLE_LOG_ERROR("Failed to get storage pools: {}", pools_result.error());
+            Json::Value error;
+            error["error"] = "Failed to retrieve pool data";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
 
-            pool["capacity"] = static_cast<Json::Int64>(capacity);
-            pool["used"] = static_cast<Json::Int64>(used);
-            pool["available"] = static_cast<Json::Int64>(capacity - used);
-            pool["drives_count"] = 90;
-            pool["online_drives"] = 80;
-            pool["offline_drives"] = 10;
+        for (const auto& pool : pools_result.value()) {
+            Json::Value pool_json;
+            pool_json["id"] = pool.id;
+            pool_json["name"] = pool.name;
+            pool_json["capacity"] = static_cast<Json::Int64>(pool.capacity);
+            pool_json["used"] = static_cast<Json::Int64>(pool.used);
+            pool_json["available"] = static_cast<Json::Int64>(pool.available);
+            pool_json["drives_count"] = pool.drives_count;
+            pool_json["online_drives"] = pool.online_drives;
+            pool_json["offline_drives"] = pool.offline_drives;
 
-            response.append(pool);
+            response.append(pool_json);
         }
 
         auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
@@ -334,25 +398,70 @@ StatsController::get_api_errors(const drogon::HttpRequestPtr& req,
     Json::Value response;
 
     try {
-        // Mock API error data (last 24 hours)
-        Json::Value data(Json::arrayValue);
+        auto db_manager = ServiceLocator::database();
+        if (!db_manager) {
+            Json::Value error;
+            error["error"] = "Database not available";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
 
+        // Get API stats for last 24 hours
         auto now = std::time(nullptr);
+        auto from_timestamp = now - (24 * 3600);
+
+        auto stats_result = db_manager->get_api_request_stats(from_timestamp, now);
+        if (!stats_result) {
+            CONSOLE_LOG_ERROR("Failed to get API stats: {}", stats_result.error());
+            Json::Value error;
+            error["error"] = "Failed to retrieve API error data";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
+
+        // Group by hour
+        std::map<int64_t, std::tuple<int, int, int>> hourly_stats; // timestamp -> (total, 4xx, 5xx)
+
+        for (const auto& stat : stats_result.value()) {
+            // Round to hour
+            int64_t hour_ts = (stat.timestamp / 3600) * 3600;
+
+            auto& [total, err_4xx, err_5xx] = hourly_stats[hour_ts];
+            total++;
+
+            if (stat.status_code >= 400 && stat.status_code < 500) {
+                err_4xx++;
+            } else if (stat.status_code >= 500) {
+                err_5xx++;
+            }
+        }
+
+        Json::Value data(Json::arrayValue);
         int total_errors = 0;
 
+        // Fill in missing hours with zeros
         for (int i = 23; i >= 0; i--) {
+            int64_t hour_ts = now - (i * 3600);
+            hour_ts = (hour_ts / 3600) * 3600;
+
+            auto it = hourly_stats.find(hour_ts);
+            int count = 0, error_4xx = 0, error_5xx = 0;
+
+            if (it != hourly_stats.end()) {
+                count = std::get<0>(it->second);
+                error_4xx = std::get<1>(it->second);
+                error_5xx = std::get<2>(it->second);
+            }
+
             Json::Value point;
-            auto timestamp = now - (i * 3600);
-
-            // Format time as HH:MM
             char time_buf[6];
-            std::strftime(time_buf, sizeof(time_buf), "%H:%M", std::localtime(&timestamp));
+            std::strftime(time_buf, sizeof(time_buf), "%H:%M", std::localtime(&hour_ts));
 
-            int error_4xx = std::rand() % 15;
-            int error_5xx = std::rand() % 10;
-            int count = error_4xx + error_5xx;
-
-            point["timestamp"] = static_cast<Json::Int64>(timestamp);
+            point["timestamp"] = static_cast<Json::Int64>(hour_ts);
             point["time"] = time_buf;
             point["count"] = count;
             point["error_4xx"] = error_4xx;
@@ -387,28 +496,68 @@ StatsController::get_data_throughput(const drogon::HttpRequestPtr& req,
     Json::Value response;
 
     try {
-        // Mock throughput data (last 24 hours)
-        Json::Value data(Json::arrayValue);
+        auto db_manager = ServiceLocator::database();
+        if (!db_manager) {
+            Json::Value error;
+            error["error"] = "Database not available";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
 
+        // Get throughput stats for last 24 hours
         auto now = std::time(nullptr);
+        auto from_timestamp = now - (24 * 3600);
+
+        auto stats_result = db_manager->get_throughput_stats(from_timestamp, now);
+        if (!stats_result) {
+            CONSOLE_LOG_ERROR("Failed to get throughput stats: {}", stats_result.error());
+            Json::Value error;
+            error["error"] = "Failed to retrieve throughput data";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
+
+        // Group by hour and aggregate
+        std::map<int64_t, std::tuple<int64_t, int64_t, int64_t>> hourly_stats; // timestamp -> (read, write, total)
+
+        for (const auto& stat : stats_result.value()) {
+            // Round to hour
+            int64_t hour_ts = (stat.timestamp / 3600) * 3600;
+
+            auto& [read_bytes, write_bytes, total_bytes] = hourly_stats[hour_ts];
+            read_bytes += stat.read_bytes;
+            write_bytes += stat.write_bytes;
+            total_bytes += stat.total_bytes;
+        }
+
+        Json::Value data(Json::arrayValue);
         int64_t total_read = 0;
         int64_t total_write = 0;
         int64_t peak_throughput = 0;
 
+        // Fill in all 24 hours
         for (int i = 23; i >= 0; i--) {
+            int64_t hour_ts = now - (i * 3600);
+            hour_ts = (hour_ts / 3600) * 3600;
+
+            auto it = hourly_stats.find(hour_ts);
+            int64_t read_bytes = 0, write_bytes = 0, total_bytes = 0;
+
+            if (it != hourly_stats.end()) {
+                read_bytes = std::get<0>(it->second);
+                write_bytes = std::get<1>(it->second);
+                total_bytes = std::get<2>(it->second);
+            }
+
             Json::Value point;
-            auto timestamp = now - (i * 3600);
-
-            // Format time as HH:MM
             char time_buf[6];
-            std::strftime(time_buf, sizeof(time_buf), "%H:%M", std::localtime(&timestamp));
+            std::strftime(time_buf, sizeof(time_buf), "%H:%M", std::localtime(&hour_ts));
 
-            // Random throughput (in bytes) - varying between 400GB to 1TB per hour
-            int64_t read_bytes = (400LL + (std::rand() % 600)) * 1024 * 1024 * 1024;
-            int64_t write_bytes = (300LL + (std::rand() % 500)) * 1024 * 1024 * 1024;
-            int64_t total_bytes = read_bytes + write_bytes;
-
-            point["timestamp"] = static_cast<Json::Int64>(timestamp);
+            point["timestamp"] = static_cast<Json::Int64>(hour_ts);
             point["time"] = time_buf;
             point["read_bytes"] = static_cast<Json::Int64>(read_bytes);
             point["write_bytes"] = static_cast<Json::Int64>(write_bytes);

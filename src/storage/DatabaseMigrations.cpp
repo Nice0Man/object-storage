@@ -427,19 +427,145 @@ DatabaseMigrations::init_migrations() {
              return Ok<String>();
          }});
 
-    // Future migrations can be added here
-    // Example:
-    // migrations_.push_back({
-    //     .version = 2,
-    //     .description = "Add email column to users",
-    //     .up = [](sqlite3* db) -> Result<void, String> {
-    //         return exec_sql("ALTER TABLE users ADD COLUMN email TEXT");
-    //     },
-    //     .down = [](sqlite3* db) -> Result<void, String> {
-    //         // Note: SQLite doesn't support DROP COLUMN easily
-    //         return Ok<String>();
-    //     }
-    // });
+    // ========================================================================
+    // Migration v2: Statistics tables
+    // ========================================================================
+    migrations_.push_back(
+        {.version = 2,
+         .description = "Add statistics and metrics tables",
+         .up = [](sqlite3* db) -> Result<void, String> {
+             auto exec_sql = [db](const String& sql) -> Result<void, String> {
+                 char* err_msg = nullptr;
+                 int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg);
+                 if (rc != SQLITE_OK) {
+                     String error = err_msg ? err_msg : "Unknown error";
+                     sqlite3_free(err_msg);
+                     return Err<void, String>(error);
+                 }
+                 return Ok<String>();
+             };
+
+             // API request stats table - для подсчета ошибок
+             auto result = exec_sql(R"(
+                CREATE TABLE IF NOT EXISTS api_request_stats (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp INTEGER NOT NULL,
+                    endpoint TEXT NOT NULL,
+                    method TEXT NOT NULL,
+                    status_code INTEGER NOT NULL,
+                    response_time_ms INTEGER,
+                    user_access_key TEXT,
+                    ip_address TEXT,
+                    user_agent TEXT
+                )
+            )");
+             if (!result)
+                 return result;
+
+             result = exec_sql("CREATE INDEX IF NOT EXISTS idx_api_stats_timestamp ON api_request_stats(timestamp)");
+             if (!result)
+                 return result;
+             result = exec_sql("CREATE INDEX IF NOT EXISTS idx_api_stats_status ON api_request_stats(status_code)");
+             if (!result)
+                 return result;
+
+             // Data throughput stats - для графика пропускной способности
+             result = exec_sql(R"(
+                CREATE TABLE IF NOT EXISTS data_throughput_stats (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp INTEGER NOT NULL,
+                    read_bytes INTEGER DEFAULT 0,
+                    write_bytes INTEGER DEFAULT 0,
+                    total_bytes INTEGER DEFAULT 0
+                )
+            )");
+             if (!result)
+                 return result;
+
+             result = exec_sql(
+                 "CREATE INDEX IF NOT EXISTS idx_throughput_timestamp ON data_throughput_stats(timestamp)");
+             if (!result)
+                 return result;
+
+             // Servers table - состояние серверов
+             result = exec_sql(R"(
+                CREATE TABLE IF NOT EXISTS servers (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    endpoint TEXT NOT NULL,
+                    status TEXT DEFAULT 'offline',
+                    uptime INTEGER DEFAULT 0,
+                    last_heartbeat INTEGER,
+                    metadata TEXT
+                )
+            )");
+             if (!result)
+                 return result;
+
+             // Drives table - состояние дисков
+             result = exec_sql(R"(
+                CREATE TABLE IF NOT EXISTS drives (
+                    id TEXT PRIMARY KEY,
+                    server_id TEXT NOT NULL,
+                    path TEXT NOT NULL,
+                    status TEXT DEFAULT 'offline',
+                    capacity INTEGER DEFAULT 0,
+                    used INTEGER DEFAULT 0,
+                    available INTEGER DEFAULT 0,
+                    last_check INTEGER,
+                    metadata TEXT,
+                    FOREIGN KEY (server_id) REFERENCES servers(id) ON DELETE CASCADE
+                )
+            )");
+             if (!result)
+                 return result;
+
+             result = exec_sql("CREATE INDEX IF NOT EXISTS idx_drives_server ON drives(server_id)");
+             if (!result)
+                 return result;
+             result = exec_sql("CREATE INDEX IF NOT EXISTS idx_drives_status ON drives(status)");
+             if (!result)
+                 return result;
+
+             // Pools table - пулы хранения
+             result = exec_sql(R"(
+                CREATE TABLE IF NOT EXISTS storage_pools (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    capacity INTEGER DEFAULT 0,
+                    used INTEGER DEFAULT 0,
+                    available INTEGER DEFAULT 0,
+                    drives_count INTEGER DEFAULT 0,
+                    online_drives INTEGER DEFAULT 0,
+                    offline_drives INTEGER DEFAULT 0,
+                    last_update INTEGER,
+                    metadata TEXT
+                )
+            )");
+             if (!result)
+                 return result;
+
+             return Ok<String>();
+         },
+         .down = [](sqlite3* db) -> Result<void, String> {
+             auto exec_sql = [db](const String& sql) -> Result<void, String> {
+                 char* err_msg = nullptr;
+                 int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg);
+                 if (rc != SQLITE_OK) {
+                     String error = err_msg ? err_msg : "Unknown error";
+                     sqlite3_free(err_msg);
+                     return Err<void, String>(error);
+                 }
+                 return Ok<String>();
+             };
+
+             exec_sql("DROP TABLE IF EXISTS storage_pools");
+             exec_sql("DROP TABLE IF EXISTS drives");
+             exec_sql("DROP TABLE IF EXISTS servers");
+             exec_sql("DROP TABLE IF EXISTS data_throughput_stats");
+             exec_sql("DROP TABLE IF EXISTS api_request_stats");
+             return Ok<String>();
+         }});
 }
 
 } // namespace console::storage

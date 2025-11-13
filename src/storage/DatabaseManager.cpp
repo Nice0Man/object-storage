@@ -1352,4 +1352,395 @@ DatabaseManager::vacuum() {
     return execute_sql("VACUUM");
 }
 
+// ============================================================================
+// Statistics Operations
+// ============================================================================
+
+Result<void, String>
+DatabaseManager::add_api_request_stat(const ApiRequestStats& stats) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind(
+        "INSERT INTO api_request_stats (timestamp, endpoint, method, status_code, response_time_ms, "
+        "user_access_key, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [&](sqlite3_stmt* stmt) {
+            sqlite3_bind_int64(stmt, 1, stats.timestamp);
+            sqlite3_bind_text(stmt, 2, stats.endpoint.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 3, stats.method.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_int(stmt, 4, stats.status_code);
+            sqlite3_bind_int(stmt, 5, stats.response_time_ms);
+            sqlite3_bind_text(stmt, 6, stats.user_access_key.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 7, stats.ip_address.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 8, stats.user_agent.c_str(), -1, SQLITE_TRANSIENT);
+        });
+}
+
+Result<Vector<ApiRequestStats>, String>
+DatabaseManager::get_api_request_stats(int64_t from_timestamp, int64_t to_timestamp, int status_code_filter) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    String query = "SELECT id, timestamp, endpoint, method, status_code, response_time_ms, "
+                   "user_access_key, ip_address, user_agent FROM api_request_stats "
+                   "WHERE timestamp >= ? AND timestamp <= ?";
+
+    if (status_code_filter > 0) {
+        query += " AND status_code = ?";
+    }
+
+    query += " ORDER BY timestamp DESC";
+
+    return query_multiple<ApiRequestStats>(
+        query,
+        [&](sqlite3_stmt* stmt) {
+            sqlite3_bind_int64(stmt, 1, from_timestamp);
+            sqlite3_bind_int64(stmt, 2, to_timestamp);
+            if (status_code_filter > 0) {
+                sqlite3_bind_int(stmt, 3, status_code_filter);
+            }
+        },
+        [](sqlite3_stmt* stmt) -> ApiRequestStats {
+            ApiRequestStats stats;
+            stats.id = sqlite3_column_int64(stmt, 0);
+            stats.timestamp = sqlite3_column_int64(stmt, 1);
+            stats.endpoint = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            stats.method = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            stats.status_code = sqlite3_column_int(stmt, 4);
+            stats.response_time_ms = sqlite3_column_int(stmt, 5);
+            if (sqlite3_column_type(stmt, 6) != SQLITE_NULL) {
+                stats.user_access_key = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
+            }
+            if (sqlite3_column_type(stmt, 7) != SQLITE_NULL) {
+                stats.ip_address = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 7));
+            }
+            if (sqlite3_column_type(stmt, 8) != SQLITE_NULL) {
+                stats.user_agent = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+            }
+            return stats;
+        });
+}
+
+Result<void, String>
+DatabaseManager::add_throughput_stat(const DataThroughputStats& stats) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind(
+        "INSERT INTO data_throughput_stats (timestamp, read_bytes, write_bytes, total_bytes) VALUES (?, ?, ?, ?)",
+        [&](sqlite3_stmt* stmt) {
+            sqlite3_bind_int64(stmt, 1, stats.timestamp);
+            sqlite3_bind_int64(stmt, 2, stats.read_bytes);
+            sqlite3_bind_int64(stmt, 3, stats.write_bytes);
+            sqlite3_bind_int64(stmt, 4, stats.total_bytes);
+        });
+}
+
+Result<Vector<DataThroughputStats>, String>
+DatabaseManager::get_throughput_stats(int64_t from_timestamp, int64_t to_timestamp) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return query_multiple<DataThroughputStats>(
+        "SELECT id, timestamp, read_bytes, write_bytes, total_bytes FROM data_throughput_stats "
+        "WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC",
+        [&](sqlite3_stmt* stmt) {
+            sqlite3_bind_int64(stmt, 1, from_timestamp);
+            sqlite3_bind_int64(stmt, 2, to_timestamp);
+        },
+        [](sqlite3_stmt* stmt) -> DataThroughputStats {
+            DataThroughputStats stats;
+            stats.id = sqlite3_column_int64(stmt, 0);
+            stats.timestamp = sqlite3_column_int64(stmt, 1);
+            stats.read_bytes = sqlite3_column_int64(stmt, 2);
+            stats.write_bytes = sqlite3_column_int64(stmt, 3);
+            stats.total_bytes = sqlite3_column_int64(stmt, 4);
+            return stats;
+        });
+}
+
+Result<DbServer, String>
+DatabaseManager::get_server(const String& id) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return query_single<DbServer>(
+        "SELECT id, name, endpoint, status, uptime, last_heartbeat, metadata FROM servers WHERE id = ?",
+        [&](sqlite3_stmt* stmt) { sqlite3_bind_text(stmt, 1, id.c_str(), -1, SQLITE_TRANSIENT); },
+        [](sqlite3_stmt* stmt) -> DbServer {
+            DbServer server;
+            server.id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            server.name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            server.endpoint = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            server.status = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            server.uptime = sqlite3_column_int64(stmt, 4);
+            server.last_heartbeat = sqlite3_column_int64(stmt, 5);
+            if (sqlite3_column_type(stmt, 6) != SQLITE_NULL) {
+                server.metadata = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
+            }
+            return server;
+        });
+}
+
+Result<Vector<DbServer>, String>
+DatabaseManager::list_servers(const String& status) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    String query = "SELECT id, name, endpoint, status, uptime, last_heartbeat, metadata FROM servers";
+    if (!status.empty()) {
+        query += " WHERE status = ?";
+    }
+    query += " ORDER BY name";
+
+    return query_multiple<DbServer>(
+        query,
+        [&](sqlite3_stmt* stmt) {
+            if (!status.empty()) {
+                sqlite3_bind_text(stmt, 1, status.c_str(), -1, SQLITE_TRANSIENT);
+            }
+        },
+        [](sqlite3_stmt* stmt) -> DbServer {
+            DbServer server;
+            server.id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            server.name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            server.endpoint = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            server.status = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            server.uptime = sqlite3_column_int64(stmt, 4);
+            server.last_heartbeat = sqlite3_column_int64(stmt, 5);
+            if (sqlite3_column_type(stmt, 6) != SQLITE_NULL) {
+                server.metadata = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
+            }
+            return server;
+        });
+}
+
+Result<void, String>
+DatabaseManager::upsert_server(const DbServer& server) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind(
+        "INSERT INTO servers (id, name, endpoint, status, uptime, last_heartbeat, metadata) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(id) DO UPDATE SET "
+        "name = excluded.name, endpoint = excluded.endpoint, status = excluded.status, "
+        "uptime = excluded.uptime, last_heartbeat = excluded.last_heartbeat, metadata = excluded.metadata",
+        [&](sqlite3_stmt* stmt) {
+            sqlite3_bind_text(stmt, 1, server.id.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 2, server.name.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 3, server.endpoint.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 4, server.status.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_int64(stmt, 5, server.uptime);
+            sqlite3_bind_int64(stmt, 6, server.last_heartbeat);
+            sqlite3_bind_text(stmt, 7, server.metadata.c_str(), -1, SQLITE_TRANSIENT);
+        });
+}
+
+Result<void, String>
+DatabaseManager::delete_server(const String& id) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind("DELETE FROM servers WHERE id = ?", [&](sqlite3_stmt* stmt) {
+        sqlite3_bind_text(stmt, 1, id.c_str(), -1, SQLITE_TRANSIENT);
+    });
+}
+
+Result<DbDrive, String>
+DatabaseManager::get_drive(const String& id) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return query_single<DbDrive>(
+        "SELECT id, server_id, path, status, capacity, used, available, last_check, metadata FROM drives WHERE id = ?",
+        [&](sqlite3_stmt* stmt) { sqlite3_bind_text(stmt, 1, id.c_str(), -1, SQLITE_TRANSIENT); },
+        [](sqlite3_stmt* stmt) -> DbDrive {
+            DbDrive drive;
+            drive.id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            drive.server_id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            drive.path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            drive.status = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            drive.capacity = sqlite3_column_int64(stmt, 4);
+            drive.used = sqlite3_column_int64(stmt, 5);
+            drive.available = sqlite3_column_int64(stmt, 6);
+            drive.last_check = sqlite3_column_int64(stmt, 7);
+            if (sqlite3_column_type(stmt, 8) != SQLITE_NULL) {
+                drive.metadata = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+            }
+            return drive;
+        });
+}
+
+Result<Vector<DbDrive>, String>
+DatabaseManager::list_drives(const String& server_id, const String& status) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    String query =
+        "SELECT id, server_id, path, status, capacity, used, available, last_check, metadata FROM drives WHERE 1=1";
+    if (!server_id.empty()) {
+        query += " AND server_id = ?";
+    }
+    if (!status.empty()) {
+        query += " AND status = ?";
+    }
+    query += " ORDER BY path";
+
+    return query_multiple<DbDrive>(
+        query,
+        [&](sqlite3_stmt* stmt) {
+            int param = 1;
+            if (!server_id.empty()) {
+                sqlite3_bind_text(stmt, param++, server_id.c_str(), -1, SQLITE_TRANSIENT);
+            }
+            if (!status.empty()) {
+                sqlite3_bind_text(stmt, param++, status.c_str(), -1, SQLITE_TRANSIENT);
+            }
+        },
+        [](sqlite3_stmt* stmt) -> DbDrive {
+            DbDrive drive;
+            drive.id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            drive.server_id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            drive.path = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+            drive.status = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+            drive.capacity = sqlite3_column_int64(stmt, 4);
+            drive.used = sqlite3_column_int64(stmt, 5);
+            drive.available = sqlite3_column_int64(stmt, 6);
+            drive.last_check = sqlite3_column_int64(stmt, 7);
+            if (sqlite3_column_type(stmt, 8) != SQLITE_NULL) {
+                drive.metadata = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 8));
+            }
+            return drive;
+        });
+}
+
+Result<void, String>
+DatabaseManager::upsert_drive(const DbDrive& drive) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind(
+        "INSERT INTO drives (id, server_id, path, status, capacity, used, available, last_check, metadata) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(id) DO UPDATE SET "
+        "server_id = excluded.server_id, path = excluded.path, status = excluded.status, "
+        "capacity = excluded.capacity, used = excluded.used, available = excluded.available, "
+        "last_check = excluded.last_check, metadata = excluded.metadata",
+        [&](sqlite3_stmt* stmt) {
+            sqlite3_bind_text(stmt, 1, drive.id.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 2, drive.server_id.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 3, drive.path.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 4, drive.status.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_int64(stmt, 5, drive.capacity);
+            sqlite3_bind_int64(stmt, 6, drive.used);
+            sqlite3_bind_int64(stmt, 7, drive.available);
+            sqlite3_bind_int64(stmt, 8, drive.last_check);
+            sqlite3_bind_text(stmt, 9, drive.metadata.c_str(), -1, SQLITE_TRANSIENT);
+        });
+}
+
+Result<void, String>
+DatabaseManager::delete_drive(const String& id) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind("DELETE FROM drives WHERE id = ?", [&](sqlite3_stmt* stmt) {
+        sqlite3_bind_text(stmt, 1, id.c_str(), -1, SQLITE_TRANSIENT);
+    });
+}
+
+Result<DbStoragePool, String>
+DatabaseManager::get_storage_pool(const String& id) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return query_single<DbStoragePool>(
+        "SELECT id, name, capacity, used, available, drives_count, online_drives, offline_drives, last_update, "
+        "metadata "
+        "FROM storage_pools WHERE id = ?",
+        [&](sqlite3_stmt* stmt) { sqlite3_bind_text(stmt, 1, id.c_str(), -1, SQLITE_TRANSIENT); },
+        [](sqlite3_stmt* stmt) -> DbStoragePool {
+            DbStoragePool pool;
+            pool.id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            pool.name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            pool.capacity = sqlite3_column_int64(stmt, 2);
+            pool.used = sqlite3_column_int64(stmt, 3);
+            pool.available = sqlite3_column_int64(stmt, 4);
+            pool.drives_count = sqlite3_column_int(stmt, 5);
+            pool.online_drives = sqlite3_column_int(stmt, 6);
+            pool.offline_drives = sqlite3_column_int(stmt, 7);
+            pool.last_update = sqlite3_column_int64(stmt, 8);
+            if (sqlite3_column_type(stmt, 9) != SQLITE_NULL) {
+                pool.metadata = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 9));
+            }
+            return pool;
+        });
+}
+
+Result<Vector<DbStoragePool>, String>
+DatabaseManager::list_storage_pools() {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return query_multiple<DbStoragePool>(
+        "SELECT id, name, capacity, used, available, drives_count, online_drives, offline_drives, last_update, "
+        "metadata "
+        "FROM storage_pools ORDER BY name",
+        [](sqlite3_stmt*) {},
+        [](sqlite3_stmt* stmt) -> DbStoragePool {
+            DbStoragePool pool;
+            pool.id = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+            pool.name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+            pool.capacity = sqlite3_column_int64(stmt, 2);
+            pool.used = sqlite3_column_int64(stmt, 3);
+            pool.available = sqlite3_column_int64(stmt, 4);
+            pool.drives_count = sqlite3_column_int(stmt, 5);
+            pool.online_drives = sqlite3_column_int(stmt, 6);
+            pool.offline_drives = sqlite3_column_int(stmt, 7);
+            pool.last_update = sqlite3_column_int64(stmt, 8);
+            if (sqlite3_column_type(stmt, 9) != SQLITE_NULL) {
+                pool.metadata = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 9));
+            }
+            return pool;
+        });
+}
+
+Result<void, String>
+DatabaseManager::upsert_storage_pool(const DbStoragePool& pool) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind(
+        "INSERT INTO storage_pools (id, name, capacity, used, available, drives_count, online_drives, offline_drives, "
+        "last_update, metadata) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(id) DO UPDATE SET "
+        "name = excluded.name, capacity = excluded.capacity, used = excluded.used, available = excluded.available, "
+        "drives_count = excluded.drives_count, online_drives = excluded.online_drives, "
+        "offline_drives = excluded.offline_drives, last_update = excluded.last_update, metadata = excluded.metadata",
+        [&](sqlite3_stmt* stmt) {
+            sqlite3_bind_text(stmt, 1, pool.id.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 2, pool.name.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_int64(stmt, 3, pool.capacity);
+            sqlite3_bind_int64(stmt, 4, pool.used);
+            sqlite3_bind_int64(stmt, 5, pool.available);
+            sqlite3_bind_int(stmt, 6, pool.drives_count);
+            sqlite3_bind_int(stmt, 7, pool.online_drives);
+            sqlite3_bind_int(stmt, 8, pool.offline_drives);
+            sqlite3_bind_int64(stmt, 9, pool.last_update);
+            sqlite3_bind_text(stmt, 10, pool.metadata.c_str(), -1, SQLITE_TRANSIENT);
+        });
+}
+
+Result<void, String>
+DatabaseManager::delete_storage_pool(const String& id) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind("DELETE FROM storage_pools WHERE id = ?", [&](sqlite3_stmt* stmt) {
+        sqlite3_bind_text(stmt, 1, id.c_str(), -1, SQLITE_TRANSIENT);
+    });
+}
+
+Result<void, String>
+DatabaseManager::cleanup_old_api_stats(int64_t older_than_timestamp) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind("DELETE FROM api_request_stats WHERE timestamp < ?",
+                                 [&](sqlite3_stmt* stmt) { sqlite3_bind_int64(stmt, 1, older_than_timestamp); });
+}
+
+Result<void, String>
+DatabaseManager::cleanup_old_throughput_stats(int64_t older_than_timestamp) {
+    std::lock_guard<std::mutex> lock(db_mutex_);
+
+    return execute_sql_with_bind("DELETE FROM data_throughput_stats WHERE timestamp < ?",
+                                 [&](sqlite3_stmt* stmt) { sqlite3_bind_int64(stmt, 1, older_than_timestamp); });
+}
+
 } // namespace console::storage
