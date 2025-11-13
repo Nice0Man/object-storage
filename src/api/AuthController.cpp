@@ -418,13 +418,15 @@ AuthController::generate_jwt_token(const UserInfo& user) const {
     auto& config = Config::instance();
     auto& auth_config = config.auth();
 
+    // Use correct claim names that match JWT::claims_to_userinfo expectations
     auto token = jwt::create()
                      .set_issuer("object-storage-console")
                      .set_type("JWT")
+                     .set_subject(user.access_key) // Set subject for access_key
                      .set_issued_at(std::chrono::system_clock::now())
                      .set_expires_at(std::chrono::system_clock::now() + auth_config.token_expiry)
-                     .set_payload_claim("username", jwt::claim(user.account_name))
-                     .set_payload_claim("access_key", jwt::claim(user.access_key))
+                     .set_payload_claim("account_access_key", jwt::claim(user.access_key)) // Match JWT.cpp
+                     .set_payload_claim("account_name", jwt::claim(user.account_name))     // Match JWT.cpp
                      .set_payload_claim("is_admin", jwt::claim(std::string(user.is_admin ? "true" : "false")))
                      .sign(jwt::algorithm::hs256{auth_config.jwt_secret});
 
