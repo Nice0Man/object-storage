@@ -2,7 +2,7 @@
   "server": {
     "host": "0.0.0.0",
     "port": 9090,
-    "threads": 0,
+    "threads": 8,
     "enable_ssl": false,
     "ssl_cert": "",
     "ssl_key": "",
@@ -11,8 +11,8 @@
   },
   "s3": {
     "endpoint": "localhost:9000",
-    "access_key": "minioadmin",
-    "secret_key": "minioadmin",
+    "access_key": "",
+    "secret_key": "",
     "region": "us-east-1",
     "use_ssl": false,
     "timeout_ms": 30000
@@ -24,6 +24,15 @@
     "enable_ldap": false,
     "ldap_server": "",
     "ldap_port": 389
+  },
+  "default_admin": {
+    "username": "admin",
+    "password": "changeme",
+    "account_name": "Administrator",
+    "enabled": true
+  },
+  "database": {
+    "path": "console.db"
   },
   "features": {
     "enable_upload": true,

@@ -20,6 +20,13 @@ set(UNIT_TEST_SOURCES
     unit/JWTTest.cpp
     unit/ModelsTest.cpp
     unit/ServicesTest.cpp
+    unit/DatabaseManagerTest.cpp
+    unit/BucketServiceTest.cpp
+    unit/ObjectServiceTest.cpp
+    unit/AuthServiceTest.cpp
+    unit/LocalStorageClientTest.cpp
+    unit/ValidationTest.cpp
+    unit/StatsControllerTest.cpp
 )
 
 set(INTEGRATION_TEST_SOURCES

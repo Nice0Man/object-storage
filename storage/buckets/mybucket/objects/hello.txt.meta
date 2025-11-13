@@ -1,0 +1,10 @@
+{
+  "bucket" : "mybucket",
+  "content_type" : "application/octet-stream",
+  "etag" : "dc28b0b1ce28de5ab00eabab7684d946",
+  "key" : "hello.txt",
+  "last_modified" : 1762975067,
+  "metadata" : {},
+  "size" : 26,
+  "version_id" : "null"
+}

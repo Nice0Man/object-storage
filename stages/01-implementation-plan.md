@@ -1,4 +1,4 @@
-# План реализации OpenMaxIO Object Browser на C++20
+# План реализации Object Storage Console на C++20
 
 ## 📋 Обзор
 

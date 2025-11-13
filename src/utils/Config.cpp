@@ -57,6 +57,14 @@ Config::load_from_file(const std::filesystem::path& config_path) {
             auth_config_.ldap_port = auth.value("ldap_port", auth_config_.ldap_port);
         }
 
+        if (raw_json_.contains("default_admin")) {
+            auto& admin = raw_json_["default_admin"];
+            default_admin_config_.username = admin.value("username", default_admin_config_.username);
+            default_admin_config_.password = admin.value("password", default_admin_config_.password);
+            default_admin_config_.account_name = admin.value("account_name", default_admin_config_.account_name);
+            default_admin_config_.enabled = admin.value("enabled", default_admin_config_.enabled);
+        }
+
         is_valid_ = validate();
         return is_valid_;
 
@@ -73,6 +81,46 @@ Config::load_from_string(const String& json_str) {
         raw_json_ = nlohmann::json::parse(json_str);
         apply_defaults();
         apply_environment_variables();
+
+        // Load structured configs
+        if (raw_json_.contains("server")) {
+            auto& server = raw_json_["server"];
+            server_config_.host = server.value("host", server_config_.host);
+            server_config_.port = server.value("port", server_config_.port);
+            server_config_.threads = server.value("threads", server_config_.threads);
+            server_config_.enable_ssl = server.value("enable_ssl", server_config_.enable_ssl);
+            server_config_.ssl_cert = server.value("ssl_cert", server_config_.ssl_cert);
+            server_config_.ssl_key = server.value("ssl_key", server_config_.ssl_key);
+            server_config_.log_level = server.value("log_level", server_config_.log_level);
+            server_config_.log_path = server.value("log_path", server_config_.log_path);
+        }
+
+        if (raw_json_.contains("s3")) {
+            auto& s3 = raw_json_["s3"];
+            s3_config_.endpoint = s3.value("endpoint", s3_config_.endpoint);
+            s3_config_.access_key = s3.value("access_key", s3_config_.access_key);
+            s3_config_.secret_key = s3.value("secret_key", s3_config_.secret_key);
+            s3_config_.region = s3.value("region", s3_config_.region);
+            s3_config_.use_ssl = s3.value("use_ssl", s3_config_.use_ssl);
+            s3_config_.timeout_ms = s3.value("timeout_ms", s3_config_.timeout_ms);
+        }
+
+        if (raw_json_.contains("auth")) {
+            auto& auth = raw_json_["auth"];
+            auth_config_.jwt_secret = auth.value("jwt_secret", auth_config_.jwt_secret);
+            auth_config_.enable_ldap = auth.value("enable_ldap", auth_config_.enable_ldap);
+            auth_config_.ldap_server = auth.value("ldap_server", auth_config_.ldap_server);
+            auth_config_.ldap_port = auth.value("ldap_port", auth_config_.ldap_port);
+        }
+
+        if (raw_json_.contains("default_admin")) {
+            auto& admin = raw_json_["default_admin"];
+            default_admin_config_.username = admin.value("username", default_admin_config_.username);
+            default_admin_config_.password = admin.value("password", default_admin_config_.password);
+            default_admin_config_.account_name = admin.value("account_name", default_admin_config_.account_name);
+            default_admin_config_.enabled = admin.value("enabled", default_admin_config_.enabled);
+        }
+
         is_valid_ = validate();
         return is_valid_;
     } catch (const std::exception& e) {
@@ -136,6 +184,20 @@ Config::apply_environment_variables() {
     // Auth
     if (const char* jwt_secret = std::getenv("JWT_SECRET")) {
         auth_config_.jwt_secret = jwt_secret;
+    }
+
+    // Default Admin
+    if (const char* admin_username = std::getenv("DEFAULT_ADMIN_USERNAME")) {
+        default_admin_config_.username = admin_username;
+    }
+    if (const char* admin_password = std::getenv("DEFAULT_ADMIN_PASSWORD")) {
+        default_admin_config_.password = admin_password;
+    }
+    if (const char* admin_account_name = std::getenv("DEFAULT_ADMIN_ACCOUNT_NAME")) {
+        default_admin_config_.account_name = admin_account_name;
+    }
+    if (const char* admin_enabled = std::getenv("DEFAULT_ADMIN_ENABLED")) {
+        default_admin_config_.enabled = (std::string(admin_enabled) == "true" || std::string(admin_enabled) == "1");
     }
 }
 

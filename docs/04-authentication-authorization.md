@@ -4,7 +4,7 @@
 
 ### Методы аутентификации
 
-OpenMaxIO Object Browser поддерживает **4 метода аутентификации**:
+Object Storage Console поддерживает **4 метода аутентификации**:
 
 1. **Form-based (Username/Password)** - стандартная форма логина
 2. **OAuth2/OIDC (SSO)** - Single Sign-On через Identity Provider

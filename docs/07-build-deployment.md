@@ -284,7 +284,7 @@ export CONSOLE_PBKDF_SALT=secret
 
 ```ini
 [Unit]
-Description=OpenMaxIO Console Server
+Description=Object Storage Console Server
 After=network.target minio.service
 Wants=minio.service
 

@@ -1,0 +1,2410 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Object Storage Console API",
+    "description": "REST API для управления Object Storage Console - веб-интерфейс для управления S3-совместимым хранилищем объектов",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support",
+      "email": "support@object-storage.local"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9090",
+      "description": "Development server"
+    },
+    {
+      "url": "https://localhost:9090",
+      "description": "Development server (HTTPS)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Эндпоинты для проверки состояния системы"
+    },
+    {
+      "name": "Authentication",
+      "description": "Аутентификация и управление сессиями"
+    },
+    {
+      "name": "Buckets",
+      "description": "Управление бакетами (контейнерами для объектов)"
+    },
+    {
+      "name": "Objects",
+      "description": "Управление объектами в бакетах"
+    },
+    {
+      "name": "Users",
+      "description": "Управление пользователями системы"
+    },
+    {
+      "name": "Documentation",
+      "description": "API документация"
+    }
+  ],
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Проверка состояния сервиса",
+        "description": "Возвращает состояние здоровья сервиса и его зависимостей (S3, БД)",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Сервис работает нормально",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ready": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Проверка готовности",
+        "description": "Проверяет готовность сервиса принимать запросы (Kubernetes readiness probe)",
+        "operationId": "getReady",
+        "responses": {
+          "200": {
+            "description": "Сервис готов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/live": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Проверка жизнеспособности",
+        "description": "Проверяет, что процесс работает (Kubernetes liveness probe)",
+        "operationId": "getLive",
+        "responses": {
+          "200": {
+            "description": "Процесс работает",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/version": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Информация о версии",
+        "description": "Возвращает информацию о версии API и билде",
+        "operationId": "getVersion",
+        "responses": {
+          "200": {
+            "description": "Информация о версии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VersionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Вход в систему",
+        "description": "Аутентификация пользователя и получение JWT токена",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешная аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неверные учетные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Выход из системы",
+        "description": "Завершение сессии пользователя",
+        "operationId": "logout",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный выход",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Обновление токена",
+        "description": "Получение нового JWT токена с обновленным сроком действия",
+        "operationId": "refresh",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Токен обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Невалидный или истекший токен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Информация о текущем пользователе",
+        "description": "Получение информации о текущем аутентифицированном пользователе",
+        "operationId": "getCurrentUser",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о пользователе",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password": {
+      "put": {
+        "tags": ["Authentication"],
+        "summary": "Смена пароля",
+        "description": "Изменение пароля текущего пользователя",
+        "operationId": "changePassword",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Пароль изменен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Не реализовано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets": {
+      "get": {
+        "tags": ["Buckets"],
+        "summary": "Список бакетов",
+        "description": "Получение списка всех доступных бакетов",
+        "operationId": "listBuckets",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список бакетов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Buckets"],
+        "summary": "Создание бакета",
+        "description": "Создание нового бакета для хранения объектов",
+        "operationId": "createBucket",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBucketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Бакет создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Бакет уже существует",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucketName}": {
+      "get": {
+        "tags": ["Buckets"],
+        "summary": "Информация о бакете",
+        "description": "Получение детальной информации о конкретном бакете",
+        "operationId": "getBucket",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucketName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о бакете",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BucketInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Бакет не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Buckets"],
+        "summary": "Удаление бакета",
+        "description": "Удаление пустого бакета",
+        "operationId": "deleteBucket",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucketName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Бакет удален",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Бакет не пуст",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Бакет не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucketName}/policy": {
+      "get": {
+        "tags": ["Buckets"],
+        "summary": "Получить политику бакета",
+        "description": "Получение политики доступа для указанного бакета",
+        "operationId": "getBucketPolicy",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucketName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Политика бакета",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "policy": {
+                      "type": "string",
+                      "description": "JSON строка с политикой доступа"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Бакет не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Buckets"],
+        "summary": "Установить политику бакета",
+        "description": "Установка политики доступа для указанного бакета",
+        "operationId": "setBucketPolicy",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucketName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["policy"],
+                "properties": {
+                  "policy": {
+                    "type": "string",
+                    "description": "JSON строка с политикой доступа"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Политика установлена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректная политика",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Бакет не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucket}/objects": {
+      "get": {
+        "tags": ["Objects"],
+        "summary": "Список объектов в бакете",
+        "description": "Получение списка объектов в указанном бакете с возможностью фильтрации",
+        "operationId": "listObjects",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          },
+          {
+            "name": "prefix",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Префикс для фильтрации объектов"
+          },
+          {
+            "name": "recursive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Рекурсивный поиск по вложенным директориям"
+          },
+          {
+            "name": "max_keys",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1000,
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "description": "Максимальное количество возвращаемых объектов"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список объектов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Бакет не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Objects"],
+        "summary": "Загрузка объекта",
+        "description": "Загрузка нового объекта в бакет",
+        "operationId": "uploadObject",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Файл для загрузки"
+                  },
+                  "key": {
+                    "type": "string",
+                    "description": "Ключ (путь) объекта в бакете"
+                  }
+                },
+                "required": ["file", "key"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Объект загружен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucket}/objects/{objectKey}": {
+      "get": {
+        "tags": ["Objects"],
+        "summary": "Скачивание объекта",
+        "description": "Получение содержимого объекта или временной ссылки для скачивания",
+        "operationId": "getObject",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          },
+          {
+            "name": "objectKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Ключ объекта"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Содержимое объекта",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Объект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Objects"],
+        "summary": "Удаление объекта",
+        "description": "Удаление объекта из бакета",
+        "operationId": "deleteObject",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          },
+          {
+            "name": "objectKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Ключ объекта"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Объект удален",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Объект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucket}/objects/{key}/info": {
+      "get": {
+        "tags": ["Objects"],
+        "summary": "Информация об объекте",
+        "description": "Получение метаданных объекта без скачивания содержимого",
+        "operationId": "getObjectInfo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Ключ объекта"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация об объекте",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Объект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucket}/objects/{key}/download": {
+      "get": {
+        "tags": ["Objects"],
+        "summary": "Скачать объект",
+        "description": "Прямое скачивание объекта с соответствующими заголовками",
+        "operationId": "downloadObject",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Ключ объекта"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Файл для скачивания",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Объект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucket}/objects/{key}/copy": {
+      "post": {
+        "tags": ["Objects"],
+        "summary": "Копировать объект",
+        "description": "Копирование объекта в другое местоположение",
+        "operationId": "copyObject",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Исходный бакет"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Исходный ключ объекта"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["destination_bucket", "destination_key"],
+                "properties": {
+                  "destination_bucket": {
+                    "type": "string",
+                    "description": "Целевой бакет"
+                  },
+                  "destination_key": {
+                    "type": "string",
+                    "description": "Целевой ключ объекта"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Объект скопирован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Исходный объект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucket}/objects/{key}/presigned-url": {
+      "get": {
+        "tags": ["Objects"],
+        "summary": "Получить presigned URL",
+        "description": "Генерация временной подписанной ссылки для доступа к объекту",
+        "operationId": "getPresignedUrl",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Ключ объекта"
+          },
+          {
+            "name": "expires",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 3600
+            },
+            "description": "Время жизни ссылки в секундах"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Presigned URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "Подписанная ссылка"
+                    },
+                    "expires_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Время истечения срока действия"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Объект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucket}/objects/{key}/tags": {
+      "get": {
+        "tags": ["Objects"],
+        "summary": "Получить теги объекта",
+        "description": "Получение тегов для указанного объекта",
+        "operationId": "getObjectTags",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Ключ объекта"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Теги объекта",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tags": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Объект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Objects"],
+        "summary": "Установить теги объекта",
+        "description": "Установка тегов для указанного объекта",
+        "operationId": "setObjectTags",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Ключ объекта"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tags"],
+                "properties": {
+                  "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Пары ключ-значение тегов"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Теги установлены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Объект не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucket}/objects/batch-delete": {
+      "post": {
+        "tags": ["Objects"],
+        "summary": "Пакетное удаление объектов",
+        "description": "Удаление нескольких объектов за один запрос",
+        "operationId": "batchDeleteObjects",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bucket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя бакета"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["keys"],
+                "properties": {
+                  "keys": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Список ключей объектов для удаления"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Результат пакетного удаления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Успешно удаленные объекты"
+                    },
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "error": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "description": "Ошибки при удалении"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Список пользователей",
+        "description": "Получение списка всех пользователей системы (только для администраторов)",
+        "operationId": "listUsers",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список пользователей",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsersListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Users"],
+        "summary": "Создание пользователя",
+        "description": "Создание нового пользователя (только для администраторов)",
+        "operationId": "createUser",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Пользователь создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Недостаточно прав",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Пользователь уже существует",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{accessKey}": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Информация о пользователе",
+        "description": "Получение детальной информации о пользователе",
+        "operationId": "getUser",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "accessKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Access Key пользователя"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о пользователе",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Обновление пользователя",
+        "description": "Обновление информации о пользователе (только для администраторов)",
+        "operationId": "updateUser",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "accessKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Access Key пользователя"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Пользователь обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Удаление пользователя",
+        "description": "Удаление пользователя из системы (только для администраторов)",
+        "operationId": "deleteUser",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "accessKey",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Access Key пользователя"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь удален",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{access_key}/policies": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Получить политики пользователя",
+        "description": "Получение списка политик доступа, назначенных пользователю",
+        "operationId": "getUserPolicies",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "access_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Access Key пользователя"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список политик пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "policies": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "description": "Имя политики"
+                          },
+                          "policy": {
+                            "type": "string",
+                            "description": "JSON-документ политики"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{access_key}/policies/{policy_name}": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Назначить политику пользователю",
+        "description": "Назначение или обновление политики доступа для пользователя",
+        "operationId": "assignUserPolicy",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "access_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Access Key пользователя"
+          },
+          {
+            "name": "policy_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя политики"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["policy"],
+                "properties": {
+                  "policy": {
+                    "type": "string",
+                    "description": "JSON-документ политики доступа"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Политика назначена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректная политика",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Удалить политику пользователя",
+        "description": "Удаление назначенной политики доступа у пользователя",
+        "operationId": "removeUserPolicy",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "access_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Access Key пользователя"
+          },
+          {
+            "name": "policy_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя политики для удаления"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Политика удалена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь или политика не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{access_key}/groups/{group_name}": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Добавить пользователя в группу",
+        "description": "Добавление пользователя в указанную группу",
+        "operationId": "addUserToGroup",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "access_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Access Key пользователя"
+          },
+          {
+            "name": "group_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя группы"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь добавлен в группу",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь или группа не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Удалить пользователя из группы",
+        "description": "Удаление пользователя из указанной группы",
+        "operationId": "removeUserFromGroup",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "access_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Access Key пользователя"
+          },
+          {
+            "name": "group_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Имя группы"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь удален из группы",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Пользователь или группа не найдены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs": {
+      "get": {
+        "tags": ["Documentation"],
+        "summary": "Swagger UI",
+        "description": "Интерактивная документация API на основе Swagger UI",
+        "operationId": "swaggerUI",
+        "responses": {
+          "200": {
+            "description": "HTML страница Swagger UI",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs/swagger.json": {
+      "get": {
+        "tags": ["Documentation"],
+        "summary": "OpenAPI спецификация",
+        "description": "Файл OpenAPI спецификации в формате JSON",
+        "operationId": "swaggerSpec",
+        "responses": {
+          "200": {
+            "description": "OpenAPI спецификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "description": "OpenAPI 3.0 спецификация"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Файл спецификации не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT токен для аутентификации. Получается через эндпоинт /auth/login"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "healthy"
+          },
+          "service": {
+            "type": "string",
+            "example": "object-storage-console"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1704067200000
+          },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "s3": {
+                "type": "string",
+                "example": "ok"
+              },
+              "storage": {
+                "type": "string",
+                "example": "ok"
+              }
+            }
+          }
+        }
+      },
+      "ReadyResponse": {
+        "type": "object",
+        "properties": {
+          "ready": {
+            "type": "boolean",
+            "example": true
+          },
+          "service": {
+            "type": "string",
+            "example": "object-storage-console"
+          }
+        }
+      },
+      "LiveResponse": {
+        "type": "object",
+        "properties": {
+          "alive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "VersionResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "api_version": {
+            "type": "string",
+            "example": "v1"
+          },
+          "build_date": {
+            "type": "string",
+            "example": "Nov 12 2025"
+          },
+          "build_time": {
+            "type": "string",
+            "example": "10:30:00"
+          },
+          "compiler": {
+            "type": "string",
+            "example": "GCC 11.4.0"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "description": "Поддерживает два формата: username/password или accessKey/secretKey",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Имя пользователя (альтернатива accessKey)",
+            "example": "admin"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "Пароль пользователя (альтернатива secretKey)",
+            "example": "changeme"
+          },
+          "accessKey": {
+            "type": "string",
+            "description": "Access Key (альтернатива username)",
+            "example": "AKIAIOSFODNN7EXAMPLE"
+          },
+          "secretKey": {
+            "type": "string",
+            "format": "password",
+            "description": "Secret Key (альтернатива password)",
+            "example": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+          }
+        },
+        "oneOf": [
+          {
+            "required": ["username", "password"]
+          },
+          {
+            "required": ["accessKey", "secretKey"]
+          }
+        ]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT токен для последующих запросов",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserInfo"
+          }
+        }
+      },
+      "UserInfo": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin"
+          },
+          "access_key": {
+            "type": "string",
+            "example": "AKIAIOSFODNN7EXAMPLE"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "required": ["old_password", "new_password"],
+        "properties": {
+          "old_password": {
+            "type": "string",
+            "format": "password"
+          },
+          "new_password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8
+          }
+        }
+      },
+      "BucketsListResponse": {
+        "type": "object",
+        "properties": {
+          "buckets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BucketInfo"
+            }
+          }
+        }
+      },
+      "BucketInfo": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "my-bucket"
+          },
+          "creation_date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00Z"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1024000
+          },
+          "objects_count": {
+            "type": "integer",
+            "example": 42
+          },
+          "region": {
+            "type": "string",
+            "example": "us-east-1"
+          },
+          "versioning": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "CreateBucketRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$",
+            "example": "my-new-bucket"
+          },
+          "region": {
+            "type": "string",
+            "example": "us-east-1"
+          },
+          "versioning": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "ObjectsListResponse": {
+        "type": "object",
+        "properties": {
+          "objects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ObjectInfo"
+            }
+          },
+          "is_truncated": {
+            "type": "boolean",
+            "description": "Есть ли еще объекты для получения"
+          },
+          "next_marker": {
+            "type": "string",
+            "description": "Маркер для следующей страницы результатов"
+          }
+        }
+      },
+      "UploadResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Object uploaded successfully"
+          },
+          "key": {
+            "type": "string",
+            "example": "folder/file.txt"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1024
+          },
+          "etag": {
+            "type": "string",
+            "example": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        }
+      },
+      "UsersListResponse": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserInfo"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 10
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "example": "newuser"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8,
+            "example": "SecurePass123!"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "default": false,
+            "example": false
+          }
+        }
+      },
+      "UpdateUserRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "format": "password",
+            "minLength": 8
+          },
+          "is_admin": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "disabled"],
+            "example": "active"
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully"
+          }
+        }
+      },
+      "ObjectInfo": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Ключ объекта",
+            "example": "documents/report.pdf"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Размер объекта в байтах",
+            "example": 1048576
+          },
+          "etag": {
+            "type": "string",
+            "description": "ETag объекта",
+            "example": "\"d41d8cd98f00b204e9800998ecf8427e\""
+          },
+          "last_modified": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Дата последнего изменения",
+            "example": "2025-11-12T10:30:00Z"
+          },
+          "content_type": {
+            "type": "string",
+            "description": "MIME тип содержимого",
+            "example": "application/pdf"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Пользовательские метаданные"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Error description"
+          },
+          "code": {
+            "type": "integer",
+            "example": 400
+          },
+          "details": {
+            "type": "object",
+            "description": "Дополнительные детали ошибки"
+          }
+        }
+      }
+    }
+  }
+}

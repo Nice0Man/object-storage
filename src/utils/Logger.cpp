@@ -3,6 +3,7 @@
 #include "console/common/Logger.hpp"
 
 #include <filesystem>
+#include <iostream>
 
 namespace console {
 

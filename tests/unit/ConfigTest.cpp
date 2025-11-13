@@ -24,6 +24,12 @@ TEST_F(ConfigTest, LoadFromString) {
         "server": {
             "host": "127.0.0.1",
             "port": 8080
+        },
+        "s3": {
+            "endpoint": "http://localhost:9000"
+        },
+        "auth": {
+            "jwt_secret": "test-secret-key"
         }
     })";
 
@@ -34,7 +40,15 @@ TEST_F(ConfigTest, LoadFromString) {
 
 TEST_F(ConfigTest, DefaultValues) {
     auto& config = Config::instance();
-    config.load_from_string("{}");
+    String minimal_config = R"({
+        "s3": {
+            "endpoint": "http://localhost:9000"
+        },
+        "auth": {
+            "jwt_secret": "default-secret"
+        }
+    })";
+    config.load_from_string(minimal_config);
 
     EXPECT_EQ(config.server().host, "0.0.0.0");
     EXPECT_EQ(config.server().port, 9090);

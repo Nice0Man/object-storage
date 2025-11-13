@@ -40,7 +40,7 @@ JWT::initialize(const String& secret, const String& encryption_passphrase, const
 Result<String, String>
 JWT::generate_token(const JWTClaims& claims) {
     if (!initialized_) {
-        return Result<String, String>("JWT not initialized");
+        return Err<String, String>("JWT not initialized");
     }
 
     try {
@@ -50,17 +50,17 @@ JWT::generate_token(const JWTClaims& claims) {
         // Sign with secret
         String token = builder.sign(jwt::algorithm::hs256{secret_});
 
-        return Result<String, String>(token);
+        return Ok<String, String>(std::move(token));
     } catch (const std::exception& e) {
         CONSOLE_LOG_ERROR("Failed to generate JWT token: {}", e.what());
-        return Result<String, String>(String("Failed to generate token: ") + e.what());
+        return Err<String, String>(String("Failed to generate token: ") + e.what());
     }
 }
 
 Result<JWTClaims, String>
 JWT::validate_token(const String& token) {
     if (!initialized_) {
-        return Result<JWTClaims, String>("JWT not initialized");
+        return Err<JWTClaims, String>("JWT not initialized");
     }
 
     try {
@@ -68,7 +68,8 @@ JWT::validate_token(const String& token) {
         auto decoded = jwt::decode(token);
 
         // Create verifier
-        auto verifier = jwt::verify().allow_algorithm(jwt::algorithm::hs256{secret_}).with_issuer("console");
+        auto verifier =
+            jwt::verify().allow_algorithm(jwt::algorithm::hs256{secret_}).with_issuer("object-storage-console");
 
         // Verify signature and claims
         verifier.verify(decoded);
@@ -78,16 +79,13 @@ JWT::validate_token(const String& token) {
 
         // Check expiration
         if (claims.is_expired()) {
-            return Result<JWTClaims, String>("Token expired");
+            return Err<JWTClaims, String>("Token expired");
         }
 
-        return Result<JWTClaims, String>(claims);
-    } catch (const jwt::token_verification_exception& e) {
-        CONSOLE_LOG_WARN("Token verification failed: {}", e.what());
-        return Result<JWTClaims, String>(String("Token verification failed: ") + e.what());
+        return Ok<JWTClaims, String>(std::move(claims));
     } catch (const std::exception& e) {
         CONSOLE_LOG_ERROR("Failed to validate token: {}", e.what());
-        return Result<JWTClaims, String>(String("Failed to validate token: ") + e.what());
+        return Err<JWTClaims, String>(String("Failed to validate token: ") + e.what());
     }
 }
 
@@ -95,7 +93,7 @@ Result<String, String>
 JWT::refresh_token(const String& token, Duration new_expiry) {
     auto claims_result = validate_token(token);
     if (claims_result.is_err()) {
-        return Result<String, String>(claims_result.error());
+        return Err<String, String>(claims_result.error());
     }
 
     auto claims = claims_result.value();
@@ -111,9 +109,9 @@ Result<JWTClaims, String>
 JWT::decode_token_unsafe(const String& token) {
     try {
         auto decoded = jwt::decode(token);
-        return Result<JWTClaims, String>(extract_claims(decoded));
+        return Ok<JWTClaims, String>(extract_claims(decoded));
     } catch (const std::exception& e) {
-        return Result<JWTClaims, String>(String("Failed to decode token: ") + e.what());
+        return Err<JWTClaims, String>(String("Failed to decode token: ") + e.what());
     }
 }
 
@@ -127,7 +125,7 @@ JWT::get_default_expiry() {
     return default_expiry_;
 }
 
-jwt::builder
+jwt::builder<jwt::default_clock, jwt::traits::kazuho_picojson>
 JWT::create_token_builder(const JWTClaims& claims) {
     auto builder = jwt::create();
 
@@ -277,6 +275,16 @@ JWT::extract_claims(const jwt::decoded_jwt<jwt::traits::kazuho_picojson>& decode
         }
     }
 
+    // Extract known custom fields
+    // Note: jwt-cpp with picojson makes it difficult to iterate over unknown claims,
+    // so we extract known custom fields explicitly
+    if (decoded.has_payload_claim("is_admin")) {
+        auto is_admin_claim = decoded.get_payload_claim("is_admin");
+        if (is_admin_claim.get_type() == jwt::json::type::string) {
+            claims.custom_fields["is_admin"] = is_admin_claim.as_string();
+        }
+    }
+
     return claims;
 }
 
@@ -291,13 +299,13 @@ JWT::encrypt_claims(const String& data) {
     // Encrypt using AES-GCM
     auto encrypted_result = AES_GCM::encrypt(plaintext, key);
     if (encrypted_result.is_err()) {
-        return Result<String, String>(encrypted_result.error());
+        return Err<String, String>(encrypted_result.error());
     }
 
     // Encode to base64
     String encoded = Base64::encode(encrypted_result.value());
 
-    return Result<String, String>(encoded);
+    return Ok<String, String>(std::move(encoded));
 }
 
 Result<String, String>
@@ -305,7 +313,7 @@ JWT::decrypt_claims(const String& encrypted_data) {
     // Decode from base64
     auto decoded_result = Base64::decode(encrypted_data);
     if (decoded_result.is_err()) {
-        return Result<String, String>(decoded_result.error());
+        return Err<String, String>(decoded_result.error());
     }
 
     // Derive decryption key using PBKDF2
@@ -314,13 +322,13 @@ JWT::decrypt_claims(const String& encrypted_data) {
     // Decrypt using AES-GCM
     auto decrypted_result = AES_GCM::decrypt(decoded_result.value(), key);
     if (decrypted_result.is_err()) {
-        return Result<String, String>(decrypted_result.error());
+        return Err<String, String>(decrypted_result.error());
     }
 
     // Convert bytes to string
     String decrypted(decrypted_result.value().begin(), decrypted_result.value().end());
 
-    return Result<String, String>(decrypted);
+    return Ok<String, String>(std::move(decrypted));
 }
 
 // ============================================================================
@@ -354,25 +362,25 @@ PBKDF2::derive_key(const String& password, const String& salt, uint32_t iteratio
 Result<ByteArray, String>
 AES_GCM::encrypt(const ByteArray& plaintext, const ByteArray& key) {
     if (key.size() != KEY_SIZE) {
-        return Result<ByteArray, String>("Invalid key size");
+        return Err<ByteArray, String>("Invalid key size");
     }
 
     // Generate random nonce
     ByteArray nonce(NONCE_SIZE);
     if (RAND_bytes(nonce.data(), NONCE_SIZE) != 1) {
-        return Result<ByteArray, String>("Failed to generate nonce");
+        return Err<ByteArray, String>("Failed to generate nonce");
     }
 
     // Initialize cipher context
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx) {
-        return Result<ByteArray, String>("Failed to create cipher context");
+        return Err<ByteArray, String>("Failed to create cipher context");
     }
 
     // Initialize encryption
     if (EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, key.data(), nonce.data()) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        return Result<ByteArray, String>("Failed to initialize encryption");
+        return Err<ByteArray, String>("Failed to initialize encryption");
     }
 
     // Allocate output buffer
@@ -382,7 +390,7 @@ AES_GCM::encrypt(const ByteArray& plaintext, const ByteArray& key) {
     // Encrypt plaintext
     if (EVP_EncryptUpdate(ctx, ciphertext.data(), &len, plaintext.data(), static_cast<int>(plaintext.size())) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        return Result<ByteArray, String>("Encryption failed");
+        return Err<ByteArray, String>("Encryption failed");
     }
 
     int ciphertext_len = len;
@@ -390,7 +398,7 @@ AES_GCM::encrypt(const ByteArray& plaintext, const ByteArray& key) {
     // Finalize encryption
     if (EVP_EncryptFinal_ex(ctx, ciphertext.data() + len, &len) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        return Result<ByteArray, String>("Encryption finalization failed");
+        return Err<ByteArray, String>("Encryption finalization failed");
     }
 
     ciphertext_len += len;
@@ -400,7 +408,7 @@ AES_GCM::encrypt(const ByteArray& plaintext, const ByteArray& key) {
     ByteArray tag(TAG_SIZE);
     if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_SIZE, tag.data()) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        return Result<ByteArray, String>("Failed to get authentication tag");
+        return Err<ByteArray, String>("Failed to get authentication tag");
     }
 
     EVP_CIPHER_CTX_free(ctx);
@@ -412,17 +420,17 @@ AES_GCM::encrypt(const ByteArray& plaintext, const ByteArray& key) {
     result.insert(result.end(), ciphertext.begin(), ciphertext.end());
     result.insert(result.end(), tag.begin(), tag.end());
 
-    return Result<ByteArray, String>(result);
+    return Ok<ByteArray, String>(std::move(result));
 }
 
 Result<ByteArray, String>
 AES_GCM::decrypt(const ByteArray& ciphertext, const ByteArray& key) {
     if (key.size() != KEY_SIZE) {
-        return Result<ByteArray, String>("Invalid key size");
+        return Err<ByteArray, String>("Invalid key size");
     }
 
     if (ciphertext.size() < NONCE_SIZE + TAG_SIZE) {
-        return Result<ByteArray, String>("Invalid ciphertext size");
+        return Err<ByteArray, String>("Invalid ciphertext size");
     }
 
     // Extract components
@@ -433,13 +441,13 @@ AES_GCM::decrypt(const ByteArray& ciphertext, const ByteArray& key) {
     // Initialize cipher context
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx) {
-        return Result<ByteArray, String>("Failed to create cipher context");
+        return Err<ByteArray, String>("Failed to create cipher context");
     }
 
     // Initialize decryption
     if (EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, key.data(), nonce.data()) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        return Result<ByteArray, String>("Failed to initialize decryption");
+        return Err<ByteArray, String>("Failed to initialize decryption");
     }
 
     // Allocate output buffer
@@ -450,7 +458,7 @@ AES_GCM::decrypt(const ByteArray& ciphertext, const ByteArray& key) {
     if (EVP_DecryptUpdate(
             ctx, plaintext.data(), &len, encrypted_data.data(), static_cast<int>(encrypted_data.size())) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        return Result<ByteArray, String>("Decryption failed");
+        return Err<ByteArray, String>("Decryption failed");
     }
 
     int plaintext_len = len;
@@ -458,13 +466,13 @@ AES_GCM::decrypt(const ByteArray& ciphertext, const ByteArray& key) {
     // Set authentication tag
     if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_SIZE, const_cast<unsigned char*>(tag.data())) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        return Result<ByteArray, String>("Failed to set authentication tag");
+        return Err<ByteArray, String>("Failed to set authentication tag");
     }
 
     // Finalize decryption (verifies tag)
     if (EVP_DecryptFinal_ex(ctx, plaintext.data() + len, &len) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        return Result<ByteArray, String>("Decryption finalization failed (authentication failed)");
+        return Err<ByteArray, String>("Decryption finalization failed (authentication failed)");
     }
 
     plaintext_len += len;
@@ -472,7 +480,7 @@ AES_GCM::decrypt(const ByteArray& ciphertext, const ByteArray& key) {
 
     EVP_CIPHER_CTX_free(ctx);
 
-    return Result<ByteArray, String>(plaintext);
+    return Ok<ByteArray, String>(std::move(plaintext));
 }
 
 // ============================================================================
@@ -538,18 +546,40 @@ Base64::decode(const String& encoded) {
         }
     }
 
-    return Result<ByteArray, String>(decoded);
+    return Ok<ByteArray, String>(std::move(decoded));
 }
 
 Result<String, String>
 Base64::decode_string(const String& encoded) {
     auto result = decode(encoded);
     if (result.is_err()) {
-        return Result<String, String>(result.error());
+        return Err<String, String>(result.error());
     }
 
     String decoded(result.value().begin(), result.value().end());
-    return Result<String, String>(decoded);
+    return Ok<String, String>(std::move(decoded));
+}
+
+// ============================================================================
+// JWT - UserInfo Conversion Utility
+// ============================================================================
+
+UserInfo
+JWT::claims_to_userinfo(const JWTClaims& claims) {
+    UserInfo user_info;
+
+    user_info.access_key = claims.account_access_key.empty() ? claims.subject : claims.account_access_key;
+    user_info.secret_key = claims.sts_secret_access_key;
+    user_info.session_token = claims.sts_session_token;
+    user_info.account_name = claims.account_name;
+    user_info.policies = claims.policies;
+    user_info.created_at = claims.issued_at;
+
+    // Check is_admin from custom fields
+    auto it = claims.custom_fields.find("is_admin");
+    user_info.is_admin = (it != claims.custom_fields.end() && it->second == "true");
+
+    return user_info;
 }
 
 } // namespace console::utils

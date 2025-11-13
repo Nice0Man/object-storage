@@ -1,119 +1,232 @@
-# 📚 Документация Object Storage Browser
+# Object Storage Console
 
-> Полное руководство по изучению современной C++ веб-разработки на примере Object Storage Console
+[![CI](https://github.com/Nice0Man/object-storage/actions/workflows/ci.yml/badge.svg)](https://github.com/Nice0Man/object-storage/actions/workflows/ci.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL%203.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![C++](https://img.shields.io/badge/C++-20-blue.svg)](https://isocpp.org/)
+[![Drogon](https://img.shields.io/badge/Drogon-1.9+-green.svg)](https://github.com/drogonframework/drogon)
 
-## 📖 Содержание
+A modern, high-performance S3-compatible object storage web console built with C++20 and Drogon framework.
 
-### Введение
+## ✨ Features
 
-- **[00. Обзор проекта](00-overview.md)** - Общее понимание проекта, цели, технологический стек
+- 🚀 **High Performance** - Built with modern C++20 and Drogon async framework
+- 🔐 **Secure** - JWT authentication, SSL/TLS support, LDAP integration
+- 🎨 **Modern UI** - React-based SPA with beautiful Material Design
+- 📦 **S3 Compatible** - Works with MinIO, AWS S3, and any S3-compatible storage
+- 🔄 **Real-time** - WebSocket support for live updates
+- 📊 **Monitoring** - Built-in metrics and health checks
+- 🧪 **Well Tested** - Comprehensive unit and integration tests
+- 📝 **Well Documented** - Extensive documentation and examples
 
-### Архитектура
+## 🏗️ Architecture
 
-- **[01. Общая архитектура](01-architecture.md)** - High-level архитектура системы
-- **[02. Backend Deep Dive](02-backend-deep-dive.md)** - Детальный разбор Go backend
-- **[03. Frontend архитектура](03-frontend-architecture.md)** - React/TypeScript frontend
+```
+┌─────────────────────────────────────────────────────┐
+│                  React SPA (Web UI)                  │
+├─────────────────────────────────────────────────────┤
+│              REST API (Drogon C++20)                 │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
+│  │   Auth   │  │ Buckets  │  │ Objects  │          │
+│  └──────────┘  └──────────┘  └──────────┘          │
+├─────────────────────────────────────────────────────┤
+│            S3 Client (MinIO SDK / AWS SDK)           │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│         S3-Compatible Object Storage (MinIO)         │
+└─────────────────────────────────────────────────────┘
+```
 
-### Безопасность и доступ
+## 🚀 Quick Start
 
-- **[04. Аутентификация и авторизация](04-authentication-authorization.md)** - JWT, OAuth2, LDAP, policies
+### Prerequisites
 
-### Функциональность
+- **C++ Compiler**: GCC 11+, Clang 14+, or MSVC 2022+
+- **CMake**: 3.20 or higher
+- **vcpkg**: For dependency management
+- **Node.js**: 18+ (for frontend)
 
-- **[05. Функциональные модули](05-functional-modules.md)** - Buckets, Objects, Users, Configuration
-- **[06. WebSocket архитектура](06-websocket-architecture.md)** - Real-time коммуникация
+### Build
 
-### Разработка и развертывание
+```bash
+# Clone repository
+git clone https://github.com/Nice0Man/object-storage.git
+cd object-storage
 
-- **[07. Сборка и развертывание](07-build-deployment.md)** - Build system, Docker, environment
-- **[08. Тестирование](08-testing.md)** - Unit, Integration, E2E тесты
+# Install dependencies via vcpkg
+git clone https://github.com/microsoft/vcpkg.git
+./vcpkg/bootstrap-vcpkg.sh
+./vcpkg/vcpkg install
 
-### API и интеграции
+# Build backend
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake --build build -j$(nproc)
 
-- **[09. API спецификация](09-api-specification.md)** - Swagger/OpenAPI детали
-- **[11. Зависимости и интеграции](11-dependencies-integrations.md)** - Внешние сервисы и библиотеки
+# Build frontend
+cd web-app
+npm install
+npm run build
+cd ..
 
-### Best Practices
+# Run
+./build/bin/console config.json
+```
 
-- **[10. Паттерны и Best Practices](10-patterns-best-practices.md)** - Архитектурные паттерны, оптимизации
+### Docker
 
-### Продвинутые темы
+```bash
+docker build -t object-storage-console .
+docker run -p 9090:9090 -v $(pwd)/config.json:/app/config.json object-storage-console
+```
 
-- **[12. Расширенные темы](12-advanced-topics.md)** - Subpath, Multi-tenancy, HA, Monitoring
+## ⚙️ Configuration
 
-### Практика
+Create `config.json` based on `config.example.json`:
 
-- **[13. Практические упражнения](13-practical-exercises.md)** - Hands-on guide, setup, debugging
-- **[14. План обучения](14-learning-roadmap.md)** - Рекомендуемый порядок изучения
+```json
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 9090,
+    "enable_ssl": false
+  },
+  "s3": {
+    "endpoint": "localhost:9000",
+    "access_key": "minioadmin",
+    "secret_key": "minioadmin"
+  },
+  "auth": {
+    "jwt_secret": "your-secret-key"
+  }
+}
+```
+
+### Environment Variables
+
+```bash
+# Server
+CONSOLE_HOST=0.0.0.0
+CONSOLE_PORT=9090
+
+# S3 (optional, usually empty for local storage)
+S3_ENDPOINT=localhost:9000
+S3_ACCESS_KEY=
+S3_SECRET_KEY=
+
+# Security
+JWT_SECRET=your-secret-key-change-in-production
+
+# Default Admin (change in production!)
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_PASSWORD=changeme
+DEFAULT_ADMIN_ACCOUNT_NAME=Administrator
+DEFAULT_ADMIN_ENABLED=true
+```
+
+> **⚠️ Security Note:** Пароли теперь хешируются с использованием PBKDF2-SHA256. 
+> См. [Security Improvements](docs/SECURITY_IMPROVEMENTS.md) для деталей.
+
+## 🧪 Testing
+
+```bash
+# Unit tests
+ctest --test-dir build --output-on-failure
+
+# Integration tests
+./build/bin/tests/integration_tests
+
+# With coverage
+cmake -B build -DENABLE_COVERAGE=ON
+cmake --build build
+ctest --test-dir build
+lcov --capture --directory build --output-file coverage.info
+genhtml coverage.info --output-directory coverage
+```
+
+## 📚 Documentation
+
+### Main Documentation
+
+- [Architecture Overview](docs/01-architecture.md)
+- [Backend Deep Dive](docs/02-backend-deep-dive.md)
+- [Frontend Architecture](docs/03-frontend-architecture.md)
+- [API Specification](docs/09-api-specification.md)
+- [Build & Deployment](docs/07-build-deployment.md)
+- [Testing Guide](docs/08-testing.md)
+
+### Planning & Development
+
+- [Implementation Plan](stages/01-implementation-plan.md) - Roadmap and current progress (~40%)
+- [Pre-commit Fixes Guide](stages/02-fixes-guide.md) - Detailed guide for fixing linter issues
+- [Quick Fix Guide](stages/03-quick-fix.md) - Fast pre-commit problem resolution
+
+## 🛠️ Development
+
+### Code Quality
+
+```bash
+# Format code
+clang-format -i src/**/*.cpp include/**/*.hpp
+
+# Lint
+clang-tidy src/*.cpp -- -std=c++20
+
+# Pre-commit hooks
+pre-commit install
+pre-commit run --all-files
+```
+
+### Project Structure
+
+```
+object-storage/
+├── src/                    # C++ source files
+│   ├── api/               # API controllers
+│   ├── models/            # Data models
+│   ├── services/          # Business logic
+│   ├── middleware/        # Middleware components
+│   └── utils/             # Utility functions
+├── include/console/        # Header files
+│   ├── api/
+│   ├── models/
+│   ├── services/
+│   ├── middleware/
+│   └── common/
+├── tests/                  # Tests
+│   ├── unit/
+│   └── integration/
+├── web-app/               # React frontend
+├── docs/                  # Documentation
+├── cmake/                 # CMake modules
+└── CMakeLists.txt         # Build configuration
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Drogon](https://github.com/drogonframework/drogon) - C++ web framework
+- [MinIO](https://min.io/) - S3-compatible object storage
+- [React](https://reactjs.org/) - Frontend framework
+- [Material-UI](https://mui.com/) - React component library
+
+## 📧 Contact
+
+- GitHub: [@Nice0Man](https://github.com/Nice0Man)
+- Email: e.krotov03@gmail.com
 
 ---
 
-## 🚀 Быстрый старт
-
-### Для новичков
-
-Начните с:
-
-1. [00-overview.md](00-overview.md) - понимание целей проекта
-2. [01-architecture.md](01-architecture.md) - общая картина
-3. [13-practical-exercises.md](13-practical-exercises.md) - запуск локально
-
-### Для Backend разработчиков
-
-Фокус на:
-
-- [02-backend-deep-dive.md](02-backend-deep-dive.md)
-- [04-authentication-authorization.md](04-authentication-authorization.md)
-- [08-testing.md](08-testing.md)
-
-### Для Frontend разработчиков
-
-Фокус на:
-
-- [03-frontend-architecture.md](03-frontend-architecture.md)
-- [09-api-specification.md](09-api-specification.md)
-- [06-websocket-architecture.md](06-websocket-architecture.md)
-
-### Для DevOps
-
-Фокус на:
-
-- [07-build-deployment.md](07-build-deployment.md)
-- [12-advanced-topics.md](12-advanced-topics.md)
-
----
-
-## 📊 Статистика проекта
-
-- **Язык Backend**: C++20 (GCC 11+, Clang 14+)
-- **Web Framework**: Drogon / Oat++ / Crow
-- **Язык Frontend**: TypeScript + React 18.3.1
-- **Всего файлов моделей**: 153+
-- **Строк в Swagger**: 2858
-- **Тестовых сценариев**: 20+
-- **Build System**: CMake 3.20+
-- **Package Manager**: vcpkg / Conan
-- **Testing**: Google Test, Catch2
-- **Лицензия**: AGPL-3.0-or-later
-
----
-
-## 🤝 Вклад
-
-Эта документация создана для изучения современной C++ веб-разработки.
-Проект демонстрирует best practices при создании высокопроизводительных веб-приложений на C++20.
-
-**Основные технологии:**
-
-- C++20 (coroutines, concepts, ranges)
-- Drogon Web Framework
-- CMake build system
-- vcpkg package management
-- Google Test для тестирования
-
----
-
-**Автор документации**: Техническая документация на основе архитектурного анализа
-**Дата создания**: 2025-11-10
-**Цель**: Обучение современной C++ веб-разработке
-**Уровень**: От intermediate до advanced C++
+Made with ❤️ using Modern C++20

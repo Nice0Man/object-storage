@@ -1,6 +1,6 @@
 {
   "app": {
-    "threads_num": 0,
+    "threads_num": 8,
     "enable_session": true,
     "session_timeout": 3600,
     "document_root": "./web-app/build",
@@ -15,7 +15,7 @@
     "gzip_static": true,
     "static_files_cache_time": 0,
     "idle_connection_timeout": 60,
-    "server_header_field": "OpenMaxIO-Console",
+    "server_header_field": "Object-Storage-Console",
     "keepalive_requests": 0,
     "pipelining_requests": 0,
     "log": {

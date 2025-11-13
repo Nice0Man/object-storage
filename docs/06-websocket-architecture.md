@@ -2,7 +2,7 @@
 
 ## 🔌 Обзор WebSocket в Console
 
-OpenMaxIO Object Browser использует WebSocket для **real-time коммуникации**:
+Object Storage Console использует WebSocket для **real-time коммуникации**:
 
 - Real-time log streaming
 - Bucket event notifications

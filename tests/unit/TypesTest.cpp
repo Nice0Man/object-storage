@@ -7,7 +7,7 @@
 using namespace console;
 
 TEST(TypesTest, ResultOk) {
-    Result<int, String> result(42);
+    Result<int, String> result = Ok<int, String>(42);
 
     EXPECT_TRUE(result.is_ok());
     EXPECT_FALSE(result.is_err());
@@ -15,7 +15,7 @@ TEST(TypesTest, ResultOk) {
 }
 
 TEST(TypesTest, ResultError) {
-    Result<int, String> result(String("error message"));
+    Result<int, String> result = Err<int, String>(String("error message"));
 
     EXPECT_FALSE(result.is_ok());
     EXPECT_TRUE(result.is_err());
@@ -23,7 +23,7 @@ TEST(TypesTest, ResultError) {
 }
 
 TEST(TypesTest, ResultMap) {
-    Result<int, String> result(42);
+    Result<int, String> result = Ok<int, String>(42);
 
     auto mapped = result.map([](int x) { return x * 2; });
 
@@ -32,8 +32,8 @@ TEST(TypesTest, ResultMap) {
 }
 
 TEST(TypesTest, ResultValueOr) {
-    Result<int, String> result_ok(42);
-    Result<int, String> result_err(String("error"));
+    Result<int, String> result_ok = Ok<int, String>(42);
+    Result<int, String> result_err = Err<int, String>(String("error"));
 
     EXPECT_EQ(result_ok.value_or(0), 42);
     EXPECT_EQ(result_err.value_or(0), 0);

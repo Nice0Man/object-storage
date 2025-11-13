@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "object-storage-console",
   "version-string": "1.0.0",
-  "description": "OpenMaxIO Object Browser - S3-compatible web console built with C++20 and Drogon framework",
+  "description": "Object Storage Console - S3-compatible web console built with C++20 and Drogon framework",
   "homepage": "https://github.com/Nice0Man/object-storage",
   "license": "AGPL-3.0",
   "dependencies": [

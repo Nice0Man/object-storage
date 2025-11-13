@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(ObjectStorageConsole
     VERSION 1.0.0
-    DESCRIPTION "OpenMaxIO Object Browser - S3-compatible web console"
+    DESCRIPTION "Object Storage Console - S3-compatible web console"
     LANGUAGES CXX
 )
 
@@ -69,12 +69,12 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
             -fomit-frame-pointer
         )
     endif()
-    
+
     # Link Time Optimization
     if(ENABLE_LTO)
         include(CheckIPOSupported)
         check_ipo_supported(RESULT lto_supported OUTPUT lto_error)
-        
+
         if(lto_supported)
             message(STATUS "LTO/IPO enabled")
             set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
@@ -131,19 +131,19 @@ find_package(jwt-cpp CONFIG QUIET)
 if(NOT jwt-cpp_FOUND)
     message(STATUS "jwt-cpp not found, fetching from GitHub...")
     include(FetchContent)
-    
+
     FetchContent_Declare(
         jwt-cpp
         GIT_REPOSITORY https://github.com/Thalhammer/jwt-cpp.git
         GIT_TAG v0.7.1
         GIT_SHALLOW TRUE
     )
-    
+
     set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(JWT_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    
+
     FetchContent_MakeAvailable(jwt-cpp)
-    
+
     message(STATUS "jwt-cpp fetched successfully")
 endif()
 

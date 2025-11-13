@@ -114,3 +114,6 @@ $RECYCLE.BIN/
 # Linux
 .directory
 .Trash-*
+
+# sqlite
+*.db*

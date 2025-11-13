@@ -23,8 +23,8 @@ TEST_F(LoggerTest, LogLevels) {
 
 TEST_F(LoggerTest, LogMessages) {
     // Test that logging doesn't crash
-    LOG_INFO("Test info message");
-    LOG_DEBUG("Test debug message: {}", 42);
-    LOG_WARN("Test warning");
-    LOG_ERROR("Test error");
+    CONSOLE_LOG_INFO("Test info message");
+    CONSOLE_LOG_DEBUG("Test debug message: {}", 42);
+    CONSOLE_LOG_WARN("Test warning");
+    CONSOLE_LOG_ERROR("Test error");
 }
