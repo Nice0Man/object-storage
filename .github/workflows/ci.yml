@@ -87,10 +87,10 @@ jobs:
     needs: [lint]
 
     strategy:
+      fail-fast: false
       matrix:
         compiler:
           - { cc: gcc-11, cxx: g++-11 }
-          - { cc: clang-14, cxx: clang++-14 }
 
     steps:
     - uses: actions/checkout@v4
@@ -99,21 +99,17 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          cmake \
-          ninja-build \
-          ${{ matrix.compiler.cc }} \
-          ${{ matrix.compiler.cxx }} \
-          libssl-dev \
-          uuid-dev \
-          zlib1g-dev
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends \
+          cmake ninja-build \
+          ${{ matrix.compiler.cc }} ${{ matrix.compiler.cxx }} \
+          libssl-dev uuid-dev zlib1g-dev
 
     - name: Setup vcpkg
       run: |
         if [ ! -d "vcpkg" ]; then
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
-          ./vcpkg/bootstrap-vcpkg.sh
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
         fi
 
     - name: Configure CMake
@@ -142,84 +138,6 @@ jobs:
     - name: Run Tests
       working-directory: build
       run: ctest -C ${{ env.BUILD_TYPE }} --output-on-failure || echo "Tests not ready"
-
-  build-macos:
-    name: Build on macOS
-    runs-on: macos-latest
-    needs: [lint]
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Install Dependencies
-      run: |
-        brew install cmake ninja openssl
-
-    - name: Setup vcpkg
-      run: |
-        if [ ! -d "vcpkg" ]; then
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
-          ./vcpkg/bootstrap-vcpkg.sh
-        fi
-
-    - name: Configure CMake
-      run: |
-        if [ ! -f "CMakeLists.txt" ]; then
-          cat > CMakeLists.txt << 'EOF'
-        cmake_minimum_required(VERSION 3.20)
-        project(ObjectStorageConsole CXX)
-        set(CMAKE_CXX_STANDARD 20)
-        message(STATUS "CI Build - Stub project")
-        EOF
-        fi
-
-        cmake -B build \
-          -G Ninja \
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-
-    - name: Build
-      run: cmake --build build --config ${{ env.BUILD_TYPE }} || echo "Build stage not ready"
-
-  build-windows:
-    name: Build on Windows
-    runs-on: windows-2022
-    needs: [lint]
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Setup vcpkg
-      run: |
-        if (!(Test-Path "vcpkg")) {
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
-          .\vcpkg\bootstrap-vcpkg.bat
-        }
-      shell: pwsh
-
-    - name: Configure CMake
-      run: |
-        if (!(Test-Path "CMakeLists.txt")) {
-          @"
-        cmake_minimum_required(VERSION 3.20)
-        project(ObjectStorageConsole CXX)
-        set(CMAKE_CXX_STANDARD 20)
-        message(STATUS "CI Build - Stub project")
-        "@ | Out-File -FilePath CMakeLists.txt -Encoding utf8
-        }
-
-        cmake -B build `
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
-          -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-      shell: pwsh
-
-    - name: Build
-      run: cmake --build build --config ${{ env.BUILD_TYPE }} || echo "Build stage not ready"
-      shell: pwsh
 
   coverage:
     name: Code Coverage

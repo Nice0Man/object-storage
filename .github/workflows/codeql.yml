@@ -34,14 +34,15 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake ninja-build g++-11 libssl-dev uuid-dev zlib1g-dev
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends \
+          cmake ninja-build g++-11 libssl-dev uuid-dev zlib1g-dev
 
     - name: Setup vcpkg
       run: |
         if [ ! -d "vcpkg" ]; then
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
-          ./vcpkg/bootstrap-vcpkg.sh
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
         fi
 
     - name: Build
