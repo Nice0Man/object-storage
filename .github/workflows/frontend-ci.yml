@@ -1,0 +1,64 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - 'web-app/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    branches: [ main, dev ]
+    paths:
+      - 'web-app/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: web-app
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: web-app/package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run linter
+      run: npm run lint
+      continue-on-error: true
+
+    - name: Run type check
+      run: npm run type-check
+      continue-on-error: true
+
+    - name: Build
+      run: npm run build
+      env:
+        CI: true
+        GENERATE_SOURCEMAP: false
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: frontend-build
+        path: web-app/build
+        retention-days: 7
+
+    - name: Build size report
+      run: |
+        echo "## Build Size Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "```" >> $GITHUB_STEP_SUMMARY
+        du -sh build/* | sort -h >> $GITHUB_STEP_SUMMARY
+        echo "```" >> $GITHUB_STEP_SUMMARY
+      if: success()
