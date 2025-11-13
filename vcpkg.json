@@ -53,6 +53,5 @@
       "version>=": "1.2.13"
     }
   ],
-  "builtin-baseline": "3426db05b996481ca31e95fff3734cf23e0f51bc",
-  "overrides": []
+  "builtin-baseline": "2d6a6cf3ac9a7cc93942c3d289a2f9c661a6f4a7"
 }
