@@ -61,9 +61,7 @@ jobs:
       run: |
         if [ ! -d "vcpkg" ]; then
           git clone https://github.com/microsoft/vcpkg.git vcpkg
-          cd vcpkg
-          git checkout a42af01b72c28a8e1d7b48107b33e4f286a55ef6
-          ./bootstrap-vcpkg.sh
+          ./vcpkg/bootstrap-vcpkg.sh
         fi
 
     - name: Configure CMake
