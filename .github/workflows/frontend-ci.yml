@@ -14,6 +14,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     defaults:
       run:
@@ -31,6 +32,10 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
+
+    - name: Security audit
+      run: npm audit --audit-level=moderate
+      continue-on-error: true
 
     - name: Run linter
       run: npm run lint
@@ -58,7 +63,13 @@ jobs:
       run: |
         echo "## Build Size Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "```" >> $GITHUB_STEP_SUMMARY
-        du -sh build/* | sort -h >> $GITHUB_STEP_SUMMARY
-        echo "```" >> $GITHUB_STEP_SUMMARY
+        echo "### Main Bundle Size" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        ls -lh build/static/js/*.js | awk '{print $9, $5}' >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Total Build Size" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        du -sh build >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
       if: success()

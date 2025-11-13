@@ -1,0 +1,60 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  pre-commit-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install pre-commit
+      run: pip install pre-commit
+
+    - name: Cache pre-commit
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+        restore-keys: |
+          pre-commit-
+
+    - name: Run pre-commit hooks
+      run: SKIP=cpplint,detect-secrets pre-commit run --all-files --show-diff-on-failure
+      continue-on-error: true
+
+  yaml-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Validate workflow files
+      run: |
+        for file in .github/workflows/*.yml; do
+          echo "Validating $file"
+          if ! python -c "import yaml; yaml.safe_load(open('$file'))"; then
+            echo "❌ Invalid YAML: $file"
+            exit 1
+          fi
+          echo "✅ Valid: $file"
+        done
+
+    - name: Check for workflow errors
+      uses: reviewdog/action-actionlint@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        reporter: github-pr-review
+        fail_on_error: false
