@@ -42,7 +42,7 @@ func newApp(name string) *cli.App {
 
 **Ключевые концепции:**
 
-- Использует `github.com/minio/cli` для CLI
+- Использует `github.com/object storage/cli` для CLI
 - Command pattern для регистрации команд
 - Version info из build-time constants
 
@@ -60,7 +60,7 @@ var appCmds = []cli.Command{
 ```go
 var serverCmd = cli.Command{
     Name:   "server",
-    Usage:  "Start MinIO Console server",
+    Usage:  "Start Object Storage Console server",
     Action: serverMain,
     Flags: []cli.Flag{
         cli.StringFlag{
@@ -203,13 +203,13 @@ func getListBucketsResponse(session *models.Principal, params bucket.ListBuckets
     ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
     defer cancel()
 
-    // 2. Create MinIO client from principal credentials
+    // 2. Create Object Storage client from principal credentials
     mClient, err := newMinioClient(session)
     if err != nil {
         return nil, err
     }
 
-    // 3. Call MinIO operation
+    // 3. Call Object Storage operation
     buckets, err := mClient.listBucketsWithContext(ctx)
     if err != nil {
         return nil, err
@@ -275,18 +275,18 @@ func getListBucketsResponse(session *models.Principal, params bucket.ListBuckets
 ```go
 type MinioClient interface {
     // Bucket operations
-    listBucketsWithContext(ctx context.Context) ([]minio.BucketInfo, error)
+    listBucketsWithContext(ctx context.Context) ([]object storage.BucketInfo, error)
     makeBucketWithContext(ctx context.Context, bucketName, location string, objectLocking bool) error
     removeBucket(ctx context.Context, bucketName string) error
     setBucketPolicyWithContext(ctx context.Context, bucketName, policy string) error
     getBucketPolicy(ctx context.Context, bucketName string) (string, error)
 
     // Object operations
-    listObjects(ctx context.Context, bucket string, opts minio.ListObjectsOptions) <-chan minio.ObjectInfo
-    putObject(ctx context.Context, bucketName, objectName string, reader io.Reader, objectSize int64, opts minio.PutObjectOptions) (minio.UploadInfo, error)
-    getObject(ctx context.Context, bucketName, objectName string, opts minio.GetObjectOptions) (*minio.Object, error)
-    removeObject(ctx context.Context, bucketName, objectName string, opts minio.RemoveObjectOptions) error
-    statObject(ctx context.Context, bucketName, prefix string, opts minio.GetObjectOptions) (minio.ObjectInfo, error)
+    listObjects(ctx context.Context, bucket string, opts object storage.ListObjectsOptions) <-chan object storage.ObjectInfo
+    putObject(ctx context.Context, bucketName, objectName string, reader io.Reader, objectSize int64, opts object storage.PutObjectOptions) (object storage.UploadInfo, error)
+    getObject(ctx context.Context, bucketName, objectName string, opts object storage.GetObjectOptions) (*object storage.Object, error)
+    removeObject(ctx context.Context, bucketName, objectName string, opts object storage.RemoveObjectOptions) error
+    statObject(ctx context.Context, bucketName, prefix string, opts object storage.GetObjectOptions) (object storage.ObjectInfo, error)
 
     // Encryption
     setBucketEncryption(ctx context.Context, bucketName string, config *sse.Configuration) error
@@ -294,18 +294,18 @@ type MinioClient interface {
     removeBucketEncryption(ctx context.Context, bucketName string) error
 
     // Tagging
-    putObjectTagging(ctx context.Context, bucketName, objectName string, otags *tags.Tags, opts minio.PutObjectTaggingOptions) error
-    getObjectTagging(ctx context.Context, bucketName, objectName string, opts minio.GetObjectTaggingOptions) (*tags.Tags, error)
+    putObjectTagging(ctx context.Context, bucketName, objectName string, otags *tags.Tags, opts object storage.PutObjectTaggingOptions) error
+    getObjectTagging(ctx context.Context, bucketName, objectName string, opts object storage.GetObjectTaggingOptions) (*tags.Tags, error)
 
     // Retention & Legal Hold
-    getObjectRetention(ctx context.Context, bucketName, objectName, versionID string) (*minio.RetentionMode, *time.Time, error)
-    putObjectRetention(ctx context.Context, bucketName, objectName string, opts minio.PutObjectRetentionOptions) error
-    getObjectLegalHold(ctx context.Context, bucketName, objectName string, opts minio.GetObjectLegalHoldOptions) (*minio.LegalHoldStatus, error)
-    putObjectLegalHold(ctx context.Context, bucketName, objectName string, opts minio.PutObjectLegalHoldOptions) error
+    getObjectRetention(ctx context.Context, bucketName, objectName, versionID string) (*object storage.RetentionMode, *time.Time, error)
+    putObjectRetention(ctx context.Context, bucketName, objectName string, opts object storage.PutObjectRetentionOptions) error
+    getObjectLegalHold(ctx context.Context, bucketName, objectName string, opts object storage.GetObjectLegalHoldOptions) (*object storage.LegalHoldStatus, error)
+    putObjectLegalHold(ctx context.Context, bucketName, objectName string, opts object storage.PutObjectLegalHoldOptions) error
 
     // Versioning
-    getBucketVersioning(ctx context.Context, bucketName string) (minio.BucketVersioningConfiguration, error)
-    setBucketVersioning(ctx context.Context, bucketName string, config minio.BucketVersioningConfiguration) error
+    getBucketVersioning(ctx context.Context, bucketName string) (object storage.BucketVersioningConfiguration, error)
+    setBucketVersioning(ctx context.Context, bucketName string, config object storage.BucketVersioningConfiguration) error
 
     // Replication
     getBucketReplication(ctx context.Context, bucketName string) (replication.Config, error)
@@ -327,15 +327,15 @@ type MinioClient interface {
 ```go
 // minioClient implements MinioClient interface
 type minioClient struct {
-    client *minio.Client  // Actual MinIO SDK client
+    client *object storage.Client  // Actual Object Storage SDK client
 }
 
-func (c minioClient) listBucketsWithContext(ctx context.Context) ([]minio.BucketInfo, error) {
+func (c minioClient) listBucketsWithContext(ctx context.Context) ([]object storage.BucketInfo, error) {
     return c.client.ListBuckets(ctx)
 }
 
 func (c minioClient) makeBucketWithContext(ctx context.Context, bucketName, location string, objectLocking bool) error {
-    return c.client.MakeBucket(ctx, bucketName, minio.MakeBucketOptions{
+    return c.client.MakeBucket(ctx, bucketName, object storage.MakeBucketOptions{
         Region:        location,
         ObjectLocking: objectLocking,
     })
@@ -349,7 +349,7 @@ func (c minioClient) makeBucketWithContext(ctx context.Context, bucketName, loca
 ```go
 func newMinioClient(session *models.Principal) (*minioClient, error) {
     // Endpoint из конфигурации
-    endpoint := getMinIOServer()
+    endpoint := getObject StorageServer()
 
     // Credentials из JWT Principal
     creds := credentials.NewStaticV4(
@@ -358,17 +358,17 @@ func newMinioClient(session *models.Principal) (*minioClient, error) {
         session.STSSessionToken,
     )
 
-    // Создание MinIO client
-    client, err := minio.New(endpoint, &minio.Options{
+    // Создание Object Storage client
+    client, err := object storage.New(endpoint, &object storage.Options{
         Creds:  creds,
-        Secure: getMinIOEndpointIsSecure(),
+        Secure: getObject StorageEndpointIsSecure(),
     })
     if err != nil {
         return nil, err
     }
 
     // Disable retries (fail fast)
-    minio.MaxRetry = 1
+    object storage.MaxRetry = 1
 
     return &minioClient{client: client}, nil
 }
@@ -670,8 +670,8 @@ func Debug(level int, format string, v ...interface{}) {
 func TestListBuckets(t *testing.T) {
     // Setup mock client
     mockClient := &MockMinioClient{
-        listBucketsFunc: func(ctx context.Context) ([]minio.BucketInfo, error) {
-            return []minio.BucketInfo{
+        listBucketsFunc: func(ctx context.Context) ([]object storage.BucketInfo, error) {
+            return []object storage.BucketInfo{
                 {Name: "bucket1", CreationDate: time.Now()},
                 {Name: "bucket2", CreationDate: time.Now()},
             }, nil
@@ -694,10 +694,10 @@ func TestListBuckets(t *testing.T) {
 
 ```go
 func TestCreateBucket(t *testing.T) {
-    // Start MinIO in Docker
+    // Start Object Storage in Docker
     // Start Console server
     // Make HTTP request to /api/v1/buckets
-    // Verify bucket created in MinIO
+    // Verify bucket created in Object Storage
 }
 ```
 

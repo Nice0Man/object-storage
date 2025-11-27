@@ -98,8 +98,8 @@ console:
 BUILD_VERSION := $(shell git describe --exact-match --tags 2>/dev/null || git rev-parse --abbrev-ref HEAD)
 BUILD_TIME := $(shell date)
 
-go build --ldflags "-X 'github.com/minio/console/pkg.Version=$(BUILD_VERSION)' \
-                     -X 'github.com/minio/console/pkg.ReleaseTime=$(BUILD_TIME)'"
+go build --ldflags "-X 'github.com/object storage/console/pkg.Version=$(BUILD_VERSION)' \
+                     -X 'github.com/object storage/console/pkg.ReleaseTime=$(BUILD_TIME)'"
 ```
 
 ### 4. Combined Build (assets + console)
@@ -174,8 +174,8 @@ docker buildx build \
 version: '3.8'
 
 services:
-  minio:
-    image: quay.io/minio/minio:latest
+  object storage:
+    image: quay.io/object storage/object storage:latest
     command: server /data --console-address :9001
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -184,21 +184,21 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - minio-data:/data
+      - object storage-data:/data
 
   console:
     image: openmaxio/console:latest
     environment:
-      CONSOLE_MINIO_SERVER: http://minio:9000
+      CONSOLE_MINIO_SERVER: http://object storage:9000
       CONSOLE_PBKDF_PASSPHRASE: secret-passphrase
       CONSOLE_PBKDF_SALT: secret-salt
     ports:
       - "9090:9090"
     depends_on:
-      - minio
+      - object storage
 
 volumes:
-  minio-data:
+  object storage-data:
 ```
 
 ## 🌐 Environment Variables
@@ -206,7 +206,7 @@ volumes:
 ### Обязательные переменные
 
 ```bash
-# MinIO connection
+# Object Storage connection
 export CONSOLE_MINIO_SERVER=http://localhost:9000
 
 # JWT encryption (важно!)
@@ -285,13 +285,13 @@ export CONSOLE_PBKDF_SALT=secret
 ```ini
 [Unit]
 Description=Object Storage Console Server
-After=network.target minio.service
-Wants=minio.service
+After=network.target object storage.service
+Wants=object storage.service
 
 [Service]
 Type=simple
-User=minio
-Group=minio
+User=object storage
+Group=object storage
 EnvironmentFile=/etc/default/console
 ExecStart=/usr/local/bin/console server
 Restart=on-failure
@@ -327,7 +327,7 @@ sudo journalctl -u console -f  # Logs
 docker run -d \
   --name console \
   -p 9090:9090 \
-  -e CONSOLE_MINIO_SERVER=http://minio:9000 \
+  -e CONSOLE_MINIO_SERVER=http://object storage:9000 \
   -e CONSOLE_PBKDF_PASSPHRASE=secret \
   -e CONSOLE_PBKDF_SALT=secret \
   openmaxio/console:latest
@@ -346,7 +346,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: console
-  namespace: minio
+  namespace: object storage
 spec:
   replicas: 2
   selector:
@@ -364,7 +364,7 @@ spec:
         - containerPort: 9090
         env:
         - name: CONSOLE_MINIO_SERVER
-          value: "http://minio:9000"
+          value: "http://object storage:9000"
         - name: CONSOLE_PBKDF_PASSPHRASE
           valueFrom:
             secretKeyRef:
@@ -392,7 +392,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: console
-  namespace: minio
+  namespace: object storage
 spec:
   selector:
     app: console
@@ -405,7 +405,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: console-secret
-  namespace: minio
+  namespace: object storage
 type: Opaque
 stringData:
   passphrase: your-secret-passphrase
@@ -420,7 +420,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: console
-  namespace: minio
+  namespace: object storage
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -538,7 +538,7 @@ CONSOLE_SUBPATH=/console/
 ├── example.com/         # Domain-specific cert
 │   ├── public.crt
 │   └── private.key
-└── CAs/                 # CA certificates для MinIO
+└── CAs/                 # CA certificates для Object Storage
     └── ca.crt
 ```
 
@@ -585,11 +585,11 @@ curl http://localhost:9090/api/v1/health
 
 ### Prometheus Metrics
 
-Console может экспонировать метрики через MinIO:
+Console может экспонировать метрики через Object Storage:
 
 ```bash
-# MinIO Prometheus endpoint
-curl http://localhost:9000/minio/v2/metrics/cluster
+# Object Storage Prometheus endpoint
+curl http://localhost:9000/object storage/v2/metrics/cluster
 ```
 
 ### Logging
@@ -611,11 +611,11 @@ CONSOLE_DEBUG_LOGLEVEL=6 ./console server
 
 ### Common Issues
 
-#### 1. Cannot connect to MinIO
+#### 1. Cannot connect to Object Storage
 
 ```bash
-# Check MinIO is running
-curl http://localhost:9000/minio/health/live
+# Check Object Storage is running
+curl http://localhost:9000/object storage/health/live
 
 # Verify environment variable
 echo $CONSOLE_MINIO_SERVER

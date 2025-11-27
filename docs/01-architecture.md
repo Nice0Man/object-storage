@@ -33,11 +33,11 @@
 │ │  Generated from swagger.yml via go-openapi                   │ │
 │ └──────────────────────────────────────────────────────────────┘ │
 │                              │                                    │
-│                              │ MinIO SDK                          │
+│                              │ Object Storage SDK                          │
 │                              ▼                                    │
 │ ┌──────────────────────────────────────────────────────────────┐ │
-│ │              MinIO Client Layer                              │ │
-│ │  - minio-go/v7 (S3 API)                                      │ │
+│ │              Object Storage Client Layer                              │ │
+│ │  - object storage-go/v7 (S3 API)                                      │ │
 │ │  - madmin-go/v3 (Admin API)                                  │ │
 │ └──────────────────────────────────────────────────────────────┘ │
 └────────────────────────┬─────────────────────────────────────────┘
@@ -45,7 +45,7 @@
                          │ Port 9000
                          ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                      MinIO Server                                 │
+│                      Object Storage Server                                 │
 │  - Actual object storage                                          │
 │  - S3-compatible API                                              │
 │  - Admin API                                                      │
@@ -103,15 +103,15 @@
    │             │
    │             └─► [Handler] - api/user_buckets.go
    │                    │
-   │                    └─► [MinIO Client] - minio.MakeBucket()
+   │                    └─► [Object Storage Client] - object storage.MakeBucket()
    │                           │
-   │                           └─► [MinIO Server] - Create bucket
+   │                           └─► [Object Storage Server] - Create bucket
    │                                  │
    └──────────────────────────────────┘
 
 3. Response
    │
-   ├─► [MinIO Server] - Returns result
+   ├─► [Object Storage Server] - Returns result
    │      │
    │      └─► [Handler] - Format response
    │             │
@@ -131,11 +131,11 @@
    Browser ─────► WS /ws/console ─────► Upgrade HTTP → WebSocket
 
 2. Streaming
-   MinIO Server ─────► Console Handler ─────► WebSocket ─────► Browser
+   Object Storage Server ─────► Console Handler ─────► WebSocket ─────► Browser
    (Server events)      (Filter/Format)        (Push)         (Display)
 
 3. Bidirectional
-   Browser ─────► Subscribe to bucket events ─────► MinIO Server
+   Browser ─────► Subscribe to bucket events ─────► Object Storage Server
 ```
 
 ## 📂 Слоистая архитектура
@@ -172,15 +172,15 @@
 │ Layer 4: Client Abstraction                             │
 │  - api/client.go (MinioClient interface)                │
 │  - api/client-admin.go (AdminClient operations)         │
-│  - Abstraction over MinIO SDK                           │
+│  - Abstraction over Object Storage SDK                           │
 └───────────────────────────┬─────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────┐
 │ Layer 5: External SDK                                   │
-│  - github.com/minio/minio-go/v7                         │
-│  - github.com/minio/madmin-go/v3                        │
-│  - Direct communication with MinIO Server               │
+│  - github.com/object storage/object storage-go/v7                         │
+│  - github.com/object storage/madmin-go/v3                        │
+│  - Direct communication with Object Storage Server               │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -225,7 +225,7 @@
 
 ```
 ┌──────────┐                                           ┌────────────┐
-│  Browser │                                           │   MinIO    │
+│  Browser │                                           │   Object Storage    │
 └─────┬────┘                                           └──────┬─────┘
       │                                                        │
       │  1. POST /api/v1/login                               │
@@ -258,7 +258,7 @@
       │                                     │     Extract STS │
       │                                     │     tokens      │
       │                                     │                 │
-      │                                     │  8. Call MinIO  │
+      │                                     │  8. Call Object Storage  │
       │                                     │     with STS    │
       │                                     ├────────────────►│
       │                                     │                 │
@@ -275,7 +275,7 @@
    ├─► JWT validation (KeyAuth middleware)
    └─► Token expiration check
 
-3. MinIO Layer
+3. Object Storage Layer
    ├─► STS credentials validation
    ├─► IAM policy evaluation
    └─► Resource-based permissions
@@ -345,7 +345,7 @@ console (binary)
 
 **Required:**
 
-- MinIO Server (v1.0.0+)
+- Object Storage Server (v1.0.0+)
 
 **Optional:**
 
@@ -366,7 +366,7 @@ console (binary)
          │
          ▼
 ┌─────────────────┐
-│  MinIO Server   │
+│  Object Storage Server   │
 │   (Port 9000)   │
 └─────────────────┘
 ```
@@ -386,7 +386,7 @@ console (binary)
          │
          ├─► /console/* ──► Console (9090)
          │
-         └─► /minio/*   ──► MinIO (9000)
+         └─► /object storage/*   ──► Object Storage (9000)
 ```
 
 #### 3. Kubernetes
@@ -396,7 +396,7 @@ console (binary)
 │         Kubernetes Cluster          │
 │                                     │
 │  ┌────────────┐    ┌────────────┐ │
-│  │  Console   │    │   MinIO    │ │
+│  │  Console   │    │   Object Storage    │ │
 │  │    Pod     │    │    Pod     │ │
 │  └──────┬─────┘    └──────┬─────┘ │
 │         │                  │       │
@@ -423,8 +423,8 @@ CONSOLE_PORT                 // HTTP port (default: 9090)
 CONSOLE_TLS_PORT            // HTTPS port (default: 9443)
 CONSOLE_HOSTNAME            // Server hostname
 
-// MinIO connection
-CONSOLE_MINIO_SERVER        // MinIO endpoint URL
+// Object Storage connection
+CONSOLE_MINIO_SERVER        // Object Storage endpoint URL
 
 // Security
 CONSOLE_PBKDF_PASSPHRASE    // JWT encryption key
@@ -501,8 +501,8 @@ User clicks "Download"
   → API call /api/v1/buckets/{bucket}/objects/download?prefix={path}
   → Handler validates JWT
   → Extract STS credentials from JWT
-  → Call MinIO with STS: GetObject(bucket, path)
-  → MinIO returns presigned URL or stream
+  → Call Object Storage with STS: GetObject(bucket, path)
+  → Object Storage returns presigned URL or stream
   → Handler returns to client
   → Browser downloads file
 ```
@@ -516,8 +516,8 @@ User drags file
   → API call POST /api/v1/buckets/{bucket}/objects/upload
   → Handler validates JWT
   → Multipart form parsing
-  → Stream file to MinIO: PutObject(bucket, path, reader)
-  → MinIO writes to disk
+  → Stream file to Object Storage: PutObject(bucket, path, reader)
+  → Object Storage writes to disk
   → Return success response
   → Update Redux store
   → Re-render component (show success)
@@ -537,7 +537,7 @@ pkg/logger/
 ### Monitoring
 
 - Health check endpoint: `/api/v1/health`
-- Prometheus metrics (через MinIO Server)
+- Prometheus metrics (через Object Storage Server)
 - Real-time log streaming via WebSocket
 
 ### Profiling

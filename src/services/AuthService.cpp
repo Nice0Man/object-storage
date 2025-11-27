@@ -38,7 +38,7 @@ AuthService::login(const String& username, const String& password) {
         return Err<Json::Value, models::ApiError>(*error);
     }
 
-    // Authenticate with MinIO and get STS credentials
+    // Authenticate with Object Storage and get STS credentials
     auto auth_result = authenticate_with_minio(username, password);
     if (!auth_result) {
         CONSOLE_LOG_ERROR("Authentication failed for user: {}", username);
@@ -108,7 +108,7 @@ AuthService::get_current_user(const String& token) {
 
     auto& user_info = validate_result.value();
 
-    // Get user details from MinIO Admin API - TODO: implement get_user_info
+    // Get user details from Object Storage Admin API - TODO: implement get_user_info
     // For now, create User from UserInfo
     models::User user(user_info);
 
@@ -137,8 +137,8 @@ AuthService::change_password(const String& token, const String& old_password, co
         return Err<void, models::ApiError>(ApiError(HttpStatus::Unauthorized, "Current password is incorrect"));
     }
 
-    // TODO(Nice0Man): Implement password change via MinIO Admin API
-    // Currently MinIO doesn't have direct password change API
+    // TODO(Nice0Man): Implement password change via Object Storage Admin API
+    // Currently Object Storage doesn't have direct password change API
     // We would need to delete and recreate user, or use LDAP/IDP
 
     return Err<void, models::ApiError>(ApiError(HttpStatus::NotImplemented, "Password change not yet implemented"));

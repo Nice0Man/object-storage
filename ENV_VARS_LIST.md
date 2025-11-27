@@ -29,8 +29,8 @@
 - `DEFAULT_ADMIN_ACCOUNT_NAME` - Display name for admin account (default: Administrator)
 - `DEFAULT_ADMIN_ENABLED` - Enable default admin account creation (default: true)
 
-### S3 Configuration (optional, for future MinIO integration)
-- `S3_ENDPOINT` - MinIO/S3 endpoint URL
+### S3 Configuration (optional, for future Object Storage integration)
+- `S3_ENDPOINT` - Object Storage/S3 endpoint URL
 - `S3_ACCESS_KEY` - S3 access key
 - `S3_SECRET_KEY` - S3 secret key  
 - `S3_REGION` - S3 region (default: us-east-1)

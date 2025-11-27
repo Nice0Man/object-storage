@@ -196,7 +196,7 @@ bucket-name/
 ## 🎯 Ключевые достижения
 
 ### 1. Независимость от внешних зависимостей
-✅ Не требует MinIO Server  
+✅ Не требует Object Storage Server  
 ✅ Не требует AWS SDK  
 ✅ Работает на чистой файловой системе  
 
@@ -240,7 +240,7 @@ bucket-name/
 1. **Configuration Integration**
    - Добавить `storage.type` в config.json
    - Создать StorageClientFactory
-   - Поддержка переключения: local vs minio
+   - Поддержка переключения: local vs object storage
 
 2. **Basic Testing**
    - Исправить manual test (seg fault)

@@ -9,9 +9,9 @@ Presentation Layer (API Handlers)
         ↓
 Business Logic Layer (Domain Logic)
         ↓
-Data Access Layer (MinIO Client)
+Data Access Layer (Object Storage Client)
         ↓
-External Services (MinIO Server)
+External Services (Object Storage Server)
 ```
 
 **Преимущества:**
@@ -53,7 +53,7 @@ func (s *BucketService) ListBuckets(ctx context.Context, principal *models.Princ
 }
 
 // Data Access Layer
-func (r *BucketRepository) List(ctx context.Context, principal *models.Principal) ([]minio.BucketInfo, error) {
+func (r *BucketRepository) List(ctx context.Context, principal *models.Principal) ([]object storage.BucketInfo, error) {
     client, err := r.createClient(principal)
     if err != nil {
         return nil, err
@@ -67,10 +67,10 @@ func (r *BucketRepository) List(ctx context.Context, principal *models.Principal
 ```go
 // Interface definition
 type BucketRepository interface {
-    List(ctx context.Context, principal *models.Principal) ([]minio.BucketInfo, error)
+    List(ctx context.Context, principal *models.Principal) ([]object storage.BucketInfo, error)
     Create(ctx context.Context, principal *models.Principal, bucket *models.Bucket) error
     Delete(ctx context.Context, principal *models.Principal, name string) error
-    Get(ctx context.Context, principal *models.Principal, name string) (*minio.BucketInfo, error)
+    Get(ctx context.Context, principal *models.Principal, name string) (*object storage.BucketInfo, error)
 }
 
 // Implementation
@@ -84,7 +84,7 @@ func NewBucketRepository(factory ClientFactory) BucketRepository {
     }
 }
 
-func (r *minioBucketRepository) List(ctx context.Context, principal *models.Principal) ([]minio.BucketInfo, error) {
+func (r *minioBucketRepository) List(ctx context.Context, principal *models.Principal) ([]object storage.BucketInfo, error) {
     client, err := r.clientFactory.Create(principal)
     if err != nil {
         return nil, err
@@ -165,7 +165,7 @@ func (f *minioClientFactory) CreateMinioClient(principal *models.Principal) (Min
         principal.STSSessionToken,
     )
 
-    client, err := minio.New(f.endpoint, &minio.Options{
+    client, err := object storage.New(f.endpoint, &object storage.Options{
         Creds:  creds,
         Secure: f.secure,
     })
@@ -192,7 +192,7 @@ type FormAuthStrategy struct {
 
 func (s *FormAuthStrategy) Authenticate(creds interface{}) (*models.Principal, error) {
     loginReq := creds.(*models.LoginRequest)
-    // Authenticate with MinIO
+    // Authenticate with Object Storage
     // Return principal
 }
 
@@ -388,7 +388,7 @@ func (rl *RateLimiter) Middleware(next http.Handler) http.Handler {
 ### 1. Connection Pooling
 
 ```go
-// MinIO client с connection pooling
+// Object Storage client с connection pooling
 type ClientPool struct {
     pool    *sync.Pool
     factory ClientFactory
@@ -491,13 +491,13 @@ func (c *Cache) cleanup() {
 
 ```go
 // Получение статистики buckets параллельно
-func getBucketsWithStats(ctx context.Context, client MinioClient, buckets []minio.BucketInfo) []BucketWithStats {
+func getBucketsWithStats(ctx context.Context, client MinioClient, buckets []object storage.BucketInfo) []BucketWithStats {
     results := make([]BucketWithStats, len(buckets))
     var wg sync.WaitGroup
 
     for i, bucket := range buckets {
         wg.Add(1)
-        go func(index int, b minio.BucketInfo) {
+        go func(index int, b object storage.BucketInfo) {
             defer wg.Done()
 
             // Get bucket size and object count
@@ -524,7 +524,7 @@ func streamObjectDownload(w http.ResponseWriter, r *http.Request, client MinioCl
     ctx := r.Context()
 
     // Get object
-    obj, err := client.getObject(ctx, bucket, object, minio.GetObjectOptions{})
+    obj, err := client.getObject(ctx, bucket, object, object storage.GetObjectOptions{})
     if err != nil {
         return err
     }

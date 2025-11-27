@@ -331,7 +331,7 @@ const BucketsList = () => {
 };
 ```
 
-## 🎨 UI Components: MDS (MinIO Design System)
+## 🎨 UI Components: MDS (Object Storage Design System)
 
 ### Dependency
 

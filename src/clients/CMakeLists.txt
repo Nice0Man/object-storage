@@ -1,4 +1,4 @@
-# S3/MinIO client implementations
+# S3/Object Storage client implementations
 
 file(GLOB CLIENTS_SOURCES *.cpp)
 

@@ -12,7 +12,7 @@ A modern, high-performance S3-compatible object storage web console built with C
 - 🚀 **High Performance** - Built with modern C++20 and Drogon async framework
 - 🔐 **Secure** - JWT authentication, SSL/TLS support, LDAP integration
 - 🎨 **Modern UI** - React-based SPA with beautiful Material Design
-- 📦 **S3 Compatible** - Works with MinIO, AWS S3, and any S3-compatible storage
+- 📦 **S3 Compatible** - Works with Object Storage, AWS S3, and any S3-compatible storage
 - 🔄 **Real-time** - WebSocket support for live updates
 - 📊 **Monitoring** - Built-in metrics and health checks
 - 🧪 **Well Tested** - Comprehensive unit and integration tests
@@ -29,11 +29,11 @@ A modern, high-performance S3-compatible object storage web console built with C
 │  │   Auth   │  │ Buckets  │  │ Objects  │          │
 │  └──────────┘  └──────────┘  └──────────┘          │
 ├─────────────────────────────────────────────────────┤
-│            S3 Client (MinIO SDK / AWS SDK)           │
+│            S3 Client (Object Storage SDK / AWS SDK)           │
 └─────────────────────────────────────────────────────┘
                         ↓
 ┌─────────────────────────────────────────────────────┐
-│         S3-Compatible Object Storage (MinIO)         │
+│         S3-Compatible Object Storage (Object Storage)         │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -218,7 +218,7 @@ This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE)
 ## 🙏 Acknowledgments
 
 - [Drogon](https://github.com/drogonframework/drogon) - C++ web framework
-- [MinIO](https://min.io/) - S3-compatible object storage
+- [Object Storage](https://min.io/) - S3-compatible object storage
 - [React](https://reactjs.org/) - Frontend framework
 - [Material-UI](https://mui.com/) - React component library
 

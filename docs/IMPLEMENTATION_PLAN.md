@@ -1,7 +1,7 @@
 # Local Storage Implementation Plan
 
 ## Цель
-Реализовать собственное файловое хранилище объектов, совместимое с S3 API, не требующее внешних зависимостей (MinIO, AWS SDK).
+Реализовать собственное файловое хранилище объектов, совместимое с S3 API, не требующее внешних зависимостей (Object Storage, AWS SDK).
 
 ## Этапы реализации
 
@@ -249,20 +249,20 @@ policies/
 
 #### 10.1 Конфигурация
 - [ ] Добавление параметров в Config
-- [ ] Выбор storage backend (MinIO или Local)
+- [ ] Выбор storage backend (Object Storage или Local)
 - [ ] Настройка storage root path
 
 **config.json:**
 ```json
 {
   "storage": {
-    "type": "local",  // или "minio"
+    "type": "local",  // или "object storage"
     "local": {
       "root_path": "/var/lib/object-storage",
       "enable_versioning": true,
       "cache_size_mb": 1024
     },
-    "minio": {
+    "object storage": {
       "endpoint": "localhost:9000",
       "access_key": "minioadmin",
       "secret_key": "minioadmin"
@@ -273,7 +273,7 @@ policies/
 
 #### 10.2 Factory Pattern
 - [ ] `StorageClientFactory` - создание клиента
-- [ ] Переключение между Local и MinIO
+- [ ] Переключение между Local и Object Storage
 
 ```cpp
 std::shared_ptr<IMinioClient> create_storage_client(const Config& config) {
@@ -325,7 +325,7 @@ tests/integration/storage/
 
 #### 12.2 User Guides
 - [ ] Configuration guide
-- [ ] Migration guide (MinIO -> Local)
+- [ ] Migration guide (Object Storage -> Local)
 - [ ] Performance tuning guide
 
 ## Timeline Summary

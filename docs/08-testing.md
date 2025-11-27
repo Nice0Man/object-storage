@@ -5,7 +5,7 @@
 Object Storage Console использует **многоуровневую стратегию тестирования**:
 
 1. **Unit Tests** - Тестирование отдельных функций/компонентов
-2. **Integration Tests** - Тестирование взаимодействия с MinIO
+2. **Integration Tests** - Тестирование взаимодействия с Object Storage
 3. **E2E Tests** - End-to-end тестирование через UI
 4. **Replication Tests** - Тестирование multi-site репликации
 5. **SSO Tests** - Тестирование SSO/LDAP интеграции
@@ -50,17 +50,17 @@ import (
     "testing"
     "time"
 
-    "github.com/minio/minio-go/v7"
+    "github.com/object storage/object storage-go/v7"
     "github.com/stretchr/testify/assert"
 )
 
-// Mock MinIO Client
+// Mock Object Storage Client
 type MockMinioClient struct {
-    listBucketsFunc func(ctx context.Context) ([]minio.BucketInfo, error)
+    listBucketsFunc func(ctx context.Context) ([]object storage.BucketInfo, error)
     makeBucketFunc  func(ctx context.Context, bucketName, location string, objectLocking bool) error
 }
 
-func (m *MockMinioClient) listBucketsWithContext(ctx context.Context) ([]minio.BucketInfo, error) {
+func (m *MockMinioClient) listBucketsWithContext(ctx context.Context) ([]object storage.BucketInfo, error) {
     if m.listBucketsFunc != nil {
         return m.listBucketsFunc(ctx)
     }
@@ -78,8 +78,8 @@ func (m *MockMinioClient) makeBucketWithContext(ctx context.Context, bucketName,
 func TestListBuckets(t *testing.T) {
     // Setup mock
     mockClient := &MockMinioClient{
-        listBucketsFunc: func(ctx context.Context) ([]minio.BucketInfo, error) {
-            return []minio.BucketInfo{
+        listBucketsFunc: func(ctx context.Context) ([]object storage.BucketInfo, error) {
+            return []object storage.BucketInfo{
                 {
                     Name:         "bucket1",
                     CreationDate: time.Now(),
@@ -179,7 +179,7 @@ test-pkg:
 
 **Location:** `integration/`
 
-**Подход:** Запуск реального MinIO в Docker
+**Подход:** Запуск реального Object Storage в Docker
 
 ```go
 // integration/buckets_test.go
@@ -191,7 +191,7 @@ import (
     "encoding/json"
 )
 
-// Setup: Start MinIO and Console in Docker
+// Setup: Start Object Storage and Console in Docker
 // See Makefile target: test-integration
 
 func TestIntegration_CreateBucket(t *testing.T) {
@@ -214,7 +214,7 @@ func TestIntegration_CreateBucket(t *testing.T) {
     assert.NoError(t, err)
     assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-    // 3. Verify bucket exists in MinIO
+    // 3. Verify bucket exists in Object Storage
     listReq, _ := http.NewRequest("GET", "http://localhost:9090/api/v1/buckets", nil)
     listReq.Header.Set("Authorization", "Bearer "+token)
 
@@ -285,7 +285,7 @@ make test-integration
 **Что делает Makefile:**
 
 1. Создает Docker network
-2. Запускает MinIO в Docker
+2. Запускает Object Storage в Docker
 3. Запускает Console server
 4. Выполняет тесты
 5. Останавливает контейнеры
@@ -294,13 +294,13 @@ make test-integration
 ```makefile
 test-integration:
  @(docker network create mynet123)
- @(docker run -d --name minio --network mynet123 -p 9000:9000 \
+ @(docker run -d --name object storage --network mynet123 -p 9000:9000 \
    -e MINIO_KMS_SECRET_KEY=my-key:xxx \
-   quay.io/minio/minio:latest server /data{1...4} --console-address ':9091')
+   quay.io/object storage/object storage:latest server /data{1...4} --console-address ':9091')
  @(sleep 5)
  @(cd integration && go test -coverpkg=../api -c -tags testrunmain . && \
    ./integration.test -test.v -test.run "^Test*" -test.coverprofile=coverage/system.out)
- @(docker stop minio)
+ @(docker stop object storage)
  @(docker network rm mynet123)
 ```
 
@@ -313,14 +313,14 @@ test-integration:
 ```go
 // replication/replication_test.go
 func TestReplication_SiteSetup(t *testing.T) {
-    // Setup: 3 MinIO instances (minio, minio1, minio2)
+    // Setup: 3 Object Storage instances (object storage, minio1, minio2)
     // Each running on different port (9000, 9001, 9002)
 
     // 1. Create admin credentials for all sites
     sites := []madmin.PeerSite{
         {
             Name:      "site1",
-            Endpoint:  "http://minio:9000",
+            Endpoint:  "http://object storage:9000",
             AccessKey: "minioadmin",
             SecretKey: "minioadmin",
         },
@@ -363,7 +363,7 @@ func TestReplication_SiteSetup(t *testing.T) {
     time.Sleep(5 * time.Second)
 
     // Verify object exists on site2 and site3
-    // (requires connecting to other MinIO instances)
+    // (requires connecting to other Object Storage instances)
 }
 ```
 
@@ -383,7 +383,7 @@ make test-replication
 
 1. OpenLDAP (user database)
 2. Dex (OIDC provider)
-3. MinIO (configured with OIDC)
+3. Object Storage (configured with OIDC)
 4. Console
 
 ```go
@@ -427,7 +427,7 @@ make test-sso-integration
 
 1. Запускает OpenLDAP container
 2. Запускает Dex container (OIDC provider)
-3. Настраивает MinIO с OIDC
+3. Настраивает Object Storage с OIDC
 4. Создает test пользователя в LDAP
 5. Назначает политики
 6. Выполняет SSO тесты

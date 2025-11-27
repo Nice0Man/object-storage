@@ -2,7 +2,7 @@
 
 ## 📋 Обзор
 
-Данный документ описывает план реализации веб-консоли для управления объектным хранилищем MinIO с использованием C++20 и Drogon Framework.
+Данный документ описывает план реализации веб-консоли для управления объектным хранилищем Object Storage с использованием C++20 и Drogon Framework.
 
 ## 🎯 Архитектурные решения
 
@@ -40,7 +40,7 @@
 │      (Business Logic: Auth, Bucket, Object, User)        │
 ├─────────────────────────────────────────────────────────┤
 │                     Client Layer                          │
-│           (MinIO S3 Client / Admin Client)               │
+│           (Object Storage S3 Client / Admin Client)               │
 ├─────────────────────────────────────────────────────────┤
 │                       Data Layer                          │
 │              (Models, Serialization, Types)               │
@@ -138,7 +138,7 @@
 - OpenSSL для криптографии
 - Поддержка custom claims
 
-### 4. MinIO Client Interface
+### 4. Object Storage Client Interface
 
 ✅ **MinioClient.hpp** (`include/console/clients/`)
 
@@ -200,7 +200,7 @@
 
 ## 🚧 В процессе реализации
 
-### 1. MinIO Client Implementation
+### 1. Object Storage Client Implementation
 
 **Статус:** Интерфейс готов, нужна реализация
 
@@ -208,7 +208,7 @@
 
 - [ ] Реализация HTTP клиента для S3 API
 - [ ] AWS Signature V4 для аутентификации запросов
-- [ ] Парсинг XML ответов от MinIO
+- [ ] Парсинг XML ответов от Object Storage
 - [ ] Обработка multipart uploads
 - [ ] Streaming для больших файлов
 - [ ] Retry logic и error handling
@@ -232,7 +232,7 @@
 
 **Компоненты:**
 
-- [ ] **AuthService** - аутентификация через MinIO STS
+- [ ] **AuthService** - аутентификация через Object Storage STS
 - [ ] **BucketService** - бизнес-логика для buckets
 - [ ] **ObjectService** - бизнес-логика для objects
 - [ ] **UserService** - управление пользователями
@@ -289,7 +289,7 @@ public:
 
 ### Этап 1: Завершение базовой инфраструктуры (приоритет: высокий)
 
-**1. MinIO Client реализация** ⏱️ ~16 часов
+**1. Object Storage Client реализация** ⏱️ ~16 часов
 
 - Интеграция AWS SDK C++ ИЛИ написание собственного S3 клиента
 - Реализация bucket operations
@@ -298,7 +298,7 @@ public:
 
 **2. Services Layer** ⏱️ ~12 часов
 
-- AuthService с MinIO STS integration
+- AuthService с Object Storage STS integration
 - BucketService
 - ObjectService
 - UserService, GroupService, PolicyService
@@ -367,7 +367,7 @@ public:
 **13. Integration Tests** ⏱️ ~6 часов
     - API endpoints tests
     - End-to-end scenarios
-    - MinIO integration tests
+    - Object Storage integration tests
 
 **14. Documentation** ⏱️ ~4 часа
     - API documentation (Swagger/OpenAPI)
@@ -413,7 +413,7 @@ public:
 
 ```json
 {
-  "aws-sdk-cpp": {              // Для MinIO S3 client
+  "aws-sdk-cpp": {              // Для Object Storage S3 client
     "components": ["s3", "sts", "iam"]
   },
   "gtest": "^1.14.0",           // Testing
@@ -424,7 +424,7 @@ public:
 
 ### Внешние сервисы
 
-- **MinIO Server** (v1.0.0+) - обязательно
+- **Object Storage Server** (v1.0.0+) - обязательно
 - **Redis** - опционально, для кеша
 - **LDAP/Active Directory** - опционально, для LDAP auth
 - **OAuth2 Provider** - опционально, для SSO
@@ -442,7 +442,7 @@ object-storage-console/
 │   │   ├── GroupsController.hpp
 │   │   ├── PoliciesController.hpp
 │   │   └── AdminController.hpp
-│   ├── clients/               # MinIO clients
+│   ├── clients/               # Object Storage clients
 │   │   ├── MinioClient.hpp
 │   │   └── MinioAdminClient.hpp (в MinioClient.hpp)
 │   ├── services/              # Business logic
@@ -504,7 +504,7 @@ object-storage-console/
 - CMake 3.20+
 - vcpkg
 - Node.js 18+ и Yarn (для frontend)
-- MinIO Server (для тестирования)
+- Object Storage Server (для тестирования)
 
 ### Сборка
 
@@ -539,8 +539,8 @@ yarn start    # Development mode
 |-----------|--------|----------|
 | Модели данных | Завершено | 100% |
 | JWT Utilities | Завершено | 100% |
-| MinIO Client (интерфейс) | Завершено | 100% |
-| MinIO Client (реализация) | 🚧 В процессе | 0% |
+| Object Storage Client (интерфейс) | Завершено | 100% |
+| Object Storage Client (реализация) | 🚧 В процессе | 0% |
 | Services Layer | ❌ Не начато | 0% |
 | Middleware | 🚧 Частично | 30% |
 | API Controllers | 🚧 Частично | 40% |
@@ -552,8 +552,8 @@ yarn start    # Development mode
 
 1. ✅ ~~Создать базовые модели данных~~
 2. ✅ ~~Реализовать JWT utilities~~
-3. ✅ ~~Создать интерфейс MinIO Client~~
-4. 🔄 Реализовать MinIO Client (AWS SDK integration)
+3. ✅ ~~Создать интерфейс Object Storage Client~~
+4. 🔄 Реализовать Object Storage Client (AWS SDK integration)
 5. 🔄 Создать Services Layer
 6. 🔄 Реализовать Middleware
 7. 🔄 Дополнить API Controllers
@@ -564,7 +564,7 @@ yarn start    # Development mode
 ## 📚 Дополнительные ресурсы
 
 - [Drogon Documentation](https://drogon.org/)
-- [MinIO Documentation](https://min.io/docs/)
+- [Object Storage Documentation](https://min.io/docs/)
 - [AWS S3 API Reference](https://docs.aws.amazon.com/s3/index.html)
 - [JWT Best Practices](https://tools.ietf.org/html/rfc8725)
 - [C++20 Features](https://en.cppreference.com/w/cpp/20)

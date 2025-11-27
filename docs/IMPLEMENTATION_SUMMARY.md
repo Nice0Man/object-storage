@@ -2,7 +2,7 @@
 
 ## 📋 Обзор
 
-Успешно реализована собственная система хранилища объектов на основе файловой системы, полностью совместимая с S3 API, без зависимости от MinIO или AWS SDK.
+Успешно реализована собственная система хранилища объектов на основе файловой системы, полностью совместимая с S3 API, без зависимости от Object Storage или AWS SDK.
 
 ## ✅ Реализовано
 
@@ -381,5 +381,5 @@ auto client = std::make_shared<MinioClient>(endpoint, access_key, secret_key);
 - Offline-first applications
 - Embedded systems
 
-**Следующий шаг:** Интеграция с Config для выбора storage backend (local vs minio)
+**Следующий шаг:** Интеграция с Config для выбора storage backend (local vs object storage)
 

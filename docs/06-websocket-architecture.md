@@ -39,16 +39,16 @@ Object Storage Console использует WebSocket для **real-time ком�
 
 ### 1. Console Logs (`/ws/console`)
 
-**Purpose:** Real-time log streaming from MinIO server
+**Purpose:** Real-time log streaming from Object Storage server
 
 **Flow:**
 
 ```
 Client connects to /ws/console
   ↓
-Server establishes MinIO trace connection
+Server establishes Object Storage trace connection
   ↓
-MinIO streams logs to Console
+Object Storage streams logs to Console
   ↓
 Console forwards to WebSocket client
   ↓
@@ -74,7 +74,7 @@ package api
 
 import (
     "net/http"
-    "github.com/minio/websocket"
+    "github.com/object storage/websocket"
 )
 
 // WebSocket handlers registry
@@ -132,7 +132,7 @@ func wsConsoleLogsHandler(w http.ResponseWriter, r *http.Request) {
     }
     defer conn.Close()
 
-    // Create MinIO admin client
+    // Create Object Storage admin client
     adminClient, err := newAdminClient(session)
     if err != nil {
         logger.Error("Failed to create admin client: %v", err)
@@ -208,7 +208,7 @@ func wsWatchBucketHandler(w http.ResponseWriter, r *http.Request) {
     }
     defer conn.Close()
 
-    // Create MinIO client
+    // Create Object Storage client
     mClient, err := newMinioClient(session)
     if err != nil {
         return

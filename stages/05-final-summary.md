@@ -10,7 +10,7 @@
 
 1. ✅ Создать базовые модели данных
 2. ✅ Реализовать JWT utilities
-3. ✅ Создать MinIO Client wrapper
+3. ✅ Создать Object Storage Client wrapper
 4. ✅ Реализовать Services layer
 5. ✅ Создать Middleware
 6. ✅ Дополнить API Controllers
@@ -95,7 +95,7 @@ object-storage/
   - Login/Logout/Refresh
   - JWT token management
   - Password validation
-  - MinIO STS integration stub
+  - Object Storage STS integration stub
   
 - ✅ **BucketService** - Bucket operations
   - CRUD operations
@@ -187,11 +187,11 @@ Services (Business Logic)
         ↓
 Client Interfaces (Data Access)
         ↓
-MinIO Server (External)
+Object Storage Server (External)
 ```
 
 ### Паттерны
-- ✅ **Repository Pattern** - MinIO Client abstraction
+- ✅ **Repository Pattern** - Object Storage Client abstraction
 - ✅ **Dependency Injection** - Service construction
 - ✅ **Result<T, E>** - Type-safe error handling
 - ✅ **Builder Pattern** - Config, JWT
@@ -253,7 +253,7 @@ MinIO Server (External)
 
 ## 🚧 Не реализовано
 
-### MinIO Client (0%)
+### Object Storage Client (0%)
 **Причина:** Требует AWS SDK C++ или custom HTTP client
 
 **Необходимо:**
@@ -276,13 +276,13 @@ MinIO Server (External)
 ### Frontend (0%)
 - ⏳ React 18.3.1 + TypeScript
 - ⏳ Redux Toolkit
-- ⏳ MinIO Design System
+- ⏳ Object Storage Design System
 - ⏳ WebSocket client
 
 ## 🎯 Следующие шаги
 
 ### Краткосрочные (1-2 дня)
-1. Реализовать MinIO Client (real implementation)
+1. Реализовать Object Storage Client (real implementation)
 2. Добавить integration tests
 3. Завершить недостающие endpoints
 
@@ -329,7 +329,7 @@ MinIO Server (External)
 - ✅ Optimized build system
 
 **Осталось:**
-- ⏳ MinIO Client реализация
+- ⏳ Object Storage Client реализация
 - ⏳ Frontend
 - ⏳ Deployment
 

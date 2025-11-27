@@ -2,13 +2,13 @@
 
 ## 🎯 Что это такое?
 
-**Object Storage Console** - это графический веб-интерфейс для управления объектным хранилищем MinIO Server. Проект является community-maintained решением для управления S3-совместимым хранилищем.
+**Object Storage Console** - это графический веб-интерфейс для управления объектным хранилищем Object Storage Server. Проект является community-maintained решением для управления S3-совместимым хранилищем.
 
 ## 📜 История и мотивация
 
 ### Предыстория
 
-MinIO - это high-performance объектное хранилище, совместимое с Amazon S3 API. Проект создан для предоставления удобного веб-интерфейса для управления объектным хранилищем.
+Object Storage - это high-performance объектное хранилище, совместимое с Amazon S3 API. Проект создан для предоставления удобного веб-интерфейса для управления объектным хранилищем.
 
 ### Цель проекта
 >
@@ -24,7 +24,7 @@ MinIO - это high-performance объектное хранилище, совм�
 
 ### Основной функционал
 
-1. **Web UI для MinIO Server** - управление через браузер
+1. **Web UI для Server** - управление через браузер
 2. **Object Browser** - просмотр, загрузка, скачивание файлов
 3. **Bucket Management** - создание, настройка, удаление buckets
 4. **User & Group Management** - управление доступом
@@ -38,7 +38,7 @@ MinIO - это high-performance объектное хранилище, совм�
 - **DevOps инженеры** - развертывание и управление хранилищем
 - **Backend разработчики** - интеграция с S3-совместимым API
 - **Data Engineers** - работа с большими объемами данных
-- **System Administrators** - администрирование MinIO кластеров
+- **System Administrators** - администрирование Object Storage кластеров
 - **Security Engineers** - настройка политик безопасности
 
 ## 🛠️ Технологический стек
@@ -63,7 +63,7 @@ MinIO - это high-performance объектное хранилище, совм�
 Язык: TypeScript
 Framework: React 18.3.1
 State Management: Redux Toolkit
-UI Library: MDS (MinIO Design System)
+UI Library: MDS (Object Storage Design System)
 Routing: React Router 6.29.0
 HTTP Client: Superagent
 ```
@@ -100,7 +100,7 @@ openmaxio-object-browser/
 │
 ├── api/                  # 🔌 Backend API handlers
 │   ├── configure_console.go  # Main configuration
-│   ├── client*.go       # MinIO client wrappers
+│   ├── client*.go       # Object Storage client wrappers
 │   ├── user_*.go        # User domain logic
 │   ├── admin_*.go       # Admin operations
 │   └── operations/      # Generated API handlers
@@ -202,16 +202,16 @@ openmaxio-object-browser/
 - ✅ Dependency injection
 - ✅ Event-driven architecture
 
-## 🔗 Связь с MinIO экосистемой
+## 🔗 Связь с Object Storage экосистемой
 
-### MinIO Server
+### Object Storage Server
 
-**Object Storage Console** - это UI для управления **MinIO Server**. Они работают как отдельные процессы:
+**Object Storage Console** - это UI для управления **Object Storage Server**. Они работают как отдельные процессы:
 
 ```
 ┌─────────────────┐         HTTP/S          ┌─────────────────┐
-│                 │ ◄───────────────────────► │                 │
-│  MinIO Server   │      S3 API Calls       │  Object Browser │
+│                 │ ◄─────────────────────► │                 │
+│     Server      │      S3 API Calls       │  Object Browser │
 │   (Port 9000)   │                         │   (Port 9090)   │
 │                 │                         │                 │
 └─────────────────┘                         └─────────────────┘
@@ -222,13 +222,13 @@ openmaxio-object-browser/
   (Buckets/Objects)                          User Management
 ```
 
-### MinIO Client (mc)
+### Object Storage Client (mc)
 
-Object Browser использует библиотеку `github.com/minio/mc/cmd` для некоторых операций, что обеспечивает консистентность с CLI инструментом `mc`.
+Object Browser использует библиотеку `github.com/object storage/mc/cmd` для некоторых операций, что обеспечивает консистентность с CLI инструментом `mc`.
 
 ### KES (Key Encryption Service)
 
-Для enterprise-grade encryption интегрируется с MinIO KES через `github.com/minio/kes`.
+Для enterprise-grade encryption интегрируется с Object Storage KES через `github.com/object storage/kes`.
 
 ## 📄 Лицензия
 

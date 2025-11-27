@@ -17,7 +17,7 @@ Object Storage Console поддерживает **4 метода аутенти�
 
 ```
 ┌─────────┐                                          ┌──────────┐
-│ Browser │                                          │  MinIO   │
+│ Browser │                                          │  Object Storage   │
 └────┬────┘                                          └────┬─────┘
      │                                                    │
      │ 1. POST /api/v1/login                             │
@@ -50,7 +50,7 @@ Object Storage Console поддерживает **4 метода аутенти�
      │                                   │ 7. Validate JWT│
      │                                   │    Extract STS │
      │                                   │                │
-     │                                   │ 8. Call MinIO  │
+     │                                   │ 8. Call Object Storage  │
      │                                   ├───────────────►│
      │                                   │                │
 ```
@@ -63,7 +63,7 @@ Object Storage Console поддерживает **4 метода аутенти�
 type ClaimsWithCustomFields struct {
     jwt.StandardClaims
 
-    // MinIO STS credentials (encrypted)
+    // Object Storage STS credentials (encrypted)
     STSAccessKeyID     string `json:"stsAccessKeyID,omitempty"`
     STSSecretAccessKey string `json:"stsSecretAccessKey,omitempty"`
     STSSessionToken    string `json:"stsSessionToken,omitempty"`
@@ -199,9 +199,9 @@ User enters credentials
   ↓
 POST /api/v1/login { accessKey, secretKey }
   ↓
-Backend validates with MinIO
+Backend validates with Object Storage
   ↓
-MinIO returns STS credentials
+Object Storage returns STS credentials
   ↓
 Generate JWT with STS embedded
   ↓
@@ -222,10 +222,10 @@ func getLoginResponse(lr *models.LoginRequest) (*string, error) {
     accessKey := *lr.AccessKey
     secretKey := *lr.SecretKey
 
-    // Create MinIO credentials
+    // Create Object Storage credentials
     creds := credentials.NewStaticV4(accessKey, secretKey, "")
 
-    // Create MinIO client
+    // Create Object Storage client
     client, err := newMinioClient(creds)
     if err != nil {
         return nil, err
@@ -240,7 +240,7 @@ func getLoginResponse(lr *models.LoginRequest) (*string, error) {
         return nil, errors.New("invalid credentials")
     }
 
-    // Get STS credentials from MinIO
+    // Get STS credentials from Object Storage
     stsCredentials, err := getSTSCredentials(accessKey, secretKey)
     if err != nil {
         return nil, err
@@ -341,7 +341,7 @@ const LoginPage = () => {
    ↓
 8. Extract user info from id_token
    ↓
-9. Get MinIO STS credentials for OIDC user
+9. Get Object Storage STS credentials for OIDC user
    ↓
 10. Generate Console JWT
    ↓
@@ -357,7 +357,7 @@ CONSOLE_IDP_CLIENT_SECRET=secret
 CONSOLE_IDP_URL=https://dex.example.com
 CONSOLE_IDP_CALLBACK=http://localhost:9090/oauth_callback
 
-// MinIO server must also be configured
+// Object Storage server must also be configured
 MINIO_IDENTITY_OPENID_CLIENT_ID=console-app
 MINIO_IDENTITY_OPENID_CLIENT_SECRET=secret
 MINIO_IDENTITY_OPENID_CONFIG_URL=https://dex.example.com/.well-known/openid-configuration
@@ -408,7 +408,7 @@ func getLoginOauth2AuthResponse(lr *models.LoginOauth2AuthRequest) (*models.Logi
         return nil, err
     }
 
-    // Get MinIO STS credentials for OIDC user
+    // Get Object Storage STS credentials for OIDC user
     stsCredentials, err := getSTSCredentialsForOIDC(rawIDToken)
     if err != nil {
         return nil, err
@@ -445,7 +445,7 @@ func getLoginOauth2AuthResponse(lr *models.LoginOauth2AuthRequest) (*models.Logi
 5. Get user groups
    LDAP Search: memberOf attributes
    ↓
-6. Get MinIO STS credentials for LDAP user
+6. Get Object Storage STS credentials for LDAP user
    ↓
 7. Generate Console JWT
    ↓
@@ -458,7 +458,7 @@ func getLoginOauth2AuthResponse(lr *models.LoginOauth2AuthRequest) (*models.Logi
 # Environment variables
 CONSOLE_LDAP_ENABLED=on
 
-# MinIO server LDAP configuration
+# Object Storage server LDAP configuration
 MINIO_IDENTITY_LDAP_SERVER_ADDR=ldap.example.com:389
 MINIO_IDENTITY_LDAP_USERNAME_FORMAT=uid=%s,dc=example,dc=org
 MINIO_IDENTITY_LDAP_USERNAME_SEARCH_FILTER=(|(objectclass=posixAccount)(uid=%s))
@@ -507,7 +507,7 @@ func authenticateLDAP(username, password string) (*credentials.Value, error) {
         return nil, err
     }
 
-    // Get MinIO STS credentials for LDAP user
+    // Get Object Storage STS credentials for LDAP user
     stsCredentials, err := getSTSCredentialsForLDAP(userDN)
     if err != nil {
         return nil, err
@@ -530,7 +530,7 @@ func authenticateLDAP(username, password string) (*credentials.Value, error) {
    ↓
 3. Backend recognizes Anonymous principal
    ↓
-4. Create MinIO client with Anonymous credentials
+4. Create Object Storage client with Anonymous credentials
    ↓
 5. List objects (read-only)
    ↓
@@ -555,14 +555,14 @@ api.KeyAuth = func(token string, scopes []string) (*models.Principal, error) {
 // api/public_objects.go
 
 func getPublicObjectsResponse(principal *models.Principal, params object.ListObjectsParams) (*models.ListObjectsResponse, error) {
-    // Create anonymous MinIO client
+    // Create anonymous Object Storage client
     client, err := newAnonymousMinioClient()
     if err != nil {
         return nil, err
     }
 
     // List objects (only works if bucket is public)
-    objects, err := client.listObjects(ctx, bucketName, minio.ListObjectsOptions{
+    objects, err := client.listObjects(ctx, bucketName, object storage.ListObjectsOptions{
         Prefix:    prefix,
         Recursive: true,
     })
@@ -617,16 +617,16 @@ func getPublicObjectsResponse(principal *models.Principal, params object.ListObj
 ### Policy Evaluation
 
 ```go
-// MinIO evaluates policies for each request
+// Object Storage evaluates policies for each request
 
 // 1. User requests operation
 //    GET /api/v1/buckets/my-bucket/objects
 
 // 2. Extract STS credentials from JWT
 
-// 3. MinIO client uses STS credentials
+// 3. Object Storage client uses STS credentials
 
-// 4. MinIO server evaluates:
+// 4. Object Storage server evaluates:
 //    - User's attached policies
 //    - Group policies (if LDAP)
 //    - Bucket policies

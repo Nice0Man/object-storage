@@ -147,7 +147,7 @@ const BucketsList = () => {
 ```go
 // Enable versioning
 func setBucketVersioning(ctx context.Context, client MinioClient, bucketName string, enabled bool) error {
-    config := minio.BucketVersioningConfiguration{
+    config := object storage.BucketVersioningConfiguration{
         Status: "Enabled",
     }
     if !enabled {
@@ -163,13 +163,13 @@ func setBucketVersioning(ctx context.Context, client MinioClient, bucketName str
 ```go
 // Set object locking
 func setObjectLocking(ctx context.Context, client MinioClient, bucketName string, mode string, days int) error {
-    retentionMode := minio.Governance
+    retentionMode := object storage.Governance
     if mode == "compliance" {
-        retentionMode = minio.Compliance
+        retentionMode = object storage.Compliance
     }
 
     validity := uint(days)
-    unit := minio.Days
+    unit := object storage.Days
 
     return client.setObjectLockConfig(ctx, bucketName, &retentionMode, &validity, &unit)
 }
@@ -231,7 +231,7 @@ func listObjects(session *models.Principal, params object.ListObjectsParams) (*m
     }
 
     // List options
-    opts := minio.ListObjectsOptions{
+    opts := object storage.ListObjectsOptions{
         Prefix:    params.Prefix,
         Recursive: params.Recursive != nil && *params.Recursive,
         WithVersions: params.WithVersions != nil && *params.WithVersions,
@@ -288,14 +288,14 @@ func uploadObject(session *models.Principal, params object.UploadObjectParams) e
     defer file.Close()
 
     // Upload options
-    opts := minio.PutObjectOptions{
+    opts := object storage.PutObjectOptions{
         ContentType: handler.Header.Get("Content-Type"),
         UserMetadata: map[string]string{
             "uploaded-by": session.AccountAccessKey,
         },
     }
 
-    // Upload to MinIO
+    // Upload to Object Storage
     _, err = mClient.putObject(
         ctx,
         params.BucketName,
@@ -322,7 +322,7 @@ func downloadObject(session *models.Principal, params object.DownloadObjectParam
     }
 
     // Get object
-    opts := minio.GetObjectOptions{}
+    opts := object storage.GetObjectOptions{}
     if params.VersionID != nil {
         opts.VersionID = *params.VersionID
     }
@@ -432,7 +432,7 @@ func addUser(ctx context.Context, client AdminClient, accessKey, secretKey strin
         return errors.New("invalid credentials format")
     }
 
-    // Create user in MinIO
+    // Create user in Object Storage
     err := client.addUser(ctx, accessKey, secretKey)
     if err != nil {
         return err
@@ -520,7 +520,7 @@ func addPolicy(ctx context.Context, client AdminClient, policyName, policyJSON s
         return errors.New("invalid policy version")
     }
 
-    // Create policy in MinIO
+    // Create policy in Object Storage
     err = client.addCannedPolicy(ctx, policyName, policyJSON)
     if err != nil {
         return err
@@ -643,7 +643,7 @@ config := notification.Configuration{
     QueueConfigs: []notification.Queue{
         {
             Queue: notification.Arn{
-                Partition: "minio",
+                Partition: "object storage",
                 Service:   "webhook",
                 Region:    "",
                 AccountID: "1",

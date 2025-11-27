@@ -33,7 +33,7 @@
 - ✅ **AuthService** - Authentication & JWT management
   - Login/Logout/Refresh token
   - Password validation
-  - MinIO STS integration (stub)
+  - Object Storage STS integration (stub)
   - Token blacklist (in-memory)
   
 - ✅ **BucketService** - Bucket operations
@@ -100,7 +100,7 @@
 
 ## 🚧 В процессе / Запланировано
 
-### MinIO Client Implementation (0%)
+### Object Storage Client Implementation (0%)
 **Приоритет:** Высокий  
 **Сложность:** Высокая
 
@@ -138,12 +138,12 @@
 ## 🎯 Следующие шаги
 
 ### Краткосрочные (1-2 дня)
-1. ⏳ Реализовать MinIO Client (stub → real implementation)
+1. ⏳ Реализовать Object Storage Client (stub → real implementation)
 2. ⏳ Добавить WebSocket поддержку
 3. ⏳ Создать базовые unit тесты
 
 ### Среднесрочные (1 неделя)
-1. ⏳ Интеграционные тесты с реальным MinIO
+1. ⏳ Интеграционные тесты с реальным Object Storage
 2. ⏳ Дополнить функциональность (Groups, Policies controllers)
 3. ⏳ Оптимизация производительности
 4. ⏳ Документация API (OpenAPI/Swagger)
@@ -159,7 +159,7 @@
 ### Архитектура
 - **Clean Architecture** - четкое разделение слоев
 - **Dependency Injection** - слабая связанность
-- **Repository Pattern** - абстракция над MinIO Client
+- **Repository Pattern** - абстракция над Object Storage Client
 - **Result<T, E>** - type-safe error handling
 
 ### Безопасность
@@ -176,9 +176,9 @@
 
 ## 🐛 Известные проблемы
 
-1. **MinIO Client - stub implementation**
+1. **Object Storage Client - stub implementation**
    - Текущая реализация возвращает ошибки
-   - Требуется реальная интеграция с MinIO
+   - Требуется реальная интеграция с Object Storage
 
 2. **Token blacklist in-memory**
    - Не персистентно

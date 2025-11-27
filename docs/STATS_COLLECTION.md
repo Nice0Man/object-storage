@@ -145,7 +145,7 @@ void update_server_stats() {
     auto db_manager = ServiceLocator::database_manager();
     if (!db_manager) return;
 
-    // Получить информацию о серверах из MinIO Admin API
+    // Получить информацию о серверах из Object Storage Admin API
     // или из конфигурации
     storage::DbServer server;
     server.id = "server-1";
@@ -161,10 +161,10 @@ void update_server_stats() {
 
 ### 4. Drive Stats
 
-Обновляйте информацию о дисках из MinIO Admin API:
+Обновляйте информацию о дисках из Object Storage Admin API:
 
 ```cpp
-// Используйте MinIO Admin API для получения информации о дисках
+// Используйте Object Storage Admin API для получения информации о дисках
 void update_drive_stats() {
     auto admin_client = ServiceLocator::admin_client();
     auto db_manager = ServiceLocator::database_manager();
@@ -288,7 +288,7 @@ drogon::app().getLoop()->runEvery(86400.0, []() {  // раз в сутки
 1. **Middleware для API requests** - добавить `registerPostHandlingAdvice` в main.cpp
 2. **Throughput tracking** - добавить запись в методы upload/download объектов
 3. **Server heartbeat** - реализовать периодическую проверку серверов
-4. **MinIO Admin API integration** - получать реальные данные о дисках/серверах
+4. **Object Storage Admin API integration** - получать реальные данные о дисках/серверах
 5. **Pool configuration** - определить логику группировки дисков в пулы
 6. **Background tasks** - настроить все периодические задачи в main.cpp
 7. **Performance monitoring** - следить за размером БД и производительностью запросов
