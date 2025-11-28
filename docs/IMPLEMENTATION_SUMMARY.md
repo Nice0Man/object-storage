@@ -200,7 +200,7 @@ auto result = client->put_object(
 
 if (result) {
     auto object = result.value();
-    std::cout << "Uploaded: " << object.key 
+    std::cout << "Uploaded: " << object.key
               << ", ETag: " << object.etag << std::endl;
 }
 ```
@@ -243,7 +243,7 @@ class BucketService {
 public:
     explicit BucketService(std::shared_ptr<clients::IMinioClient> client)
         : minio_client_(client) {}
-    
+
     // Работает с любой реализацией IMinioClient
 private:
     std::shared_ptr<clients::IMinioClient> minio_client_;
@@ -382,4 +382,3 @@ auto client = std::make_shared<MinioClient>(endpoint, access_key, secret_key);
 - Embedded systems
 
 **Следующий шаг:** Интеграция с Config для выбора storage backend (local vs object storage)
-

@@ -21,6 +21,7 @@
 #include "console/services/AuthService.hpp"
 #include "console/services/BucketService.hpp"
 #include "console/services/ObjectService.hpp"
+#include "console/services/StatsCollector.hpp"
 #include "console/services/UserService.hpp"
 
 // Storage clients
@@ -206,6 +207,125 @@ setup_cors() {
 }
 
 void
+setup_api_stats_collection() {
+    CONSOLE_LOG_INFO("Setting up API stats collection...");
+
+    // Register post-handling advice to record API request statistics
+    app().registerPostHandlingAdvice([](const HttpRequestPtr& req, const HttpResponsePtr& resp) {
+        // Skip stats endpoints to avoid recursion and noise
+        const std::string& path = req->path();
+        if (path.find("/api/v1/stats") != std::string::npos || path.find("/api/v1/health") != std::string::npos ||
+            path.find("/api/v1/version") != std::string::npos) {
+            return;
+        }
+
+        // Only track API endpoints
+        if (path.find("/api/") == std::string::npos) {
+            return;
+        }
+
+        auto db = ServiceLocator::database();
+        if (!db) {
+            return;
+        }
+
+        storage::ApiRequestStats stats;
+        stats.timestamp = std::time(nullptr);
+        stats.endpoint = path;
+
+        // Convert method to string
+        switch (req->method()) {
+            case drogon::HttpMethod::Get:
+                stats.method = "GET";
+                break;
+            case drogon::HttpMethod::Post:
+                stats.method = "POST";
+                break;
+            case drogon::HttpMethod::Put:
+                stats.method = "PUT";
+                break;
+            case drogon::HttpMethod::Delete:
+                stats.method = "DELETE";
+                break;
+            case drogon::HttpMethod::Patch:
+                stats.method = "PATCH";
+                break;
+            case drogon::HttpMethod::Options:
+                stats.method = "OPTIONS";
+                break;
+            case drogon::HttpMethod::Head:
+                stats.method = "HEAD";
+                break;
+            default:
+                stats.method = "UNKNOWN";
+                break;
+        }
+
+        stats.status_code = static_cast<int>(resp->statusCode());
+        stats.ip_address = req->peerAddr().toIp();
+        stats.user_agent = req->getHeader("User-Agent");
+
+        // Get user access key from request attributes if available
+        try {
+            auto user_info = req->attributes()->get<UserInfo>("user_info");
+            stats.user_access_key = user_info.access_key;
+        } catch (...) {
+            // User not authenticated, leave empty
+        }
+
+        // Record stats asynchronously to not block response
+        db->add_api_request_stat(stats);
+    });
+
+    CONSOLE_LOG_INFO("API stats collection configured successfully");
+}
+
+void
+setup_background_tasks() {
+    CONSOLE_LOG_INFO("Setting up background tasks...");
+
+    // Task to cleanup old stats (runs daily)
+    app().getLoop()->runEvery(86400.0, []() {
+        auto db = ServiceLocator::database();
+        if (!db)
+            return;
+
+        auto now = std::time(nullptr);
+        auto week_ago = now - (7 * 24 * 3600); // 7 days ago
+
+        CONSOLE_LOG_INFO("Running cleanup of old statistics data...");
+
+        auto api_cleanup = db->cleanup_old_api_stats(week_ago);
+        if (!api_cleanup) {
+            CONSOLE_LOG_WARN("Failed to cleanup old API stats: {}", api_cleanup.error());
+        }
+
+        auto throughput_cleanup = db->cleanup_old_throughput_stats(week_ago);
+        if (!throughput_cleanup) {
+            CONSOLE_LOG_WARN("Failed to cleanup old throughput stats: {}", throughput_cleanup.error());
+        }
+
+        CONSOLE_LOG_INFO("Cleanup of old statistics completed");
+    });
+
+    // Run initial cleanup on startup (delayed by 60 seconds)
+    app().getLoop()->runAfter(60.0, []() {
+        auto db = ServiceLocator::database();
+        if (!db)
+            return;
+
+        auto now = std::time(nullptr);
+        auto week_ago = now - (7 * 24 * 3600);
+
+        CONSOLE_LOG_DEBUG("Running initial cleanup of old statistics...");
+        db->cleanup_old_api_stats(week_ago);
+        db->cleanup_old_throughput_stats(week_ago);
+    });
+
+    CONSOLE_LOG_INFO("Background tasks configured successfully");
+}
+
+void
 register_routes() {
     CONSOLE_LOG_INFO("Registering API routes...");
 
@@ -309,6 +429,17 @@ init_services() {
     ServiceLocator::set_auth_service(auth_service);
     CONSOLE_LOG_INFO("  ✓ AuthService initialized");
 
+    // Initialize StatsCollector for background statistics collection
+    auto stats_collector = std::make_shared<services::StatsCollector>(database);
+    ServiceLocator::set_stats_collector(stats_collector);
+
+    // Initialize sample data for dashboard (servers, drives, pools)
+    stats_collector->initialize_sample_data();
+
+    // Start background collection tasks
+    stats_collector->start();
+    CONSOLE_LOG_INFO("  ✓ StatsCollector initialized and started");
+
     CONSOLE_LOG_INFO("");
     CONSOLE_LOG_INFO("All services initialized successfully!");
     CONSOLE_LOG_INFO("════════════════════════════════════════════════════════");
@@ -372,6 +503,12 @@ main(int argc, char* argv[]) {
 
         // Setup CORS (MUST be before routes)
         setup_cors();
+
+        // Setup API stats collection
+        setup_api_stats_collection();
+
+        // Setup background tasks
+        setup_background_tasks();
 
         // Register routes
         register_routes();

@@ -1,4 +1,3 @@
-//
 #include "console/common/ServiceLocator.hpp"
 
 #include "console/clients/LocalAdminClient.hpp"
@@ -6,6 +5,7 @@
 #include "console/services/AuthService.hpp"
 #include "console/services/BucketService.hpp"
 #include "console/services/ObjectService.hpp"
+#include "console/services/StatsCollector.hpp"
 #include "console/services/UserService.hpp"
 #include "console/storage/DatabaseManager.hpp"
 
@@ -19,6 +19,7 @@ std::shared_ptr<services::ObjectService> ServiceLocator::object_service_;
 std::shared_ptr<services::BucketService> ServiceLocator::bucket_service_;
 std::shared_ptr<services::UserService> ServiceLocator::user_service_;
 std::shared_ptr<services::AuthService> ServiceLocator::auth_service_;
+std::shared_ptr<services::StatsCollector> ServiceLocator::stats_collector_;
 
 // Getters
 std::shared_ptr<clients::LocalStorageClient>
@@ -54,6 +55,11 @@ ServiceLocator::user_service() {
 std::shared_ptr<services::AuthService>
 ServiceLocator::auth_service() {
     return auth_service_;
+}
+
+std::shared_ptr<services::StatsCollector>
+ServiceLocator::stats_collector() {
+    return stats_collector_;
 }
 
 // Setters
@@ -92,10 +98,21 @@ ServiceLocator::set_auth_service(std::shared_ptr<services::AuthService> service)
     auth_service_ = service;
 }
 
+void
+ServiceLocator::set_stats_collector(std::shared_ptr<services::StatsCollector> collector) {
+    stats_collector_ = collector;
+}
+
 // Cleanup - clear all services in reverse order of initialization
 void
 ServiceLocator::clear() {
-    // Clear services first
+    // Stop and clear stats collector first (has background threads)
+    if (stats_collector_) {
+        stats_collector_->stop();
+        stats_collector_.reset();
+    }
+
+    // Clear services
     auth_service_.reset();
     user_service_.reset();
     bucket_service_.reset();

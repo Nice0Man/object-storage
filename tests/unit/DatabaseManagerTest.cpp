@@ -1,5 +1,6 @@
 #include "console/storage/DatabaseManager.hpp"
 
+#include <atomic>
 #include <chrono>
 #include <filesystem>
 #include <gtest/gtest.h>
@@ -446,6 +447,13 @@ TEST_F(DatabaseManagerTest, Transaction_Rollback) {
 // ============================================================================
 
 TEST_F(DatabaseManagerTest, CreateUserAsync_Success) {
+    // Note: The main test fixture uses 0 threads for simplicity.
+    // For async operations, we need a separate DatabaseManager with threads.
+
+    auto async_db = std::make_unique<DatabaseManager>(":memory:", 2);
+    auto init_result = async_db->initialize_schema();
+    ASSERT_TRUE(init_result) << "Failed to initialize async DB schema: " << init_result.error();
+
     DbUser user;
     user.access_key = "async-user";
     user.secret_key = "secret";
@@ -456,22 +464,22 @@ TEST_F(DatabaseManagerTest, CreateUserAsync_Success) {
     user.updated_at = user.created_at;
     user.metadata = "{}";
 
-    bool callback_called = false;
-    bool success = false;
+    std::atomic<bool> callback_called{false};
+    std::atomic<bool> success{false};
 
-    db_manager_->create_user_async(user, [&](Result<void, String> result) {
+    async_db->create_user_async(user, [&](Result<void, String> result) {
         callback_called = true;
         success = static_cast<bool>(result);
     });
 
     // Wait for async operation to complete
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
     EXPECT_TRUE(callback_called);
     EXPECT_TRUE(success);
 
     // Verify user was created
-    auto get_result = db_manager_->get_user("async-user");
+    auto get_result = async_db->get_user("async-user");
     ASSERT_TRUE(get_result);
 }
 

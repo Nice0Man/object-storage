@@ -31,6 +31,7 @@ import Loader from "../components/Common/Loader";
 import CapacityPieChart from "../components/Charts/CapacityPieChart";
 import DataThroughputChart from "../components/Charts/DataThroughputChart";
 import ApiErrorsChart from "../components/Charts/ApiErrorsChart";
+import { apiClient } from "../api/client";
 
 // Helper function to format bytes
 const formatBytes = (bytes: number, decimals: number = 2): string => {
@@ -74,8 +75,8 @@ const DashboardPageNew: React.FC = () => {
                     dispatch(fetchAllStats()),
                 ]);
 
-                // Load additional stats (mock data for now since backend endpoints don't exist yet)
-                loadMockStats();
+                // Load additional stats from real API endpoints
+                await loadAdditionalStats();
             } finally {
                 setLoading(false);
             }
@@ -83,81 +84,60 @@ const DashboardPageNew: React.FC = () => {
         loadData();
     }, [dispatch]);
 
-    const loadMockStats = () => {
-        // Mock server stats
-        setServerStats({
-            online_count: 10,
-            offline_count: 7,
-            total_count: 20,
-        });
-
-        // Mock drive stats
-        setDriveStats({
-            online_count: 1900,
-            offline_count: 100,
-            total_count: 2000,
-        });
-
-        // Mock pool stats
-        setPoolStats([
-            {
-                id: "pool1",
-                name: "Pool 1",
-                capacity: 5.25 * (1024 ** 6),
-                available: 1.22 * (1024 ** 6),
-                used: 4.03 * (1024 ** 6),
-                drives_count: 90,
-                online_drives: 80,
-                offline_drives: 10,
-            },
-            {
-                id: "pool2",
-                name: "Pool 2",
-                capacity: 5.25 * (1024 ** 6),
-                available: 1.46 * (1024 ** 6),
-                used: 3.79 * (1024 ** 6),
-                drives_count: 90,
-                online_drives: 80,
-                offline_drives: 10,
-            },
-        ]);
-
-        // Mock API errors data (last 24 hours)
-        const now = Date.now();
-        const mockApiErrors = [];
-        for (let i = 23; i >= 0; i--) {
-            const time = new Date(now - i * 3600000).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-            });
-            mockApiErrors.push({
-                time,
-                count: Math.floor(Math.random() * 25),
-                error_4xx: Math.floor(Math.random() * 15),
-                error_5xx: Math.floor(Math.random() * 10),
-            });
+    const loadAdditionalStats = async () => {
+        try {
+            // Fetch server stats from API
+            const serverResponse = await apiClient.getServerStats();
+            setServerStats(serverResponse);
+        } catch (error) {
+            console.warn("Failed to fetch server stats:", error);
+            // Fallback to default values
+            setServerStats({ online_count: 0, offline_count: 0, total_count: 0 });
         }
-        setApiErrorsData(mockApiErrors);
 
-        // Mock throughput data (last 24 hours)
-        const mockThroughput = [];
-        for (let i = 23; i >= 0; i--) {
-            const time = new Date(now - i * 3600000).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-            });
-            const readBytes = Math.floor(Math.random() * 1000 * 1024 * 1024 * 1024);
-            const writeBytes = Math.floor(Math.random() * 800 * 1024 * 1024 * 1024);
-            mockThroughput.push({
-                time,
-                read_bytes: readBytes,
-                write_bytes: writeBytes,
-                total_bytes: readBytes + writeBytes,
-            });
+        try {
+            // Fetch drive stats from API
+            const driveResponse = await apiClient.getDriveStats();
+            setDriveStats(driveResponse);
+        } catch (error) {
+            console.warn("Failed to fetch drive stats:", error);
+            setDriveStats({ online_count: 0, offline_count: 0, total_count: 0 });
         }
-        setThroughputData(mockThroughput);
+
+        try {
+            // Fetch pool stats from API
+            const poolResponse = await apiClient.getPoolStats();
+            setPoolStats(Array.isArray(poolResponse) ? poolResponse : []);
+        } catch (error) {
+            console.warn("Failed to fetch pool stats:", error);
+            setPoolStats([]);
+        }
+
+        try {
+            // Fetch API errors from API
+            const apiErrorsResponse = await apiClient.getApiErrorStats();
+            if (apiErrorsResponse && apiErrorsResponse.data) {
+                setApiErrorsData(apiErrorsResponse.data);
+            } else {
+                setApiErrorsData([]);
+            }
+        } catch (error) {
+            console.warn("Failed to fetch API error stats:", error);
+            setApiErrorsData([]);
+        }
+
+        try {
+            // Fetch throughput data from API
+            const throughputResponse = await apiClient.getDataThroughputStats();
+            if (throughputResponse && throughputResponse.data) {
+                setThroughputData(throughputResponse.data);
+            } else {
+                setThroughputData([]);
+            }
+        } catch (error) {
+            console.warn("Failed to fetch throughput stats:", error);
+            setThroughputData([]);
+        }
     };
 
     if (loading || statsLoading) {

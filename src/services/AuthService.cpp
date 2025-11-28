@@ -54,14 +54,9 @@ AuthService::login(const String& username, const String& password) {
 
 Result<void, ApiError>
 AuthService::logout(const String& token) {
-    // Validate token first
-    auto validate_result = validate_token(token);
-    if (!validate_result) {
-        return Err<void, models::ApiError>(validate_result.error());
-    }
-
-    // Add token to blacklist
-    {
+    // Logout is idempotent - always succeeds
+    // Even if token is invalid, we add it to blacklist to prevent any future use
+    if (!token.empty()) {
         std::lock_guard<std::mutex> lock(blacklist_mutex_);
         token_blacklist_.insert(token);
     }
@@ -137,11 +132,30 @@ AuthService::change_password(const String& token, const String& old_password, co
         return Err<void, models::ApiError>(ApiError(HttpStatus::Unauthorized, "Current password is incorrect"));
     }
 
-    // TODO(Nice0Man): Implement password change via Object Storage Admin API
-    // Currently Object Storage doesn't have direct password change API
-    // We would need to delete and recreate user, or use LDAP/IDP
+    // Get current user from database
+    if (!db_manager_) {
+        return Err<void, models::ApiError>(
+            ApiError(HttpStatus::InternalServerError, "Database manager not initialized"));
+    }
 
-    return Err<void, models::ApiError>(ApiError(HttpStatus::NotImplemented, "Password change not yet implemented"));
+    auto user_result = db_manager_->get_user(user_info.access_key);
+    if (!user_result) {
+        return Err<void, models::ApiError>(ApiError(HttpStatus::NotFound, "User not found"));
+    }
+
+    // Update password with new hash
+    auto db_user = user_result.value();
+    db_user.secret_key = utils::PasswordHash::hash(new_password);
+    db_user.updated_at = std::time(nullptr);
+
+    auto update_result = db_manager_->update_user(db_user);
+    if (!update_result) {
+        CONSOLE_LOG_ERROR("Failed to update password for user: {}", user_info.access_key);
+        return Err<void, models::ApiError>(ApiError(HttpStatus::InternalServerError, "Failed to update password"));
+    }
+
+    CONSOLE_LOG_INFO("Password changed successfully for user: {}", user_info.access_key);
+    return Ok<models::ApiError>();
 }
 
 Result<UserInfo, ApiError>
@@ -275,6 +289,7 @@ AuthService::userinfo_to_claims(const UserInfo& user_info, Duration expiry) {
     JWTClaims claims;
 
     // Standard claims
+    claims.issuer = "object-storage-console"; // Must match JWT::verify_token expectation
     claims.subject = user_info.access_key;
     claims.issued_at = std::chrono::system_clock::now();
     claims.expires_at = claims.issued_at + expiry;

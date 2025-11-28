@@ -3,36 +3,43 @@
 ## Required Environment Variables
 
 ### Server Configuration
+
 - `CONSOLE_HOST` - Server bind address (default: 0.0.0.0)
 - `CONSOLE_PORT` - Server port (default: 9090)
 - `CONSOLE_THREADS` - Number of worker threads (default: CPU count)
 - `CONSOLE_LOG_LEVEL` - Logging level: debug/info/warn/error (default: info)
 
-### Storage Configuration  
+### Storage Configuration
+
 - `STORAGE_ROOT_PATH` - Root directory for file storage (default: ./storage)
 
 ### Database Configuration
+
 - `DATABASE_PATH` - SQLite database file path (default: console.db)
 
 ### CORS Configuration
+
 - `CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed origins (default: http://localhost:3000)
 - `CORS_ALLOWED_METHODS` - Allowed HTTP methods (default: GET,POST,PUT,DELETE,OPTIONS)
 - `CORS_ALLOWED_HEADERS` - Allowed HTTP headers (default: Content-Type,Authorization)
 
 ### Authentication
+
 - `JWT_SECRET` - **REQUIRED** Secret key for JWT token signing (no default, must be set!)
 - `JWT_EXPIRATION` - JWT token expiration time in seconds (default: 86400 = 24h)
 
 ### Default Admin Account
+
 - `DEFAULT_ADMIN_USERNAME` - Default admin username (default: admin)
 - `DEFAULT_ADMIN_PASSWORD` - **IMPORTANT** Default admin password (default: changeme - CHANGE THIS!)
 - `DEFAULT_ADMIN_ACCOUNT_NAME` - Display name for admin account (default: Administrator)
 - `DEFAULT_ADMIN_ENABLED` - Enable default admin account creation (default: true)
 
 ### S3 Configuration (optional, for future Object Storage integration)
+
 - `S3_ENDPOINT` - Object Storage/S3 endpoint URL
 - `S3_ACCESS_KEY` - S3 access key
-- `S3_SECRET_KEY` - S3 secret key  
+- `S3_SECRET_KEY` - S3 secret key
 - `S3_REGION` - S3 region (default: us-east-1)
 - `S3_USE_SSL` - Use SSL for S3 connections (default: true)
 

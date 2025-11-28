@@ -93,7 +93,7 @@ ObjectService::upload_object(const UserInfo& user_info,
         return Err<Object>(ApiError(HttpStatus::BadRequest, "Object size exceeds maximum single upload size"));
     }
 
-    auto result = storage_client_->put_object(bucket_name, object_key, data);
+    auto result = storage_client_->put_object(bucket_name, object_key, data, content_type, metadata);
 
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to upload object {}/{}: {}", bucket_name, object_key, result.error());

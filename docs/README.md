@@ -123,7 +123,7 @@ DEFAULT_ADMIN_ACCOUNT_NAME=Administrator
 DEFAULT_ADMIN_ENABLED=true
 ```
 
-> **⚠️ Security Note:** Пароли теперь хешируются с использованием PBKDF2-SHA256. 
+> **⚠️ Security Note:** Пароли теперь хешируются с использованием PBKDF2-SHA256.
 > См. [Security Improvements](docs/SECURITY_IMPROVEMENTS.md) для деталей.
 
 ## 🧪 Testing

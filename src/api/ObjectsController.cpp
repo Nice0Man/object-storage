@@ -3,7 +3,9 @@
 #include "console/common/Logger.hpp"
 #include "console/common/ServiceLocator.hpp"
 #include "console/services/ObjectService.hpp"
+#include "console/storage/DatabaseManager.hpp"
 
+#include <ctime>
 #include <json/json.h>
 
 namespace console::api {
@@ -137,6 +139,21 @@ ObjectsController::download(const drogon::HttpRequestPtr& req,
         return;
     }
 
+    // Get data size for throughput tracking
+    int64_t data_size = static_cast<int64_t>(result.value().size());
+
+    // Record throughput stats
+    auto db = ServiceLocator::database();
+    if (db) {
+        storage::DataThroughputStats throughput;
+        throughput.timestamp = std::time(nullptr);
+        throughput.read_bytes = data_size;
+        throughput.write_bytes = 0;
+        throughput.total_bytes = data_size;
+        db->add_throughput_stat(throughput);
+        CONSOLE_LOG_DEBUG("Recorded download throughput: {} bytes", data_size);
+    }
+
     // Create binary response
     auto resp = drogon::HttpResponse::newHttpResponse();
     resp->setBody(String(result.value().begin(), result.value().end()));
@@ -196,6 +213,19 @@ ObjectsController::upload(const drogon::HttpRequestPtr& req,
             resp->setStatusCode(static_cast<drogon::HttpStatusCode>(result.error().status()));
             callback(resp);
             return;
+        }
+
+        // Record throughput stats for successful upload
+        int64_t data_size = static_cast<int64_t>(data.size());
+        auto db = ServiceLocator::database();
+        if (db) {
+            storage::DataThroughputStats throughput;
+            throughput.timestamp = std::time(nullptr);
+            throughput.read_bytes = 0;
+            throughput.write_bytes = data_size;
+            throughput.total_bytes = data_size;
+            db->add_throughput_stat(throughput);
+            CONSOLE_LOG_DEBUG("Recorded upload throughput: {} bytes", data_size);
         }
 
         // Success response for raw body upload

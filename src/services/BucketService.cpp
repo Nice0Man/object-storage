@@ -163,16 +163,35 @@ BucketService::validate_bucket_name(const String& name) {
         return ApiError(HttpStatus::BadRequest, "Bucket name must be between 3 and 63 characters");
     }
 
-    // Check for valid characters (lowercase letters, numbers, dots, hyphens)
+    // Check for valid characters (lowercase letters, numbers, dots, hyphens only)
     for (char c : name) {
-        if (!std::isalnum(c) && c != '.' && c != '-') {
-            return ApiError(HttpStatus::BadRequest, "Bucket name contains invalid characters");
+        if (!std::islower(c) && !std::isdigit(c) && c != '.' && c != '-') {
+            return ApiError(
+                HttpStatus::BadRequest,
+                "Bucket name contains invalid characters (only lowercase letters, numbers, dots, and hyphens allowed)");
         }
     }
 
     // Cannot start or end with dot or hyphen
     if (name.front() == '.' || name.front() == '-' || name.back() == '.' || name.back() == '-') {
         return ApiError(HttpStatus::BadRequest, "Bucket name cannot start or end with dot or hyphen");
+    }
+
+    // Check for consecutive dots
+    if (name.find("..") != String::npos) {
+        return ApiError(HttpStatus::BadRequest, "Bucket name cannot contain consecutive dots");
+    }
+
+    // Must contain at least one lowercase letter (prevents IP address-like names)
+    bool has_letter = false;
+    for (char c : name) {
+        if (std::islower(c)) {
+            has_letter = true;
+            break;
+        }
+    }
+    if (!has_letter) {
+        return ApiError(HttpStatus::BadRequest, "Bucket name must contain at least one lowercase letter");
     }
 
     return std::nullopt;

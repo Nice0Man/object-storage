@@ -48,7 +48,7 @@
 // storage_root/buckets/bucket-name/.metadata.json
 
 Result<bool, String> LocalStorageClient::create_bucket(
-    const String& name, 
+    const String& name,
     const String& region
 ) {
     // 1. Валидация имени бакета (S3 rules)
@@ -356,7 +356,7 @@ tests/integration/storage/
 5. Этап 11: Testing (базовое)
 
 ### Production Ready - 20-25 дней
-MVP + 
+MVP +
 6. Этап 4: Metadata & Tags
 7. Этап 5: Presigned URLs
 8. Этап 9: Access Control (базовый)
@@ -388,4 +388,3 @@ Production Ready +
 4. ⏳ Реализовать MVP (Этапы 1-3 + 10-11)
 5. ⏳ Провести тестирование
 6. ⏳ Расширить функциональность до Production Ready
-

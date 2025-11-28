@@ -211,7 +211,7 @@ TEST_F(BucketServiceTest, GetBucket_NotFound) {
     auto result = bucket_service_->get_bucket_info(user_info_, "nonexistent");
 
     ASSERT_TRUE(result.is_err());
-    EXPECT_EQ(result.error().status(), HttpStatus::InternalServerError);
+    EXPECT_EQ(result.error().status(), HttpStatus::NotFound);
 }
 
 // ============================================================================

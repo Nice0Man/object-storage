@@ -62,31 +62,24 @@ class AuthServiceTest : public ::testing::Test {
 
         mock_admin_client_ = std::make_shared<NiceMock<MockAdminClient>>();
 
-        config_ = std::make_shared<Config>();
-        config_->auth().jwt_secret = "test-secret-key-for-testing-purposes-only";
-        config_->auth().token_expiry = std::chrono::hours(24);
-        config_->default_admin().enabled = true;
-        config_->default_admin().username = "admin";
-        config_->default_admin().password = "admin123";
-        config_->default_admin().account_name = "Administrator";
+        // Configure the global Config instance for tests
+        // This is needed because initialize_schema() uses Config::instance()
+        auto& global_config = Config::instance();
+        global_config.auth().jwt_secret = "test-secret-key-for-testing-purposes-only";
+        global_config.auth().token_expiry = std::chrono::hours(24);
+        global_config.default_admin().enabled = true;
+        global_config.default_admin().username = "admin";
+        global_config.default_admin().password = "admin123";
+        global_config.default_admin().account_name = "Administrator";
+
+        // Use the global config
+        config_ = std::shared_ptr<Config>(&global_config, [](Config*) {}); // Non-owning shared_ptr
 
         // Initialize JWT with config
         utils::JWT::initialize(config_->auth().jwt_secret, "test-encryption-passphrase", "test-encryption-salt");
 
         db_manager_ = std::make_shared<storage::DatabaseManager>(test_db_path_);
-        db_manager_->initialize_schema(); // Create tables
-
-        // Create default admin user manually (initialize_schema uses Config::instance())
-        storage::DbUser admin_user;
-        admin_user.access_key = "admin";
-        admin_user.secret_key = utils::PasswordHash::hash("admin123");
-        admin_user.account_name = "Administrator";
-        admin_user.status = "active";
-        admin_user.is_admin = true;
-        admin_user.created_at = std::time(nullptr);
-        admin_user.updated_at = admin_user.created_at;
-        admin_user.metadata = "{}";
-        db_manager_->create_user(admin_user);
+        db_manager_->initialize_schema(); // Create tables and default admin user
 
         auth_service_ = std::make_unique<AuthService>(mock_admin_client_, config_, db_manager_);
     }
@@ -177,7 +170,10 @@ TEST_F(AuthServiceTest, ValidateToken_ValidToken) {
     // Validate the token
     auto validate_result = auth_service_->validate_token(token);
 
-    ASSERT_TRUE(validate_result.is_ok());
+    ASSERT_TRUE(validate_result.is_ok()) << "Validation failed: "
+                                         << (validate_result.is_err()
+                                                 ? validate_result.error().to_json().toStyledString()
+                                                 : "unknown");
     EXPECT_EQ(validate_result.value().access_key, "admin");
     EXPECT_TRUE(validate_result.value().is_admin);
 }
@@ -239,7 +235,9 @@ TEST_F(AuthServiceTest, ChangePassword_Success) {
 
     auto change_result = auth_service_->change_password(token, "admin123", "newpassword123");
 
-    ASSERT_TRUE(change_result.is_ok());
+    ASSERT_TRUE(change_result.is_ok()) << "Change password failed: "
+                                       << (change_result.is_err() ? change_result.error().to_json().toStyledString()
+                                                                  : "unknown");
 
     // Verify can login with new password
     auto new_login = auth_service_->login("admin", "newpassword123");

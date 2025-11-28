@@ -58,6 +58,7 @@ class ObjectServiceTest : public ::testing::Test {
         user_info_.access_key = "testuser";
         user_info_.secret_key = "testsecret";
         user_info_.is_admin = false;
+        user_info_.policies = {"readwrite"}; // Add default policy to allow operations
     }
 
     std::shared_ptr<MockStorageClient> mock_client_;
@@ -181,7 +182,7 @@ TEST_F(ObjectServiceTest, GetObjectInfo_NotFound) {
     auto result = object_service_->get_object_info(user_info_, "test-bucket", "nonexistent.txt");
 
     ASSERT_TRUE(result.is_err());
-    EXPECT_EQ(result.error().status(), HttpStatus::InternalServerError);
+    EXPECT_EQ(result.error().status(), HttpStatus::NotFound);
 }
 
 // ============================================================================
@@ -239,6 +240,10 @@ TEST_F(ObjectServiceTest, UploadObject_Success) {
     EXPECT_CALL(*mock_client_, put_object("test-bucket", "upload.txt", _, "text/plain", _))
         .WillOnce(Return(Ok<models::Object, String>(obj)));
 
+    // ObjectService calls stat_object after put_object to get object info
+    EXPECT_CALL(*mock_client_, stat_object("test-bucket", "upload.txt"))
+        .WillOnce(Return(Ok<models::Object, String>(obj)));
+
     auto result = object_service_->upload_object(user_info_, "test-bucket", "upload.txt", data, "text/plain", {});
 
     ASSERT_TRUE(result.is_ok());
@@ -257,6 +262,10 @@ TEST_F(ObjectServiceTest, UploadObject_WithMetadata) {
     EXPECT_CALL(*mock_client_, put_object("test-bucket", "file-with-meta.txt", _, _, _))
         .WillOnce(Return(Ok<models::Object, String>(obj)));
 
+    // ObjectService calls stat_object after put_object to get object info
+    EXPECT_CALL(*mock_client_, stat_object("test-bucket", "file-with-meta.txt"))
+        .WillOnce(Return(Ok<models::Object, String>(obj)));
+
     auto result = object_service_->upload_object(
         user_info_, "test-bucket", "file-with-meta.txt", data, "application/octet-stream", metadata);
 
@@ -271,6 +280,10 @@ TEST_F(ObjectServiceTest, UploadObject_EmptyData) {
     obj.set_size(0);
 
     EXPECT_CALL(*mock_client_, put_object("test-bucket", "empty.txt", _, _, _))
+        .WillOnce(Return(Ok<models::Object, String>(obj)));
+
+    // ObjectService calls stat_object after put_object to get object info
+    EXPECT_CALL(*mock_client_, stat_object("test-bucket", "empty.txt"))
         .WillOnce(Return(Ok<models::Object, String>(obj)));
 
     auto result = object_service_->upload_object(user_info_, "test-bucket", "empty.txt", empty_data, "text/plain", {});
