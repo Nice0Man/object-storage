@@ -1,776 +1,719 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
-    Box,
-    Grid,
-    Typography,
-    Card,
-    CardContent,
-    useTheme,
-    alpha,
-    LinearProgress,
-    Chip,
+  Box,
+  IconButton,
+  Button,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  useTheme,
+  alpha,
+  Menu,
+  MenuItem,
+  Snackbar,
+  Alert,
+  Chip,
+  Fade,
 } from "@mui/material";
 import {
-    Storage,
-    Computer,
-    Folder,
-    Description,
-    ArrowForward,
+  Add,
+  Save,
+  Close,
+  MoreVert,
+  Visibility,
+  Dashboard as DashboardIcon,
+  Tune,
 } from "@mui/icons-material";
+import { ResponsiveGridLayout, useContainerWidth } from "react-grid-layout";
 import { useTranslation } from "react-i18next";
 import { useAppDispatch } from "../hooks/useAppDispatch";
 import { useAppSelector } from "../hooks/useAppSelector";
-import { fetchBuckets, selectBuckets } from "../store/bucketsSlice";
 import {
-    fetchAllStats,
-    selectSystemStats,
-    selectActivityStats,
-    selectStatsLoading,
-} from "../store/statsSlice";
+  initializeDashboard,
+  fetchWidgets,
+  saveWidgets,
+  createBoard,
+  updateBoard,
+  deleteBoard,
+  setActiveBoard,
+  setEditMode,
+  updateLocalWidgets,
+  selectBoards,
+  selectActiveBoard,
+  selectActiveBoardData,
+  selectActiveWidgets,
+  selectEditMode,
+  selectDashboardLoading,
+  selectSavingWidgets,
+} from "../store/dashboardSlice";
 import Loader from "../components/Common/Loader";
-import CapacityPieChart from "../components/Charts/CapacityPieChart";
-import DataThroughputChart from "../components/Charts/DataThroughputChart";
-import ApiErrorsChart from "../components/Charts/ApiErrorsChart";
-import { apiClient } from "../api/client";
+import {
+  CapacityWidget,
+  ServersWidget,
+  DrivesWidget,
+  BucketsWidget,
+  ApiErrorsWidget,
+  ThroughputWidget,
+  EncryptionWidget,
+  PoolsWidget,
+  QuickActionsWidget,
+} from "../components/Dashboard/widgets";
+import WidgetSettingsPanel from "../components/Dashboard/WidgetSettingsPanel";
+import { dashboardTheme, getThemeValue } from "../components/Dashboard/theme";
+import type { DashboardWidget, WidgetType } from "../api/types";
 
-// Helper function to format bytes
-const formatBytes = (bytes: number, decimals: number = 2): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
-};
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 
-// Helper to format bytes to EiB
-const formatBytesToEiB = (bytes: number): string => {
-    const eib = bytes / (1024 ** 6);
-    return eib.toFixed(2);
+// Layout item type for react-grid-layout
+interface LayoutItem {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  minW?: number;
+  minH?: number;
+  maxW?: number;
+  maxH?: number;
+  static?: boolean;
+}
+
+// Widget component mapper
+const widgetComponents: Record<WidgetType, React.FC<any>> = {
+  capacity: CapacityWidget,
+  servers: ServersWidget,
+  drives: DrivesWidget,
+  buckets: BucketsWidget,
+  api_errors: ApiErrorsWidget,
+  throughput: ThroughputWidget,
+  encryption: EncryptionWidget,
+  pools: PoolsWidget,
+  quick_actions: QuickActionsWidget,
 };
 
 const DashboardPageNew: React.FC = () => {
-    const dispatch = useAppDispatch();
-    const theme = useTheme();
-    const { t } = useTranslation();
+  const dispatch = useAppDispatch();
+  const theme = useTheme();
+  const { t } = useTranslation();
 
-    // Redux state
-    const buckets = useAppSelector(selectBuckets);
-    const systemStats = useAppSelector(selectSystemStats);
-    const activityStats = useAppSelector(selectActivityStats);
-    const statsLoading = useAppSelector(selectStatsLoading);
+  // Redux state
+  const boards = useAppSelector(selectBoards);
+  const activeBoard = useAppSelector(selectActiveBoard);
+  const activeBoardData = useAppSelector(selectActiveBoardData);
+  const widgets = useAppSelector(selectActiveWidgets);
+  const editMode = useAppSelector(selectEditMode);
+  const loading = useAppSelector(selectDashboardLoading);
+  const savingWidgets = useAppSelector(selectSavingWidgets);
 
-    const [loading, setLoading] = useState(true);
-    const [serverStats, setServerStats] = useState<any>(null);
-    const [driveStats, setDriveStats] = useState<any>(null);
-    const [poolStats, setPoolStats] = useState<any[]>([]);
-    const [apiErrorsData, setApiErrorsData] = useState<any[]>([]);
-    const [throughputData, setThroughputData] = useState<any[]>([]);
+  // Grid width hook for responsive layout
+  const { width: containerWidth, containerRef, mounted: gridMounted } = useContainerWidth();
 
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                await Promise.all([
-                    dispatch(fetchBuckets()),
-                    dispatch(fetchAllStats()),
-                ]);
+  // Local state
+  const [createBoardDialogOpen, setCreateBoardDialogOpen] = useState(false);
+  const [newBoardName, setNewBoardName] = useState("");
+  const [renameBoardDialogOpen, setRenameBoardDialogOpen] = useState(false);
+  const [boardMenuAnchor, setBoardMenuAnchor] = useState<null | HTMLElement>(null);
+  const [selectedWidget, setSelectedWidget] = useState<DashboardWidget | null>(null);
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
-                // Load additional stats from real API endpoints
-                await loadAdditionalStats();
-            } finally {
-                setLoading(false);
-            }
-        };
-        loadData();
-    }, [dispatch]);
+  // Initialize dashboard on mount
+  useEffect(() => {
+    dispatch(initializeDashboard());
+  }, [dispatch]);
 
-    const loadAdditionalStats = async () => {
-        try {
-            // Fetch server stats from API
-            const serverResponse = await apiClient.getServerStats();
-            setServerStats(serverResponse);
-        } catch (error) {
-            console.warn("Failed to fetch server stats:", error);
-            // Fallback to default values
-            setServerStats({ online_count: 0, offline_count: 0, total_count: 0 });
+  // Generate layout from widgets
+  const layout = useMemo(() => {
+    return widgets
+      .filter((w) => w.visible)
+      .map((widget) => ({
+        i: widget.id,
+        x: widget.position.x,
+        y: widget.position.y,
+        w: widget.size.w,
+        h: widget.size.h,
+        minW: 2,
+        minH: 1,
+        static: !editMode,
+      }));
+  }, [widgets, editMode]);
+
+  // Handle layout change
+  const handleLayoutChange = useCallback(
+    (newLayout: LayoutItem[]) => {
+      if (!editMode || !activeBoard) return;
+
+      const updatedWidgets = widgets.map((widget) => {
+        const layoutItem = newLayout.find((l) => l.i === widget.id);
+        if (layoutItem) {
+          return {
+            ...widget,
+            position: { x: layoutItem.x, y: layoutItem.y },
+            size: { w: layoutItem.w, h: layoutItem.h },
+          };
         }
+        return widget;
+      });
 
-        try {
-            // Fetch drive stats from API
-            const driveResponse = await apiClient.getDriveStats();
-            setDriveStats(driveResponse);
-        } catch (error) {
-            console.warn("Failed to fetch drive stats:", error);
-            setDriveStats({ online_count: 0, offline_count: 0, total_count: 0 });
-        }
+      dispatch(updateLocalWidgets({ boardId: activeBoard, widgets: updatedWidgets }));
+    },
+    [editMode, activeBoard, widgets, dispatch]
+  );
 
-        try {
-            // Fetch pool stats from API
-            const poolResponse = await apiClient.getPoolStats();
-            setPoolStats(Array.isArray(poolResponse) ? poolResponse : []);
-        } catch (error) {
-            console.warn("Failed to fetch pool stats:", error);
-            setPoolStats([]);
-        }
 
-        try {
-            // Fetch API errors from API
-            const apiErrorsResponse = await apiClient.getApiErrorStats();
-            if (apiErrorsResponse && apiErrorsResponse.data) {
-                setApiErrorsData(apiErrorsResponse.data);
-            } else {
-                setApiErrorsData([]);
-            }
-        } catch (error) {
-            console.warn("Failed to fetch API error stats:", error);
-            setApiErrorsData([]);
-        }
+  // Create new board
+  const handleCreateBoard = useCallback(async () => {
+    if (!newBoardName.trim()) return;
 
-        try {
-            // Fetch throughput data from API
-            const throughputResponse = await apiClient.getDataThroughputStats();
-            if (throughputResponse && throughputResponse.data) {
-                setThroughputData(throughputResponse.data);
-            } else {
-                setThroughputData([]);
-            }
-        } catch (error) {
-            console.warn("Failed to fetch throughput stats:", error);
-            setThroughputData([]);
-        }
-    };
+    await dispatch(createBoard({ name: newBoardName, order_index: boards.length }));
+    setNewBoardName("");
+    setCreateBoardDialogOpen(false);
+    setSnackbar({ open: true, message: "Board created successfully", severity: "success" });
+  }, [dispatch, newBoardName, boards.length]);
 
-    if (loading || statsLoading) {
-        return <Loader message={t("dashboard.loading")} />;
+  // Rename board
+  const handleRenameBoard = useCallback(async () => {
+    if (!activeBoard || !newBoardName.trim()) return;
+
+    await dispatch(updateBoard({ id: activeBoard, request: { name: newBoardName } }));
+    setNewBoardName("");
+    setRenameBoardDialogOpen(false);
+    setBoardMenuAnchor(null);
+    setSnackbar({ open: true, message: "Board renamed successfully", severity: "success" });
+  }, [dispatch, activeBoard, newBoardName]);
+
+  // Delete board
+  const handleDeleteBoard = useCallback(async () => {
+    if (!activeBoard || boards.length <= 1) return;
+
+    await dispatch(deleteBoard(activeBoard));
+    setBoardMenuAnchor(null);
+    setSnackbar({ open: true, message: "Board deleted successfully", severity: "success" });
+  }, [dispatch, activeBoard, boards.length]);
+
+  // Toggle edit mode
+  const handleToggleEditMode = useCallback(() => {
+    dispatch(setEditMode(!editMode));
+  }, [dispatch, editMode]);
+
+  // Save widgets
+  const handleSaveWidgets = useCallback(async () => {
+    if (!activeBoard) return;
+
+    await dispatch(saveWidgets({ boardId: activeBoard, widgets }));
+    dispatch(setEditMode(false));
+    setSnackbar({ open: true, message: "Dashboard saved successfully", severity: "success" });
+  }, [dispatch, activeBoard, widgets]);
+
+  // Cancel edit mode
+  const handleCancelEdit = useCallback(() => {
+    if (activeBoard) {
+      dispatch(fetchWidgets(activeBoard));
     }
+    dispatch(setEditMode(false));
+  }, [dispatch, activeBoard]);
 
-    // Calculate stats
-    const totalObjects = systemStats?.objects || 1263;
-    const totalSize = systemStats?.storage_used || 7.82 * (1024 ** 6);
-    const totalBuckets = systemStats?.buckets || buckets.length || 7;
-    const availableStorage = systemStats?.storage_available || 2.68 * (1024 ** 6);
-    const totalStorage = systemStats?.storage_total || 10.50 * (1024 ** 6);
+  // Toggle widget visibility
+  const handleToggleWidgetVisibility = useCallback(
+    (widgetId: string) => {
+      if (!activeBoard) return;
 
-    const totalApiErrors = apiErrorsData.reduce((sum, item) => sum + item.count, 0);
-    const totalDataTransfer =
-        throughputData.reduce((sum, item) => sum + item.total_bytes, 0) / (1024 ** 3);
+      const updatedWidgets = widgets.map((w) =>
+        w.id === widgetId ? { ...w, visible: !w.visible } : w
+      );
+      dispatch(updateLocalWidgets({ boardId: activeBoard, widgets: updatedWidgets }));
+    },
+    [activeBoard, widgets, dispatch]
+  );
 
-    return (
-        <Box
+  // Open widget settings
+  const handleOpenWidgetSettings = useCallback((widget: DashboardWidget) => {
+    setSelectedWidget(widget);
+    setSettingsPanelOpen(true);
+  }, []);
+
+  // Update widget settings
+  const handleUpdateWidgetSettings = useCallback(
+    (updatedWidget: DashboardWidget) => {
+      if (!activeBoard) return;
+
+      const updatedWidgets = widgets.map((w) =>
+        w.id === updatedWidget.id ? updatedWidget : w
+      );
+      dispatch(updateLocalWidgets({ boardId: activeBoard, widgets: updatedWidgets }));
+      setSettingsPanelOpen(false);
+      setSelectedWidget(null);
+    },
+    [activeBoard, widgets, dispatch]
+  );
+
+  // Render widget component
+  const renderWidget = useCallback(
+    (widget: DashboardWidget) => {
+      const WidgetComponent = widgetComponents[widget.widget_type];
+      if (!WidgetComponent) return null;
+
+      return (
+        <WidgetComponent
+          widget={widget}
+          editMode={editMode}
+          onSettingsClick={() => handleOpenWidgetSettings(widget)}
+          onVisibilityToggle={() => handleToggleWidgetVisibility(widget.id)}
+        />
+      );
+    },
+    [editMode, handleOpenWidgetSettings, handleToggleWidgetVisibility]
+  );
+
+  if (loading && boards.length === 0) {
+    return <Loader message={t("dashboard.loading") || "Loading dashboard..."} />;
+  }
+
+  const isDark = theme.palette.mode === "dark";
+  const { primary, secondary, background, gradients, shadows, opacity } = dashboardTheme;
+
+  return (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        background: getThemeValue(isDark, gradients.background.dark, gradients.background.light),
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Subtle background pattern */}
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: isDark
+            ? `radial-gradient(circle at 25% 25%, ${alpha(primary.main, 0.03)} 0%, transparent 50%),
+               radial-gradient(circle at 75% 75%, ${alpha(secondary.main, 0.03)} 0%, transparent 50%)`
+            : `radial-gradient(circle at 25% 25%, ${alpha(primary.main, 0.04)} 0%, transparent 50%),
+               radial-gradient(circle at 75% 75%, ${alpha(secondary.main, 0.04)} 0%, transparent 50%)`,
+          pointerEvents: "none",
+        }}
+      />
+
+      <Box sx={{ position: "relative", zIndex: 1, p: { xs: 2, md: 3 } }}>
+        {/* Compact Toolbar */}
+        <Fade in timeout={400}>
+          <Box
             sx={{
-                bgcolor: theme.palette.mode === "dark" ? "#0F172A" : "#F8FAFC",
-                minHeight: "100vh",
-                p: 3,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 2.5,
+              gap: 2,
             }}
-        >
-            {/* Header */}
-            <Box sx={{ mb: 3 }}>
-                <Typography
-                    variant="h4"
-                    gutterBottom
-                    sx={{ fontWeight: 700, color: theme.palette.text.primary }}
+          >
+            {/* Board Chips Navigation */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flexWrap: "wrap",
+                flex: 1,
+              }}
+            >
+              {boards.map((board) => (
+                <Chip
+                  key={board.id}
+                  label={board.name}
+                  icon={<DashboardIcon sx={{ fontSize: "1rem !important" }} />}
+                  onClick={() => {
+                    dispatch(setActiveBoard(board.id));
+                    dispatch(fetchWidgets(board.id));
+                  }}
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "0.85rem",
+                    height: 36,
+                    px: 0.5,
+                    borderRadius: dashboardTheme.borderRadius.chip,
+                    transition: "all 0.2s ease",
+                    bgcolor: activeBoard === board.id
+                      ? alpha(primary.main, isDark ? opacity.active : opacity.hover)
+                      : alpha(isDark ? background.dark.card : background.light.card, isDark ? 0.6 : 0.8),
+                    color: activeBoard === board.id
+                      ? getThemeValue(isDark, primary.light, primary.dark)
+                      : theme.palette.text.primary,
+                    border: activeBoard === board.id
+                      ? `1px solid ${alpha(primary.main, isDark ? 0.4 : 0.3)}`
+                      : `1px solid ${alpha(theme.palette.divider, opacity.divider)}`,
+                    backdropFilter: "blur(8px)",
+                    "&:hover": {
+                      bgcolor: activeBoard === board.id
+                        ? alpha(primary.main, isDark ? 0.3 : 0.2)
+                        : alpha(isDark ? background.dark.card : background.light.card, isDark ? 0.8 : 1),
+                      transform: "translateY(-1px)",
+                    },
+                    "& .MuiChip-icon": {
+                      color: activeBoard === board.id
+                        ? getThemeValue(isDark, primary.light, primary.dark)
+                        : theme.palette.text.secondary,
+                    },
+                  }}
+                />
+              ))}
+
+              {/* Add Board Button */}
+              <Tooltip title="New Board" arrow>
+                <IconButton
+                  size="small"
+                  onClick={() => setCreateBoardDialogOpen(true)}
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    bgcolor: alpha(getThemeValue(isDark, background.dark.card, background.light.card), isDark ? 0.6 : 0.8),
+                    border: `1px dashed ${alpha(theme.palette.divider, 0.3)}`,
+                    backdropFilter: "blur(8px)",
+                    "&:hover": {
+                      bgcolor: alpha(getThemeValue(isDark, background.dark.card, background.light.card), isDark ? 0.9 : 1),
+                      borderColor: primary.main,
+                    },
+                  }}
                 >
-                    {t("dashboard.title") || "Object Storage Dashboard"}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    {t("dashboard.subtitle") || "System Overview and Metrics"}
-                </Typography>
+                  <Add sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+
+              {/* Board Menu */}
+              {activeBoard && (
+                <>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => setBoardMenuAnchor(e.currentTarget)}
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      bgcolor: alpha(getThemeValue(isDark, background.dark.card, background.light.card), isDark ? 0.6 : 0.8),
+                      border: `1px solid ${alpha(theme.palette.divider, opacity.divider)}`,
+                      backdropFilter: "blur(8px)",
+                    }}
+                  >
+                    <MoreVert sx={{ fontSize: 18 }} />
+                  </IconButton>
+                  <Menu
+                    anchorEl={boardMenuAnchor}
+                    open={Boolean(boardMenuAnchor)}
+                    onClose={() => setBoardMenuAnchor(null)}
+                    PaperProps={{
+                      sx: {
+                        bgcolor: getThemeValue(isDark, background.dark.card, background.light.card),
+                        backdropFilter: "blur(20px)",
+                        borderRadius: dashboardTheme.borderRadius.sm,
+                        border: `1px solid ${alpha(theme.palette.divider, opacity.border)}`,
+                        boxShadow: getThemeValue(isDark, shadows.menu.dark, shadows.menu.light),
+                      },
+                    }}
+                  >
+                    <MenuItem
+                      onClick={() => {
+                        setNewBoardName(activeBoardData?.name || "");
+                        setRenameBoardDialogOpen(true);
+                      }}
+                    >
+                      Rename Board
+                    </MenuItem>
+                    <MenuItem
+                      onClick={handleDeleteBoard}
+                      disabled={boards.length <= 1}
+                      sx={{ color: theme.palette.error.main }}
+                    >
+                      Delete Board
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
             </Box>
 
-            <Grid container spacing={3}>
-                {/* Capacity Card */}
-                <Grid item xs={12} md={6} lg={4}>
-                    <Card
-                        sx={{
-                            height: "100%",
-                            bgcolor:
-                                theme.palette.mode === "dark"
-                                    ? alpha("#1E293B", 0.8)
-                                    : "#FFFFFF",
-                            borderRadius: 2,
-                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        }}
-                    >
-                        <CardContent>
-                            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                                <Storage sx={{ color: theme.palette.primary.main, mr: 1 }} />
-                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                    Capacity
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    sx={{ ml: "auto", fontWeight: 600 }}
-                                >
-                                    {formatBytesToEiB(totalStorage)} EiB
-                                </Typography>
-                            </Box>
+            {/* Action Buttons */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {editMode ? (
+                <>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Close />}
+                    onClick={handleCancelEdit}
+                    sx={{
+                      borderRadius: dashboardTheme.borderRadius.sm,
+                      textTransform: "none",
+                      fontWeight: 600,
+                      borderColor: alpha(theme.palette.divider, 0.3),
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<Save />}
+                    onClick={handleSaveWidgets}
+                    disabled={savingWidgets}
+                    sx={{
+                      borderRadius: dashboardTheme.borderRadius.sm,
+                      textTransform: "none",
+                      fontWeight: 600,
+                      background: gradients.primary,
+                      boxShadow: shadows.button,
+                      "&:hover": {
+                        background: gradients.primaryHover,
+                      },
+                    }}
+                  >
+                    {savingWidgets ? "Saving..." : "Save"}
+                  </Button>
+                </>
+              ) : (
+                <Tooltip title="Customize Layout" arrow>
+                  <IconButton
+                    onClick={handleToggleEditMode}
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      bgcolor: alpha(getThemeValue(isDark, background.dark.card, background.light.card), isDark ? 0.6 : 0.8),
+                      border: `1px solid ${alpha(theme.palette.divider, opacity.divider)}`,
+                      backdropFilter: "blur(8px)",
+                      "&:hover": {
+                        bgcolor: alpha(primary.main, 0.1),
+                        borderColor: primary.main,
+                      },
+                    }}
+                  >
+                    <Tune sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          </Box>
+        </Fade>
 
-                            <CapacityPieChart
-                                available={availableStorage}
-                                used={totalSize}
-                                formatBytes={formatBytes} total={0} />
-
-                            {/* Storage breakdown */}
-                            <Box sx={{ mt: 2 }}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        mb: 1,
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        <Box
-                                            sx={{
-                                                width: 12,
-                                                height: 12,
-                                                bgcolor: theme.palette.primary.main,
-                                                borderRadius: "50%",
-                                            }}
-                                        />
-                                        <Typography variant="body2">Object data</Typography>
-                                    </Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                        {formatBytesToEiB(totalSize)} EiB
-                                    </Typography>
-                                </Box>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        <Box
-                                            sx={{
-                                                width: 12,
-                                                height: 12,
-                                                bgcolor: alpha(theme.palette.primary.main, 0.3),
-                                                borderRadius: "50%",
-                                            }}
-                                        />
-                                        <Typography variant="body2">Available</Typography>
-                                    </Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                        {formatBytesToEiB(availableStorage)} EiB
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Servers Card */}
-                <Grid item xs={12} md={6} lg={4}>
-                    <Card
-                        sx={{
-                            height: "100%",
-                            bgcolor:
-                                theme.palette.mode === "dark"
-                                    ? alpha("#1E293B", 0.8)
-                                    : "#FFFFFF",
-                            borderRadius: 2,
-                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        }}
-                    >
-                        <CardContent>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    mb: 3,
-                                }}
-                            >
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <Computer sx={{ color: theme.palette.primary.main }} />
-                                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                        Servers
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                        {serverStats?.total_count || 20}
-                                    </Typography>
-                                    <ArrowForward sx={{ color: theme.palette.text.secondary }} />
-                                </Box>
-                            </Box>
-
-                            <Box sx={{ mb: 2 }}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        mb: 1,
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        <Chip
-                                            label="Online"
-                                            size="small"
-                                            sx={{
-                                                bgcolor: alpha("#10B981", 0.1),
-                                                color: "#10B981",
-                                                fontWeight: 600,
-                                            }}
-                                        />
-                                        <Typography variant="body2">
-                                            {serverStats?.online_count || 10}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        <Chip
-                                            label="Offline"
-                                            size="small"
-                                            sx={{
-                                                bgcolor: alpha("#EF4444", 0.1),
-                                                color: "#EF4444",
-                                                fontWeight: 600,
-                                            }}
-                                        />
-                                        <Typography variant="body2">
-                                            {serverStats?.offline_count || 7}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-
-                                <LinearProgress
-                                    variant="determinate"
-                                    value={
-                                        ((serverStats?.online_count || 10) /
-                                            (serverStats?.total_count || 20)) *
-                                        100
-                                    }
-                                    sx={{
-                                        height: 8,
-                                        borderRadius: 1,
-                                        bgcolor: alpha("#EF4444", 0.2),
-                                        "& .MuiLinearProgress-bar": {
-                                            bgcolor: "#10B981",
-                                            borderRadius: 1,
-                                        },
-                                    }}
-                                />
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Drives Card */}
-                <Grid item xs={12} md={6} lg={4}>
-                    <Card
-                        sx={{
-                            height: "100%",
-                            bgcolor:
-                                theme.palette.mode === "dark"
-                                    ? alpha("#1E293B", 0.8)
-                                    : "#FFFFFF",
-                            borderRadius: 2,
-                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        }}
-                    >
-                        <CardContent>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    mb: 3,
-                                }}
-                            >
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <Storage sx={{ color: theme.palette.primary.main }} />
-                                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                        Drives
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                        {driveStats?.total_count || 2000}
-                                    </Typography>
-                                    <ArrowForward sx={{ color: theme.palette.text.secondary }} />
-                                </Box>
-                            </Box>
-
-                            <Box sx={{ mb: 2 }}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        mb: 1,
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        <Chip
-                                            label="Online"
-                                            size="small"
-                                            sx={{
-                                                bgcolor: alpha("#10B981", 0.1),
-                                                color: "#10B981",
-                                                fontWeight: 600,
-                                            }}
-                                        />
-                                        <Typography variant="body2">
-                                            {driveStats?.online_count || 1900}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        <Chip
-                                            label="Offline"
-                                            size="small"
-                                            sx={{
-                                                bgcolor: alpha("#EF4444", 0.1),
-                                                color: "#EF4444",
-                                                fontWeight: 600,
-                                            }}
-                                        />
-                                        <Typography variant="body2">
-                                            {driveStats?.offline_count || 100}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-
-                                <LinearProgress
-                                    variant="determinate"
-                                    value={
-                                        ((driveStats?.online_count || 1900) /
-                                            (driveStats?.total_count || 2000)) *
-                                        100
-                                    }
-                                    sx={{
-                                        height: 8,
-                                        borderRadius: 1,
-                                        bgcolor: alpha("#EF4444", 0.2),
-                                        "& .MuiLinearProgress-bar": {
-                                            bgcolor: "#10B981",
-                                            borderRadius: 1,
-                                        },
-                                    }}
-                                />
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Buckets Card */}
-                <Grid item xs={12} md={6} lg={4}>
-                    <Card
-                        sx={{
-                            height: "100%",
-                            bgcolor:
-                                theme.palette.mode === "dark"
-                                    ? alpha("#1E293B", 0.8)
-                                    : "#FFFFFF",
-                            borderRadius: 2,
-                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        }}
-                    >
-                        <CardContent>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    mb: 2,
-                                }}
-                            >
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <Folder sx={{ color: theme.palette.primary.main }} />
-                                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                        Buckets
-                                    </Typography>
-                                </Box>
-                                <ArrowForward sx={{ color: theme.palette.text.secondary }} />
-                            </Box>
-
-                            <Box sx={{ mb: 2 }}>
-                                <Typography variant="h3" sx={{ fontWeight: 700, mb: 0.5 }}>
-                                    {totalBuckets}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Buckets
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ mb: 2 }}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        mb: 0.5,
-                                    }}
-                                >
-                                    <Typography variant="body2" color="text.secondary">
-                                        Objects
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                        {totalObjects.toLocaleString()}
-                                    </Typography>
-                                </Box>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <Typography variant="body2" color="text.secondary">
-                                        Size
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                        {formatBytesToEiB(totalSize)} EiB
-                                    </Typography>
-                                </Box>
-                            </Box>
-
-                            {/* Recent Activity */}
-                            <Typography
-                                variant="caption"
-                                sx={{ fontWeight: 600, color: theme.palette.text.secondary }}
-                            >
-                                Recent Activity
-                            </Typography>
-                            <Box sx={{ mt: 1, maxHeight: 120, overflowY: "auto" }}>
-                                {activityStats?.recent_buckets
-                                    ?.slice(0, 4)
-                                    .map((bucket) => (
-                                        <Box
-                                            key={bucket.name}
-                                            sx={{
-                                                py: 0.5,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "space-between",
-                                            }}
-                                        >
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                <Folder
-                                                    sx={{ fontSize: 16, color: theme.palette.primary.main }}
-                                                />
-                                                <Typography variant="caption">{bucket.name}</Typography>
-                                            </Box>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {bucket.objects.toLocaleString()}
-                                            </Typography>
-                                        </Box>
-                                    ))}
-                            </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* API Errors Chart */}
-                <Grid item xs={12} md={6} lg={4}>
-                    <Card
-                        sx={{
-                            height: "100%",
-                            bgcolor:
-                                theme.palette.mode === "dark"
-                                    ? alpha("#1E293B", 0.8)
-                                    : "#FFFFFF",
-                            borderRadius: 2,
-                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        }}
-                    >
-                        <CardContent>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    mb: 2,
-                                }}
-                            >
-                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                    API Errors (24 hrs)
-                                </Typography>
-                                <ArrowForward sx={{ color: theme.palette.text.secondary }} />
-                            </Box>
-
-                            <Box sx={{ mb: 2 }}>
-                                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                    Total {totalApiErrors}
-                                </Typography>
-                            </Box>
-
-                            <ApiErrorsChart data={apiErrorsData} />
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Data Throughput Chart */}
-                <Grid item xs={12} md={6} lg={4}>
-                    <Card
-                        sx={{
-                            height: "100%",
-                            bgcolor:
-                                theme.palette.mode === "dark"
-                                    ? alpha("#1E293B", 0.8)
-                                    : "#FFFFFF",
-                            borderRadius: 2,
-                            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        }}
-                    >
-                        <CardContent>
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "space-between",
-                                    mb: 2,
-                                }}
-                            >
-                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                    Data (24 hrs)
-                                </Typography>
-                                <ArrowForward sx={{ color: theme.palette.text.secondary }} />
-                            </Box>
-
-                            <Box sx={{ mb: 2 }}>
-                                <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                    Total {totalDataTransfer.toFixed(2)} GiB
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                    TTFB 567 ms
-                                </Typography>
-                            </Box>
-
-                            <DataThroughputChart
-                                data={throughputData}
-                                formatBytes={formatBytes}
-                            />
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Pool 1 */}
-                {poolStats.map((pool) => (
-                    <Grid item xs={12} md={6} lg={6} key={pool.id}>
-                        <Card
-                            sx={{
-                                height: "100%",
-                                bgcolor:
-                                    theme.palette.mode === "dark"
-                                        ? alpha("#1E293B", 0.8)
-                                        : "#FFFFFF",
-                                borderRadius: 2,
-                                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                            }}
-                        >
-                            <CardContent>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        mb: 3,
-                                    }}
-                                >
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        <Storage sx={{ color: theme.palette.primary.main }} />
-                                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                            {pool.name}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                        <Description sx={{ color: theme.palette.primary.main }} />
-                                        <ArrowForward sx={{ color: theme.palette.text.secondary }} />
-                                    </Box>
-                                </Box>
-
-                                <Grid container spacing={2}>
-                                    <Grid item xs={6}>
-                                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                                            Capacity
-                                        </Typography>
-                                        <Box sx={{ mb: 2 }}>
-                                            <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                                                {formatBytesToEiB(pool.available)}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                EiB Available
-                                            </Typography>
-                                        </Box>
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                mb: 0.5,
-                                            }}
-                                        >
-                                            <Typography variant="caption" color="text.secondary">
-                                                Object data
-                                            </Typography>
-                                            <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                                                {formatBytesToEiB(pool.used)} EiB
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-
-                                    <Grid item xs={6}>
-                                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
-                                            Drives
-                                        </Typography>
-                                        <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-                                            {pool.drives_count}
-                                        </Typography>
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                mb: 1,
-                                            }}
-                                        >
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                <Chip
-                                                    label="Online"
-                                                    size="small"
-                                                    sx={{
-                                                        bgcolor: alpha("#10B981", 0.1),
-                                                        color: "#10B981",
-                                                        fontWeight: 600,
-                                                    }}
-                                                />
-                                                <Typography variant="caption">
-                                                    {pool.online_drives}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                <Chip
-                                                    label="Offline"
-                                                    size="small"
-                                                    sx={{
-                                                        bgcolor: alpha("#EF4444", 0.1),
-                                                        color: "#EF4444",
-                                                        fontWeight: 600,
-                                                    }}
-                                                />
-                                                <Typography variant="caption">
-                                                    {pool.offline_drives}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                        <LinearProgress
-                                            variant="determinate"
-                                            value={(pool.online_drives / pool.drives_count) * 100}
-                                            sx={{
-                                                height: 6,
-                                                borderRadius: 1,
-                                                bgcolor: alpha("#EF4444", 0.2),
-                                                "& .MuiLinearProgress-bar": {
-                                                    bgcolor: "#10B981",
-                                                    borderRadius: 1,
-                                                },
-                                            }}
-                                        />
-                                    </Grid>
-                                </Grid>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+        {/* Hidden Widgets Panel (Edit Mode) */}
+        {editMode && widgets.filter((w) => !w.visible).length > 0 && (
+          <Fade in timeout={300}>
+            <Box
+              sx={{
+                mb: 2.5,
+                p: 2,
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                bgcolor: alpha(dashboardTheme.warning.main, opacity.subtle),
+                borderRadius: dashboardTheme.borderRadius.md,
+                border: `1px solid ${alpha(dashboardTheme.warning.main, 0.2)}`,
+              }}
+            >
+              <Box
+                sx={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  color: dashboardTheme.warning.main,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Hidden
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                {widgets.filter((w) => !w.visible).map((widget) => (
+                  <Chip
+                    key={widget.id}
+                    label={widget.widget_type.replace("_", " ")}
+                    size="small"
+                    icon={<Visibility sx={{ fontSize: "0.9rem !important" }} />}
+                    onClick={() => handleToggleWidgetVisibility(widget.id)}
+                    sx={{
+                      height: 28,
+                      borderRadius: dashboardTheme.borderRadius.sm,
+                      bgcolor: alpha(getThemeValue(isDark, background.dark.card, background.light.card), isDark ? 0.8 : 0.9),
+                      border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        bgcolor: alpha(primary.main, 0.1),
+                        borderColor: primary.main,
+                      },
+                    }}
+                  />
                 ))}
-            </Grid>
-        </Box>
-    );
+              </Box>
+            </Box>
+          </Fade>
+        )}
+
+        {/* Widget Grid */}
+        <div ref={containerRef as React.RefObject<HTMLDivElement>} style={{ width: "100%" }}>
+          {gridMounted && (
+            <ResponsiveGridLayout
+              className="layout"
+              layouts={{ lg: layout, md: layout, sm: layout }}
+              breakpoints={{ lg: 1200, md: 996, sm: 768 }}
+              cols={{ lg: 12, md: 12, sm: 6 }}
+              rowHeight={120}
+              width={containerWidth}
+              onLayoutChange={(newLayout) => handleLayoutChange(newLayout as unknown as LayoutItem[])}
+              margin={[16, 16]}
+            >
+              {widgets.filter((w) => w.visible).map((widget) => (
+                <Box
+                  key={widget.id}
+                  sx={{ height: "100%" }}
+                  className={editMode ? "drag-handle" : ""}
+                >
+                  {renderWidget(widget)}
+                </Box>
+              ))}
+            </ResponsiveGridLayout>
+          )}
+        </div>
+      </Box>
+
+      {/* Create Board Dialog */}
+      <Dialog
+        open={createBoardDialogOpen}
+        onClose={() => setCreateBoardDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: getThemeValue(isDark, background.dark.card, background.light.card),
+            borderRadius: dashboardTheme.borderRadius.md,
+            minWidth: 360,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Create New Board</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Board Name"
+            fullWidth
+            value={newBoardName}
+            onChange={(e) => setNewBoardName(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleCreateBoard()}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: dashboardTheme.borderRadius.sm,
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setCreateBoardDialogOpen(false)}
+            sx={{ borderRadius: dashboardTheme.borderRadius.sm, textTransform: "none" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCreateBoard}
+            variant="contained"
+            disabled={!newBoardName.trim()}
+            sx={{
+              borderRadius: dashboardTheme.borderRadius.sm,
+              textTransform: "none",
+              fontWeight: 600,
+              background: gradients.primary,
+            }}
+          >
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Rename Board Dialog */}
+      <Dialog
+        open={renameBoardDialogOpen}
+        onClose={() => setRenameBoardDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: getThemeValue(isDark, background.dark.card, background.light.card),
+            borderRadius: dashboardTheme.borderRadius.md,
+            minWidth: 360,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Rename Board</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Board Name"
+            fullWidth
+            value={newBoardName}
+            onChange={(e) => setNewBoardName(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && handleRenameBoard()}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: dashboardTheme.borderRadius.sm,
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setRenameBoardDialogOpen(false)}
+            sx={{ borderRadius: dashboardTheme.borderRadius.sm, textTransform: "none" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRenameBoard}
+            variant="contained"
+            disabled={!newBoardName.trim()}
+            sx={{
+              borderRadius: dashboardTheme.borderRadius.sm,
+              textTransform: "none",
+              fontWeight: 600,
+              background: gradients.primary,
+            }}
+          >
+            Rename
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Widget Settings Panel */}
+      {selectedWidget && (
+        <WidgetSettingsPanel
+          open={settingsPanelOpen}
+          widget={selectedWidget}
+          onClose={() => {
+            setSettingsPanelOpen(false);
+            setSelectedWidget(null);
+          }}
+          onSave={handleUpdateWidgetSettings}
+        />
+      )}
+
+      {/* Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          sx={{ borderRadius: dashboardTheme.borderRadius.sm }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
 };
 
 export default DashboardPageNew;
