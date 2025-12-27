@@ -52,8 +52,8 @@ vcpkg_installed/
 *.exe
 *.out
 *.app
-console
-object-storage-console
+/console
+/object-storage-console
 
 # Coverage
 *.gcda
@@ -117,3 +117,6 @@ $RECYCLE.BIN/
 
 # sqlite
 *.db*
+
+# data
+data/
