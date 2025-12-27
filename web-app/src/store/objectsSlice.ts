@@ -49,13 +49,25 @@ export const fetchObjects = createAsyncThunk(
 export const uploadObject = createAsyncThunk(
   "objects/uploadObject",
   async (
-    { bucketName, key, file }: { bucketName: string; key: string; file: File },
+    { bucketName, key, file, sseCustomerKey }: {
+      bucketName: string;
+      key: string;
+      file: File;
+      sseCustomerKey?: string;
+    },
     { rejectWithValue, dispatch },
   ) => {
     try {
-      await apiClient.uploadObject(bucketName, key, file, (progress) => {
-        dispatch(setUploadProgress({ key, progress }));
-      });
+      await apiClient.uploadObject(
+        bucketName,
+        key,
+        file,
+        undefined, // contentType - auto-detect
+        sseCustomerKey,
+        (progress) => {
+          dispatch(setUploadProgress({ key, progress }));
+        }
+      );
       // Refresh objects list after upload
       dispatch(fetchObjects({ bucketName }));
       return key;
@@ -125,11 +137,11 @@ export const fetchObjectInfo = createAsyncThunk(
 export const downloadObject = createAsyncThunk(
   "objects/downloadObject",
   async (
-    { bucketName, key }: { bucketName: string; key: string },
+    { bucketName, key, sseCustomerKey }: { bucketName: string; key: string; sseCustomerKey?: string },
     { rejectWithValue },
   ) => {
     try {
-      const blob = await apiClient.downloadObject(bucketName, key);
+      const blob = await apiClient.downloadObject(bucketName, key, sseCustomerKey);
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");

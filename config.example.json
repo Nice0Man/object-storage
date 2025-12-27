@@ -33,6 +33,19 @@
     "max_upload_size_mb": 100,
     "enable_sharing": true
   },
+  "database": {
+    "path": "./data/rocksdb",
+    "encryption_key": ""
+  },
+  "storage": {
+    "root_path": "./storage"
+  },
+  "default_admin": {
+    "username": "admin",
+    "password": "CHANGE-THIS-PASSWORD",
+    "account_name": "Administrator",
+    "enabled": true
+  },
   "ui": {
     "theme": "light",
     "items_per_page": 50,

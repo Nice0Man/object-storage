@@ -1,0 +1,99 @@
+---
+title: "Activity Diagram: Загрузка файла AS-IS (Ручной процесс)"
+config:
+  theme: default
+---
+flowchart TD
+    %% ==================== LEGEND ====================
+    subgraph legend ["📋 Легенда UML Activity"]
+        direction LR
+        L_Start(( )):::startEnd
+        L_End((◉)):::finalEnd
+        L_Action["Действие"]:::action
+        L_Decision{"Решение"}:::decision
+        L_Note>"Примечание"]:::note
+    end
+
+    %% ==================== SWIMLANES ====================
+    subgraph user_lane ["👤 Пользователь"]
+        direction TB
+        Start(( )):::startEnd
+        Start --> CheckLocal["Проверить наличие<br/>файлового сервера в сети"]
+
+        CheckLocal --> ServerAvailable{"Сервер<br/>доступен?"}
+
+        ServerAvailable -->|Нет| ContactIT["Обратиться в<br/>IT-поддержку"]
+        ContactIT --> WaitServer["⏳ Ожидать<br/>восстановления сервера"]
+        WaitServer --> CheckLocal
+
+        ServerAvailable -->|Да| FindFolder["Найти нужную папку<br/>на сервере"]
+
+        FindFolder --> CheckAccess{"Есть права<br/>доступа?"}
+
+        CheckAccess -->|Нет| RequestAccess["Отправить запрос на доступ<br/>администратору"]
+    end
+
+    subgraph admin_lane ["👔 IT-Администратор"]
+        direction TB
+        RequestAccess --> WaitApproval["⏳ Ожидание одобрения<br/>от админа"]
+        WaitApproval --> ReceiveCreds["Получить учетные данные<br/>по email"]
+    end
+
+    subgraph user_lane2 ["👤 Пользователь (продолжение)"]
+        direction TB
+        ReceiveCreds --> ConfigureClient["Настроить FTP/SMB<br/>клиент вручную"]
+        ConfigureClient --> CheckAccess2{"Доступ<br/>настроен?"}
+
+        CheckAccess -->|Да| SelectFiles["Выбрать файлы<br/>для загрузки"]
+        CheckAccess2 -->|Да| SelectFiles
+        CheckAccess2 -->|Нет| ConfigureClient
+
+        SelectFiles --> CopyFile["📂 Скопировать файлы<br/>на сервер вручную"]
+
+        CopyFile --> UploadProgress["⏳ Ожидание завершения<br/>копирования"]
+
+        UploadProgress --> VerifyUpload{"Копирование<br/>успешно?"}
+
+        VerifyUpload -->|Нет: Ошибка сети| HandleError["⚠️ Обработать<br/>ошибку вручную"]
+        HandleError --> RetryDecision{"Повторить<br/>попытку?"}
+        RetryDecision -->|Да| CopyFile
+        RetryDecision -->|Нет| CancelUpload((◉)):::cancelEnd
+
+        VerifyUpload -->|Да| VerifyIntegrity["Проверить целостность<br/>файла вручную"]
+
+        VerifyIntegrity --> IntegrityOK{"Файл<br/>корректен?"}
+
+        IntegrityOK -->|Нет| DeleteCorrupt["🗑️ Удалить<br/>поврежденный файл"]
+        DeleteCorrupt --> CopyFile
+
+        IntegrityOK -->|Да| NotifyTeam["📧 Уведомить команду<br/>по email о загрузке"]
+
+        NotifyTeam --> UpdateDocs["📝 Обновить документацию<br/>и журнал вручную"]
+
+        UpdateDocs --> EndSuccess((◉)):::successEnd
+    end
+
+    %% ==================== NOTES ====================
+    N1>"❌ Ручной процесс<br/>требует много времени"]
+    ServerAvailable -.-> N1
+
+    N2>"⚠️ Нет автоматической<br/>проверки целостности"]
+    VerifyIntegrity -.-> N2
+
+    %% ==================== STYLING ====================
+    classDef startEnd fill:#000000,stroke:#000000,color:#000000
+    classDef finalEnd fill:#000000,stroke:#000000,color:#ffffff
+    classDef successEnd fill:#4CAF50,stroke:#2E7D32,color:#ffffff
+    classDef cancelEnd fill:#F44336,stroke:#C62828,color:#ffffff
+    classDef action fill:#FFFFFF,stroke:#424242,stroke-width:1px
+    classDef decision fill:#FFFFFF,stroke:#424242,stroke-width:1px
+    classDef note fill:#FFF9C4,stroke:#F9A825,stroke-width:1px
+    classDef warning fill:#FFCC80,stroke:#EF6C00
+    classDef wait fill:#FFE082,stroke:#FF8F00
+
+    class Start startEnd
+    class EndSuccess successEnd
+    class CancelUpload cancelEnd
+    class WaitServer,WaitApproval,UploadProgress wait
+    class HandleError,ContactIT warning
+    class N1,N2 note

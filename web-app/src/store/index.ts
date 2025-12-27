@@ -4,6 +4,7 @@ import bucketsReducer from "./bucketsSlice";
 import objectsReducer from "./objectsSlice";
 import usersReducer from "./usersSlice";
 import statsReducer from "./statsSlice";
+import dashboardReducer from "./dashboardSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     objects: objectsReducer,
     users: usersReducer,
     stats: statsReducer,
+    dashboard: dashboardReducer,
   },
 });
 

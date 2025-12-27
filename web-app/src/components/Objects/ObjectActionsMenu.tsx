@@ -15,25 +15,34 @@ import {
   Label,
   Link,
   Delete,
+  History,
+  Lock,
+  Visibility,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
 interface ObjectActionsMenuProps {
+  onPreview?: () => void;
   onInfo: () => void;
   onDownload: () => void;
   onCopy: () => void;
   onTags: () => void;
   onPresignedUrl: () => void;
   onDelete: () => void;
+  onVersions?: () => void;
+  onRetention?: () => void;
 }
 
 const ObjectActionsMenu: React.FC<ObjectActionsMenuProps> = ({
+  onPreview,
   onInfo,
   onDownload,
   onCopy,
   onTags,
   onPresignedUrl,
   onDelete,
+  onVersions,
+  onRetention,
 }) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -66,6 +75,14 @@ const ObjectActionsMenu: React.FC<ObjectActionsMenuProps> = ({
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
+        {onPreview && (
+          <MenuItem onClick={() => handleAction(onPreview)}>
+            <ListItemIcon>
+              <Visibility fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Preview</ListItemText>
+          </MenuItem>
+        )}
         <MenuItem onClick={() => handleAction(onInfo)}>
           <ListItemIcon>
             <Info fontSize="small" />
@@ -96,6 +113,22 @@ const ObjectActionsMenu: React.FC<ObjectActionsMenuProps> = ({
           </ListItemIcon>
           <ListItemText>{t("objects.actions.generateLink")}</ListItemText>
         </MenuItem>
+        {onVersions && (
+          <MenuItem onClick={() => handleAction(onVersions)}>
+            <ListItemIcon>
+              <History fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Versions</ListItemText>
+          </MenuItem>
+        )}
+        {onRetention && (
+          <MenuItem onClick={() => handleAction(onRetention)}>
+            <ListItemIcon>
+              <Lock fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Retention & Lock</ListItemText>
+          </MenuItem>
+        )}
         <Divider />
         <MenuItem
           onClick={() => handleAction(onDelete)}

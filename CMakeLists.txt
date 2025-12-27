@@ -132,6 +132,45 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
+# RocksDB is required for database storage
+find_package(RocksDB CONFIG QUIET)
+
+if(NOT RocksDB_FOUND)
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(ROCKSDB QUIET rocksdb)
+    endif()
+endif()
+
+if(NOT RocksDB_FOUND AND NOT ROCKSDB_FOUND)
+    message(STATUS "RocksDB not found locally, fetching from GitHub...")
+    include(FetchContent)
+
+    set(WITH_GFLAGS OFF CACHE BOOL "" FORCE)
+    set(WITH_TESTS OFF CACHE BOOL "" FORCE)
+    set(WITH_BENCHMARK_TOOLS OFF CACHE BOOL "" FORCE)
+    set(WITH_TOOLS OFF CACHE BOOL "" FORCE)
+    set(WITH_CORE_TOOLS OFF CACHE BOOL "" FORCE)
+    set(WITH_ALL_TESTS OFF CACHE BOOL "" FORCE)
+    set(FAIL_ON_WARNINGS OFF CACHE BOOL "" FORCE)
+    set(ROCKSDB_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(WITH_SNAPPY OFF CACHE BOOL "" FORCE)
+    set(WITH_LZ4 OFF CACHE BOOL "" FORCE)
+    set(WITH_ZLIB OFF CACHE BOOL "" FORCE)
+    set(WITH_ZSTD OFF CACHE BOOL "" FORCE)
+    set(WITH_BZ2 OFF CACHE BOOL "" FORCE)
+
+    FetchContent_Declare(
+        rocksdb
+        GIT_REPOSITORY https://github.com/facebook/rocksdb.git
+        GIT_TAG v9.7.4
+        GIT_SHALLOW TRUE
+    )
+
+    FetchContent_MakeAvailable(rocksdb)
+    set(RocksDB_FOUND TRUE)
+    message(STATUS "RocksDB fetched from GitHub successfully")
+endif()
 
 # jwt-cpp is header-only, fetch from GitHub if not found
 find_package(jwt-cpp CONFIG QUIET)

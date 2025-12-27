@@ -1,0 +1,219 @@
+---
+title: "Traceability Matrix: Требования → Проектирование → Реализация → Тесты"
+config:
+  theme: default
+---
+flowchart TB
+    %% ==================== REQUIREMENTS LAYER ====================
+    subgraph requirements ["📋 ФУНКЦИОНАЛЬНЫЕ ТРЕБОВАНИЯ"]
+        direction TB
+
+        subgraph auth_req ["🔐 Аутентификация и авторизация"]
+            REQ001["REQ-001<br/>Аутентификация по логину/паролю"]
+            REQ002["REQ-002<br/>JWT токены для сессий"]
+            REQ003["REQ-003<br/>Разграничение прав IAM"]
+            REQ004["REQ-004<br/>Роли Admin/User"]
+        end
+
+        subgraph bucket_req ["📁 Управление бакетами"]
+            REQ005["REQ-005<br/>CRUD операции"]
+            REQ006["REQ-006<br/>Версионирование"]
+            REQ007["REQ-007<br/>Шифрование"]
+            REQ008["REQ-008<br/>Политики доступа"]
+            REQ009["REQ-009<br/>Lifecycle правила"]
+        end
+
+        subgraph object_req ["📦 Управление объектами"]
+            REQ010["REQ-010<br/>Загрузка объектов"]
+            REQ011["REQ-011<br/>Скачивание объектов"]
+            REQ012["REQ-012<br/>Удаление объектов"]
+            REQ013["REQ-013<br/>Копирование объектов"]
+            REQ014["REQ-014<br/>Presigned URL"]
+            REQ015["REQ-015<br/>Теги объектов"]
+        end
+
+        subgraph infra_req ["🖥️ Инфраструктура"]
+            REQ016["REQ-016<br/>Мониторинг серверов"]
+            REQ017["REQ-017<br/>Мониторинг дисков"]
+            REQ018["REQ-018<br/>Восстановление данных"]
+        end
+
+        subgraph security_req ["🛡️ Безопасность"]
+            REQ019["REQ-019<br/>Шифрование AES-256"]
+            REQ020["REQ-020<br/>Object Lock WORM"]
+        end
+    end
+
+    %% ==================== DESIGN LAYER ====================
+    subgraph design ["⚙️ ПРОЕКТНЫЕ РЕШЕНИЯ - Сервисы"]
+        direction TB
+
+        DES_Auth["🔐 AuthService<br/>Аутентификация и JWT"]
+        DES_Bucket["📁 BucketService<br/>Управление бакетами"]
+        DES_Object["📦 ObjectService<br/>Управление объектами"]
+        DES_User["👥 UserService<br/>Управление пользователями"]
+        DES_Infra["🖥️ InfrastructureService<br/>Мониторинг"]
+        DES_Encrypt["🔏 EncryptionService<br/>Шифрование"]
+        DES_Policy["🛡️ PolicyEvaluator<br/>Оценка IAM политик"]
+        DES_Storage["💾 LocalStorageClient<br/>Хранение данных"]
+        DES_Stats["📊 StatsCollector<br/>Сбор статистики"]
+    end
+
+    %% ==================== IMPLEMENTATION LAYER ====================
+    subgraph implementation ["💻 РЕАЛИЗАЦИЯ - Исходный код"]
+        direction TB
+
+        subgraph api_layer ["📡 API Controllers"]
+            IMP_AuthCtrl["AuthController.cpp"]
+            IMP_BucketCtrl["BucketsController.cpp"]
+            IMP_ObjectCtrl["ObjectsController.cpp"]
+            IMP_UserCtrl["UsersController.cpp"]
+            IMP_InfraCtrl["InfrastructureController.cpp"]
+            IMP_PresignCtrl["PresignedController.cpp"]
+        end
+
+        subgraph service_layer ["⚙️ Services"]
+            IMP_AuthSvc["AuthService.cpp"]
+            IMP_BucketSvc["BucketService.cpp"]
+            IMP_ObjectSvc["ObjectService.cpp"]
+            IMP_UserSvc["UserService.cpp"]
+            IMP_InfraSvc["InfrastructureService.cpp"]
+            IMP_EncryptSvc["EncryptionService.cpp"]
+            IMP_PolicySvc["PolicyEvaluator.cpp"]
+        end
+
+        subgraph storage_layer ["💾 Storage"]
+            IMP_LocalClient["LocalStorageClient.cpp"]
+            IMP_MetaMgr["MetadataManager.cpp"]
+            IMP_PathMgr["PathManager.cpp"]
+            IMP_DbMgr["DatabaseManager.cpp"]
+        end
+
+        subgraph model_layer ["📋 Models"]
+            IMP_Bucket["Bucket.cpp"]
+            IMP_Object["Object.cpp"]
+            IMP_User["User.cpp"]
+            IMP_Policy["Policy.cpp"]
+        end
+    end
+
+    %% ==================== TESTING LAYER ====================
+    subgraph testing ["🧪 ТЕСТИРОВАНИЕ"]
+        direction TB
+
+        subgraph unit_tests ["🔬 Unit Tests"]
+            TST_AuthUnit["auth_service_test.cpp"]
+            TST_BucketUnit["bucket_service_test.cpp"]
+            TST_ObjectUnit["object_service_test.cpp"]
+            TST_PolicyUnit["policy_evaluator_test.cpp"]
+            TST_EncryptUnit["encryption_test.cpp"]
+            TST_StorageUnit["storage_client_test.cpp"]
+        end
+
+        subgraph integration_tests ["🔗 Integration Tests"]
+            TST_AuthInt["auth_integration_test.cpp"]
+            TST_BucketInt["bucket_workflow_test.cpp"]
+            TST_ObjectInt["object_workflow_test.cpp"]
+            TST_PresignInt["presigned_test.cpp"]
+        end
+
+        subgraph e2e_tests ["🌐 E2E Tests - Playwright"]
+            TST_LoginE2E["login.spec.ts"]
+            TST_BucketE2E["bucket.spec.ts"]
+            TST_UploadE2E["upload.spec.ts"]
+            TST_ShareE2E["share.spec.ts"]
+        end
+    end
+
+    %% ==================== TRACEABILITY LINKS ====================
+
+    %% Requirements → Design
+    REQ001 --> DES_Auth
+    REQ002 --> DES_Auth
+    REQ003 --> DES_Policy
+    REQ004 --> DES_User
+
+    REQ005 --> DES_Bucket
+    REQ006 --> DES_Bucket
+    REQ007 --> DES_Encrypt
+    REQ008 --> DES_Policy
+    REQ009 --> DES_Bucket
+
+    REQ010 --> DES_Object
+    REQ011 --> DES_Object
+    REQ012 --> DES_Object
+    REQ013 --> DES_Object
+    REQ014 --> DES_Object
+    REQ015 --> DES_Object
+
+    REQ016 --> DES_Infra
+    REQ017 --> DES_Infra
+    REQ018 --> DES_Infra
+
+    REQ019 --> DES_Encrypt
+    REQ020 --> DES_Bucket
+
+    %% Design → Implementation
+    DES_Auth --> IMP_AuthCtrl
+    DES_Auth --> IMP_AuthSvc
+
+    DES_Bucket --> IMP_BucketCtrl
+    DES_Bucket --> IMP_BucketSvc
+    DES_Bucket --> IMP_Bucket
+
+    DES_Object --> IMP_ObjectCtrl
+    DES_Object --> IMP_ObjectSvc
+    DES_Object --> IMP_PresignCtrl
+    DES_Object --> IMP_Object
+
+    DES_User --> IMP_UserCtrl
+    DES_User --> IMP_UserSvc
+    DES_User --> IMP_User
+
+    DES_Infra --> IMP_InfraCtrl
+    DES_Infra --> IMP_InfraSvc
+
+    DES_Encrypt --> IMP_EncryptSvc
+
+    DES_Policy --> IMP_PolicySvc
+    DES_Policy --> IMP_Policy
+
+    DES_Storage --> IMP_LocalClient
+    DES_Storage --> IMP_MetaMgr
+    DES_Storage --> IMP_PathMgr
+    DES_Storage --> IMP_DbMgr
+
+    DES_Stats --> IMP_InfraSvc
+
+    %% Implementation → Tests
+    IMP_AuthSvc --> TST_AuthUnit
+    IMP_AuthCtrl --> TST_AuthInt
+    IMP_AuthCtrl --> TST_LoginE2E
+
+    IMP_BucketSvc --> TST_BucketUnit
+    IMP_BucketCtrl --> TST_BucketInt
+    IMP_BucketCtrl --> TST_BucketE2E
+
+    IMP_ObjectSvc --> TST_ObjectUnit
+    IMP_ObjectCtrl --> TST_ObjectInt
+    IMP_ObjectCtrl --> TST_UploadE2E
+
+    IMP_PolicySvc --> TST_PolicyUnit
+
+    IMP_EncryptSvc --> TST_EncryptUnit
+
+    IMP_LocalClient --> TST_StorageUnit
+
+    IMP_PresignCtrl --> TST_PresignInt
+    IMP_PresignCtrl --> TST_ShareE2E
+
+    %% ==================== STYLING ====================
+    classDef reqStyle fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    classDef designStyle fill:#E8F5E9,stroke:#388E3C,stroke-width:2px
+    classDef implStyle fill:#FFF3E0,stroke:#F57C00,stroke-width:2px
+    classDef testStyle fill:#FCE4EC,stroke:#C2185B,stroke-width:2px
+
+    class REQ001,REQ002,REQ003,REQ004,REQ005,REQ006,REQ007,REQ008,REQ009,REQ010,REQ011,REQ012,REQ013,REQ014,REQ015,REQ016,REQ017,REQ018,REQ019,REQ020 reqStyle
+    class DES_Auth,DES_Bucket,DES_Object,DES_User,DES_Infra,DES_Encrypt,DES_Policy,DES_Storage,DES_Stats designStyle
+    class IMP_AuthCtrl,IMP_BucketCtrl,IMP_ObjectCtrl,IMP_UserCtrl,IMP_InfraCtrl,IMP_PresignCtrl,IMP_AuthSvc,IMP_BucketSvc,IMP_ObjectSvc,IMP_UserSvc,IMP_InfraSvc,IMP_EncryptSvc,IMP_PolicySvc,IMP_LocalClient,IMP_MetaMgr,IMP_PathMgr,IMP_DbMgr,IMP_Bucket,IMP_Object,IMP_User,IMP_Policy implStyle
+    class TST_AuthUnit,TST_BucketUnit,TST_ObjectUnit,TST_PolicyUnit,TST_EncryptUnit,TST_StorageUnit,TST_AuthInt,TST_BucketInt,TST_ObjectInt,TST_PresignInt,TST_LoginE2E,TST_BucketE2E,TST_UploadE2E,TST_ShareE2E testStyle

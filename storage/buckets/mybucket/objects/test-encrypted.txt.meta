@@ -1,0 +1,15 @@
+{
+  "bucket" : "mybucket",
+  "content_type" : "text/plain",
+  "encrypted" : true,
+  "encryption_algorithm" : "AES256",
+  "etag" : "e7cdf6fbf55480462d58d7efd6ed88ed",
+  "key" : "test-encrypted.txt",
+  "last_modified" : 1765401006,
+  "legal_hold" : false,
+  "metadata" : {},
+  "original_size" : 58,
+  "size" : 80,
+  "sse_type" : "SSE-S3",
+  "version_id" : "null"
+}

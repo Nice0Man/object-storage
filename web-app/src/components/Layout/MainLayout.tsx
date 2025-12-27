@@ -73,7 +73,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     { text: 'nav.buckets', icon: <StorageIcon />, path: '/buckets' },
     { text: 'nav.objects', icon: <FolderIcon />, path: '/objects' },
     { text: 'nav.users', icon: <PeopleIcon />, path: '/users' },
-    { text: 'nav.system', icon: <MonitorHeartIcon />, path: '/system' },
+    { text: 'nav.system', icon: <MonitorHeartIcon />, path: '/system-health' },
     { text: 'nav.profile', icon: <PersonIcon />, path: '/profile' },
   ];
 
@@ -86,9 +86,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           {t('app.title')}
         </Typography>
         )}
-        <IconButton 
-          onClick={handleCollapse} 
-          sx={{ 
+        <IconButton
+          onClick={handleCollapse}
+          sx={{
             color: 'white',
             ml: collapsed ? 'auto' : 0,
             mr: collapsed ? 'auto' : 0,
@@ -98,7 +98,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </IconButton>
       </Toolbar>
       <Divider />
-      
+
       {/* Main menu */}
       <List sx={{ flexGrow: 1 }}>
         {menuItems.map((item) => (
@@ -136,9 +136,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </ListItem>
         ))}
       </List>
-      
+
       <Divider />
-      
+
       {/* Bottom section with user info and settings */}
       <Box sx={{ p: 2 }}>
         {!collapsed ? (
@@ -152,19 +152,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 {username}
               </Typography>
             </Box>
-            
+
             {/* Theme and Language */}
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', mb: 2 }}>
               <ThemeToggle />
               <LanguageSelector />
             </Box>
-            
+
             {/* Logout button */}
-            <Button 
+            <Button
               fullWidth
-              variant="outlined" 
+              variant="outlined"
               color="error"
-              startIcon={<LogoutIcon />} 
+              startIcon={<LogoutIcon />}
               onClick={handleLogout}
             >
               {t('auth.logout')}
@@ -233,8 +233,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
               width: drawerWidth,
               transition: 'width 0.3s ease',
             },
@@ -265,4 +265,3 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 };
 
 export default MainLayout;
-

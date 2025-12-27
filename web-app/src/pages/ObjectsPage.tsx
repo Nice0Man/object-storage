@@ -23,6 +23,7 @@ import {
   Breadcrumbs,
   Link,
   Chip,
+  Tooltip,
 } from "@mui/material";
 import {
   CloudUpload,
@@ -31,6 +32,8 @@ import {
   InsertDriveFile,
   Home,
   DeleteSweep,
+  Lock,
+  LockOpen,
 } from "@mui/icons-material";
 import ObjectActionsMenu from "../components/Objects/ObjectActionsMenu";
 import {
@@ -39,6 +42,13 @@ import {
   CopyObjectDialog,
   PresignedUrlDialog,
 } from "../components/Objects/ObjectDialogs";
+import ObjectVersionsDialog from "../components/Objects/ObjectVersionsDialog";
+import ObjectRetentionDialog from "../components/Objects/ObjectRetentionDialog";
+import MultipartUploadDialog from "../components/Objects/MultipartUploadDialog";
+import EncryptedUploadDialog from "../components/Objects/EncryptedUploadDialog";
+import EncryptedDownloadDialog from "../components/Objects/EncryptedDownloadDialog";
+import FilePreview from "../components/Objects/FilePreview";
+import apiClient from "../api/client";
 import { useSearchParams } from "react-router-dom";
 import { useAppDispatch } from "../hooks/useAppDispatch";
 import { useAppSelector } from "../hooks/useAppSelector";
@@ -98,6 +108,19 @@ const ObjectsPage: React.FC = () => {
   const [tagsDialogOpen, setTagsDialogOpen] = useState(false);
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
   const [presignedUrlDialogOpen, setPresignedUrlDialogOpen] = useState(false);
+  const [versionsDialogOpen, setVersionsDialogOpen] = useState(false);
+  const [retentionDialogOpen, setRetentionDialogOpen] = useState(false);
+  const [multipartUploadOpen, setMultipartUploadOpen] = useState(false);
+  const [encryptedUploadOpen, setEncryptedUploadOpen] = useState(false);
+  const [encryptedDownloadOpen, setEncryptedDownloadOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewObject, setPreviewObject] = useState<{
+    url: string;
+    name: string;
+    size?: number;
+    isEncrypted?: boolean;
+    encryptionType?: string;
+  } | null>(null);
 
   useEffect(() => {
     dispatch(fetchBuckets());
@@ -137,9 +160,72 @@ const ObjectsPage: React.FC = () => {
     setUploadDialogOpen(false);
   };
 
-  const handleDownload = async (key: string) => {
+  const handleDownload = async (key: string, sseCustomerKey?: string) => {
     if (!selectedBucket) return;
-    await dispatch(downloadObject({ bucketName: selectedBucket, key }));
+    await dispatch(downloadObject({ bucketName: selectedBucket, key, sseCustomerKey }));
+  };
+
+  const handleDownloadWithEncryptionCheck = (key: string) => {
+    if (!selectedBucket) return;
+    // Find the object to check if it's SSE-C encrypted
+    const object = objects.find((obj) => obj.key === key);
+    if (object?.sse_type === "SSE-C") {
+      setSelectedObjectKey(key);
+      setEncryptedDownloadOpen(true);
+    } else {
+      handleDownload(key);
+    }
+  };
+
+  const handleEncryptedDownload = async (sseCustomerKey: string) => {
+    await handleDownload(selectedObjectKey, sseCustomerKey);
+  };
+
+  const handlePreview = async (key: string) => {
+    if (!selectedBucket) return;
+    const object = objects.find((obj) => obj.key === key);
+    if (!object) return;
+
+    const isEncrypted = object.sse_type === "SSE-C";
+
+    // For SSE-C encrypted objects, show download dialog instead (need key)
+    if (isEncrypted) {
+      setSelectedObjectKey(key);
+      setPreviewObject({
+        url: "",
+        name: key.split("/").pop() || key,
+        size: object.size,
+        isEncrypted: true,
+        encryptionType: object.sse_type,
+      });
+      setPreviewOpen(true);
+      return;
+    }
+
+    try {
+      // Generate presigned URL for preview (valid for 1 hour)
+      const presignedResponse = await apiClient.getPresignedUrl(selectedBucket, key, 3600);
+
+      setPreviewObject({
+        url: presignedResponse.url,
+        name: key.split("/").pop() || key,
+        size: object.size,
+        isEncrypted: object.encrypted || object.sse_type === "SSE-S3",
+        encryptionType: object.sse_type,
+      });
+      setPreviewOpen(true);
+    } catch (error) {
+      console.error("Failed to generate preview URL:", error);
+      // Fallback: just show file info without preview
+      setPreviewObject({
+        url: "",
+        name: key.split("/").pop() || key,
+        size: object.size,
+        isEncrypted: object.encrypted,
+        encryptionType: object.sse_type,
+      });
+      setPreviewOpen(true);
+    }
   };
 
   const handleDelete = async (key: string) => {
@@ -150,11 +236,14 @@ const ObjectsPage: React.FC = () => {
   const handleObjectAction = (key: string, action: string) => {
     setSelectedObjectKey(key);
     switch (action) {
+      case "preview":
+        handlePreview(key);
+        break;
       case "info":
         setInfoDialogOpen(true);
         break;
       case "download":
-        handleDownload(key);
+        handleDownloadWithEncryptionCheck(key);
         break;
       case "copy":
         setCopyDialogOpen(true);
@@ -164,6 +253,12 @@ const ObjectsPage: React.FC = () => {
         break;
       case "presignedUrl":
         setPresignedUrlDialogOpen(true);
+        break;
+      case "versions":
+        setVersionsDialogOpen(true);
+        break;
+      case "retention":
+        setRetentionDialogOpen(true);
         break;
       case "delete":
         handleDelete(key);
@@ -267,12 +362,31 @@ const ObjectsPage: React.FC = () => {
             </Button>
           )}
           <Button
-            variant="contained"
+            variant="outlined"
             startIcon={<CloudUpload />}
             onClick={() => setUploadDialogOpen(true)}
             disabled={!selectedBucket}
+            sx={{ mr: 1 }}
           >
-            Upload
+            Quick Upload
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<Lock />}
+            onClick={() => setEncryptedUploadOpen(true)}
+            disabled={!selectedBucket}
+            sx={{ mr: 1 }}
+            color="warning"
+          >
+            Encrypted Upload
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<CloudUpload />}
+            onClick={() => setMultipartUploadOpen(true)}
+            disabled={!selectedBucket}
+          >
+            Upload Large Files
           </Button>
         </Box>
       </Box>
@@ -356,6 +470,7 @@ const ObjectsPage: React.FC = () => {
                 <TableCell>Size</TableCell>
                 <TableCell>Last Modified</TableCell>
                 <TableCell>Type</TableCell>
+                <TableCell align="center">Encryption</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -382,6 +497,7 @@ const ObjectsPage: React.FC = () => {
                   <TableCell>
                     <Chip label="Folder" size="small" />
                   </TableCell>
+                  <TableCell align="center">-</TableCell>
                   <TableCell></TableCell>
                 </TableRow>
               ))}
@@ -409,8 +525,26 @@ const ObjectsPage: React.FC = () => {
                       size="small"
                     />
                   </TableCell>
+                  <TableCell align="center">
+                    {object.encrypted ? (
+                      <Tooltip
+                        title={`${object.sse_type} (${object.encryption_algorithm})`}
+                        arrow
+                      >
+                        <Lock
+                          fontSize="small"
+                          color={object.sse_type === "SSE-C" ? "warning" : "success"}
+                        />
+                      </Tooltip>
+                    ) : (
+                      <Tooltip title="Not encrypted" arrow>
+                        <LockOpen fontSize="small" color="disabled" />
+                      </Tooltip>
+                    )}
+                  </TableCell>
                   <TableCell align="right">
                     <ObjectActionsMenu
+                      onPreview={() => handleObjectAction(object.key, "preview")}
                       onInfo={() => handleObjectAction(object.key, "info")}
                       onDownload={() =>
                         handleObjectAction(object.key, "download")
@@ -420,6 +554,8 @@ const ObjectsPage: React.FC = () => {
                       onPresignedUrl={() =>
                         handleObjectAction(object.key, "presignedUrl")
                       }
+                      onVersions={() => handleObjectAction(object.key, "versions")}
+                      onRetention={() => handleObjectAction(object.key, "retention")}
                       onDelete={() => handleObjectAction(object.key, "delete")}
                     />
                   </TableCell>
@@ -428,7 +564,7 @@ const ObjectsPage: React.FC = () => {
               {(objects || []).length === 0 &&
                 (prefixes || []).length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                       <Typography variant="body2" color="text.secondary">
                         No objects found
                       </Typography>
@@ -515,6 +651,68 @@ const ObjectsPage: React.FC = () => {
         bucketName={selectedBucket}
         objectKey={selectedObjectKey}
       />
+
+      {/* Object Versions Dialog */}
+      <ObjectVersionsDialog
+        open={versionsDialogOpen}
+        onClose={() => setVersionsDialogOpen(false)}
+        bucketName={selectedBucket}
+        objectKey={selectedObjectKey}
+        onSuccess={handleDialogSuccess}
+      />
+
+      {/* Object Retention Dialog */}
+      <ObjectRetentionDialog
+        open={retentionDialogOpen}
+        onClose={() => setRetentionDialogOpen(false)}
+        bucketName={selectedBucket}
+        objectKey={selectedObjectKey}
+        onSuccess={handleDialogSuccess}
+      />
+
+      {/* Multipart Upload Dialog */}
+      <MultipartUploadDialog
+        open={multipartUploadOpen}
+        onClose={() => setMultipartUploadOpen(false)}
+        bucketName={selectedBucket}
+        currentPrefix={currentPrefix}
+        onSuccess={handleDialogSuccess}
+      />
+
+      {/* Encrypted Upload Dialog */}
+      <EncryptedUploadDialog
+        open={encryptedUploadOpen}
+        onClose={() => setEncryptedUploadOpen(false)}
+        bucketName={selectedBucket}
+        currentPrefix={currentPrefix}
+        onSuccess={handleDialogSuccess}
+      />
+
+      {/* Encrypted Download Dialog */}
+      <EncryptedDownloadDialog
+        open={encryptedDownloadOpen}
+        onClose={() => setEncryptedDownloadOpen(false)}
+        bucketName={selectedBucket}
+        objectKey={selectedObjectKey}
+        onDownload={handleEncryptedDownload}
+      />
+
+      {/* File Preview Dialog */}
+      {previewObject && (
+        <FilePreview
+          open={previewOpen}
+          onClose={() => {
+            setPreviewOpen(false);
+            setPreviewObject(null);
+          }}
+          fileUrl={previewObject.url}
+          fileName={previewObject.name}
+          fileSize={previewObject.size}
+          isEncrypted={previewObject.isEncrypted}
+          encryptionType={previewObject.encryptionType}
+          onDownload={() => handleDownloadWithEncryptionCheck(selectedObjectKey)}
+        />
+      )}
     </Box>
   );
 };

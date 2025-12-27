@@ -1,8 +1,7 @@
-
-//
 #include "console/models/Group.hpp"
 
 #include <algorithm>
+#include <sstream>
 
 namespace console::models {
 
@@ -68,7 +67,12 @@ Group::from_json(const Json::Value& json) {
         }
     }
 
-    // TODO(Nice0Man): Parse created_at date
+    // Parse created_at date if present
+    if (json.isMember("created_at")) {
+        group.created_at_ = parse_iso8601_date(json["created_at"].asString());
+    } else {
+        group.created_at_ = std::chrono::system_clock::now();
+    }
 
     return group;
 }

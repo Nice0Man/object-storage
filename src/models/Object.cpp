@@ -1,5 +1,3 @@
-
-//
 #include "console/models/Object.hpp"
 
 #include <algorithm>
@@ -66,6 +64,17 @@ Object::to_json() const {
         user_metadata_obj[key] = value;
     }
     json["user_metadata"] = user_metadata_obj;
+
+    // Encryption fields
+    json["encrypted"] = info_.encrypted;
+    json["encryption_algorithm"] = info_.encryption_algorithm;
+    json["sse_type"] = info_.sse_type;
+    if (!info_.sse_customer_key_md5.empty()) {
+        json["sse_customer_key_md5"] = info_.sse_customer_key_md5;
+    }
+    if (info_.original_size > 0) {
+        json["original_size"] = Json::Int64(info_.original_size);
+    }
 
     return json;
 }
@@ -181,7 +190,13 @@ ObjectRetention::from_json(const Json::Value& json) {
     String mode_str = json.get("mode", "GOVERNANCE").asString();
     retention.mode = (mode_str == "COMPLIANCE") ? Mode::Compliance : Mode::Governance;
 
-    // TODO(Nice0Man): Parse date string to TimePoint
+    // Parse retain_until_date if present
+    if (json.isMember("retain_until_date")) {
+        retention.retain_until_date = parse_iso8601_date(json["retain_until_date"].asString());
+    } else {
+        // Default to now + 30 days if not specified
+        retention.retain_until_date = std::chrono::system_clock::now() + std::chrono::hours(24 * 30);
+    }
 
     return retention;
 }

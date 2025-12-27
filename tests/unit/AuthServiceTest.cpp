@@ -25,7 +25,7 @@ class MockAdminClient : public IMinioAdminClient {
     // User management
     MOCK_METHOD((Result<Vector<models::User>, String>), list_users, (), (override));
     MOCK_METHOD((Result<models::User, String>), get_user, (const String&), (override));
-    MOCK_METHOD((Result<models::User, String>), create_user, (const String&, const String&), (override));
+    MOCK_METHOD((Result<models::User, String>), create_user, (const String&, const String&, bool), (override));
     MOCK_METHOD((Result<void, String>), delete_user, (const String&), (override));
     MOCK_METHOD((Result<void, String>), set_user_policy, (const String&, const String&), (override));
     MOCK_METHOD((Result<void, String>), update_user_groups, (const String&, const Vector<String>&), (override));
@@ -63,7 +63,7 @@ class AuthServiceTest : public ::testing::Test {
         mock_admin_client_ = std::make_shared<NiceMock<MockAdminClient>>();
 
         // Configure the global Config instance for tests
-        // This is needed because initialize_schema() uses Config::instance()
+        // This is needed because initialize() uses Config::instance()
         auto& global_config = Config::instance();
         global_config.auth().jwt_secret = "test-secret-key-for-testing-purposes-only";
         global_config.auth().token_expiry = std::chrono::hours(24);
@@ -79,7 +79,7 @@ class AuthServiceTest : public ::testing::Test {
         utils::JWT::initialize(config_->auth().jwt_secret, "test-encryption-passphrase", "test-encryption-salt");
 
         db_manager_ = std::make_shared<storage::DatabaseManager>(test_db_path_);
-        db_manager_->initialize_schema(); // Create tables and default admin user
+        db_manager_->initialize(); // Create tables and default admin user
 
         auth_service_ = std::make_unique<AuthService>(mock_admin_client_, config_, db_manager_);
     }
@@ -88,9 +88,9 @@ class AuthServiceTest : public ::testing::Test {
         auth_service_.reset();
         db_manager_.reset();
 
-        // Clean up test database
+        // Clean up test database (RocksDB creates a directory, not a file)
         if (std::filesystem::exists(test_db_path_)) {
-            std::filesystem::remove(test_db_path_);
+            std::filesystem::remove_all(test_db_path_);
         }
     }
 

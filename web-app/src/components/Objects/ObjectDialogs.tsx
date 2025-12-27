@@ -23,7 +23,7 @@ import {
   InputLabel,
   Stack,
 } from "@mui/material";
-import { ContentCopy, Close, Add, Delete } from "@mui/icons-material";
+import { ContentCopy, Close, Add, Delete, Lock, LockOpen } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import apiClient from "../../api/client";
 import type { ObjectInfo } from "../../api/types";
@@ -132,6 +132,52 @@ export const ObjectInfoDialog: React.FC<ObjectInfoDialogProps> = ({
                   {info.etag}
                 </TableCell>
               </TableRow>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 600 }}>
+                  Encryption
+                </TableCell>
+                <TableCell>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    {info.encrypted ? (
+                      <>
+                        <Lock fontSize="small" color={info.sse_type === "SSE-C" ? "warning" : "success"} />
+                        <Chip
+                          label={info.sse_type || "Encrypted"}
+                          size="small"
+                          color={info.sse_type === "SSE-C" ? "warning" : "success"}
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                          ({info.encryption_algorithm})
+                        </Typography>
+                        {info.original_size && info.original_size !== info.size && (
+                          <Typography variant="body2" color="text.secondary">
+                            Original: {formatSize(info.original_size)}
+                          </Typography>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <LockOpen fontSize="small" color="disabled" />
+                        <Typography variant="body2" color="text.secondary">
+                          Not encrypted
+                        </Typography>
+                      </>
+                    )}
+                  </Box>
+                </TableCell>
+              </TableRow>
+              {info.encrypted && info.sse_type === "SSE-C" && (
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>
+                    Customer Key MD5
+                  </TableCell>
+                  <TableCell
+                    sx={{ fontFamily: "monospace", fontSize: "0.875rem" }}
+                  >
+                    {info.sse_customer_key_md5}
+                  </TableCell>
+                </TableRow>
+              )}
               {info.metadata && Object.keys(info.metadata).length > 0 && (
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600 }}>

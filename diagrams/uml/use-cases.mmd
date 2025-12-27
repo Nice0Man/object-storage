@@ -1,0 +1,139 @@
+---
+title: "Use Case Diagram: Object Storage Console"
+config:
+  theme: default
+---
+flowchart TB
+    %% ==================== ACTORS ====================
+    subgraph actors [" "]
+        direction TB
+        User((👤<br/>Пользователь))
+        Admin((👔<br/>Администратор))
+        ExternalSystem((🔌<br/>Внешняя<br/>система))
+    end
+
+    %% ==================== SYSTEM BOUNDARY ====================
+    subgraph system ["🗄️ Object Storage Console"]
+        direction TB
+
+        subgraph auth_module ["Модуль аутентификации"]
+            UC_Login(["UC-01<br/>Аутентификация"])
+            UC_Logout(["UC-02<br/>Выход из системы"])
+            UC_ChangePassword(["UC-03<br/>Смена пароля"])
+            UC_RefreshToken(["UC-04<br/>Обновление токена"])
+        end
+
+        subgraph bucket_module ["Модуль управления бакетами"]
+            UC_ListBuckets(["UC-05<br/>Просмотр списка бакетов"])
+            UC_CreateBucket(["UC-06<br/>Создание бакета"])
+            UC_DeleteBucket(["UC-07<br/>Удаление бакета"])
+            UC_ConfigureVersioning(["UC-08<br/>Настройка версионирования"])
+            UC_ConfigureEncryption(["UC-09<br/>Настройка шифрования"])
+            UC_SetBucketPolicy(["UC-10<br/>Установка политики бакета"])
+            UC_SetBucketTags(["UC-11<br/>Управление тегами бакета"])
+            UC_SetLifecycle(["UC-12<br/>Настройка lifecycle правил"])
+        end
+
+        subgraph object_module ["Модуль управления объектами"]
+            UC_ListObjects(["UC-13<br/>Просмотр объектов"])
+            UC_UploadObject(["UC-14<br/>Загрузка объекта"])
+            UC_DownloadObject(["UC-15<br/>Скачивание объекта"])
+            UC_DeleteObject(["UC-16<br/>Удаление объекта"])
+            UC_CopyObject(["UC-17<br/>Копирование объекта"])
+            UC_SetObjectTags(["UC-18<br/>Управление тегами"])
+            UC_GeneratePresigned(["UC-19<br/>Генерация Presigned URL"])
+            UC_ViewObjectInfo(["UC-20<br/>Просмотр информации"])
+        end
+
+        subgraph user_module ["Модуль управления пользователями"]
+            UC_ListUsers(["UC-21<br/>Просмотр пользователей"])
+            UC_CreateUser(["UC-22<br/>Создание пользователя"])
+            UC_DeleteUser(["UC-23<br/>Удаление пользователя"])
+            UC_UpdateUser(["UC-24<br/>Редактирование"])
+            UC_AssignPolicy(["UC-25<br/>Назначение политики"])
+            UC_ManageGroups(["UC-26<br/>Управление группами"])
+        end
+
+        subgraph infra_module ["Модуль инфраструктуры"]
+            UC_ViewServers(["UC-27<br/>Просмотр серверов"])
+            UC_ViewDrives(["UC-28<br/>Просмотр дисков"])
+            UC_ViewPools(["UC-29<br/>Просмотр пулов"])
+            UC_StartHeal(["UC-30<br/>Запуск восстановления"])
+            UC_ViewStats(["UC-31<br/>Просмотр статистики"])
+        end
+
+        subgraph presigned_module ["Модуль публичного доступа"]
+            UC_AccessPresigned(["UC-32<br/>Доступ по Presigned URL"])
+            UC_UploadPresigned(["UC-33<br/>Загрузка по Presigned URL"])
+        end
+    end
+
+    %% ==================== ACTOR ASSOCIATIONS ====================
+
+    %% Пользователь
+    User --- UC_Login
+    User --- UC_Logout
+    User --- UC_ChangePassword
+    User --- UC_ListBuckets
+    User --- UC_CreateBucket
+    User --- UC_ListObjects
+    User --- UC_UploadObject
+    User --- UC_DownloadObject
+    User --- UC_DeleteObject
+    User --- UC_CopyObject
+    User --- UC_SetObjectTags
+    User --- UC_GeneratePresigned
+    User --- UC_ViewObjectInfo
+
+    %% Администратор (наследует от Пользователя)
+    Admin --- UC_Login
+    Admin --- UC_DeleteBucket
+    Admin --- UC_ConfigureVersioning
+    Admin --- UC_ConfigureEncryption
+    Admin --- UC_SetBucketPolicy
+    Admin --- UC_SetBucketTags
+    Admin --- UC_SetLifecycle
+    Admin --- UC_ListUsers
+    Admin --- UC_CreateUser
+    Admin --- UC_DeleteUser
+    Admin --- UC_UpdateUser
+    Admin --- UC_AssignPolicy
+    Admin --- UC_ManageGroups
+    Admin --- UC_ViewServers
+    Admin --- UC_ViewDrives
+    Admin --- UC_ViewPools
+    Admin --- UC_StartHeal
+    Admin --- UC_ViewStats
+
+    %% Внешняя система
+    ExternalSystem --- UC_AccessPresigned
+    ExternalSystem --- UC_UploadPresigned
+    ExternalSystem --- UC_UploadObject
+    ExternalSystem --- UC_DownloadObject
+
+    %% ==================== INCLUDE RELATIONSHIPS ====================
+    %% include: базовый UC --включает--> включаемый UC
+    UC_UploadObject -.->|≪include≫| UC_Login
+    UC_DownloadObject -.->|≪include≫| UC_Login
+    UC_CreateBucket -.->|≪include≫| UC_Login
+    UC_DeleteObject -.->|≪include≫| UC_Login
+    UC_GeneratePresigned -.->|≪include≫| UC_Login
+
+    %% ==================== EXTEND RELATIONSHIPS ====================
+    %% extend: расширяющий UC --расширяет--> базовый UC
+    UC_ConfigureEncryption -.->|≪extend≫| UC_UploadObject
+    UC_ConfigureVersioning -.->|≪extend≫| UC_UploadObject
+    UC_DeleteObject -.->|≪extend≫| UC_DeleteBucket
+
+    %% ==================== STYLING ====================
+    classDef actorStyle fill:#E1F5FE,stroke:#0288D1,stroke-width:2px
+    classDef useCaseStyle fill:#FFFFFF,stroke:#424242,stroke-width:1px,rx:20,ry:20
+    classDef moduleStyle fill:#F5F5F5,stroke:#9E9E9E,stroke-width:1px
+
+    class User,Admin,ExternalSystem actorStyle
+    class UC_Login,UC_Logout,UC_ChangePassword,UC_RefreshToken useCaseStyle
+    class UC_ListBuckets,UC_CreateBucket,UC_DeleteBucket,UC_ConfigureVersioning,UC_ConfigureEncryption,UC_SetBucketPolicy,UC_SetBucketTags,UC_SetLifecycle useCaseStyle
+    class UC_ListObjects,UC_UploadObject,UC_DownloadObject,UC_DeleteObject,UC_CopyObject,UC_SetObjectTags,UC_GeneratePresigned,UC_ViewObjectInfo useCaseStyle
+    class UC_ListUsers,UC_CreateUser,UC_DeleteUser,UC_UpdateUser,UC_AssignPolicy,UC_ManageGroups useCaseStyle
+    class UC_ViewServers,UC_ViewDrives,UC_ViewPools,UC_StartHeal,UC_ViewStats useCaseStyle
+    class UC_AccessPresigned,UC_UploadPresigned useCaseStyle

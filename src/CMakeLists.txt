@@ -11,6 +11,7 @@ add_subdirectory(api)
 add_subdirectory(middleware)
 add_subdirectory(filters)
 add_subdirectory(websocket)
+add_subdirectory(cli)
 
 # Main console library combining all modules
 add_library(console_lib INTERFACE)
@@ -26,6 +27,7 @@ target_link_libraries(console_lib INTERFACE
     console_middleware
     console_filters
     console_websocket
+    console_cli
 )
 
 target_include_directories(console_lib INTERFACE

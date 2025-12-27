@@ -25,6 +25,22 @@ import type {
   UpdateUserRequest,
   UserPoliciesResponse,
   ApiError,
+  MultipartUploadInfo,
+  CompletedPart,
+  ListMultipartUploadsResponse,
+  ListObjectVersionsResponse,
+  ObjectRetention,
+  ObjectLegalHold,
+  BucketObjectLockConfig,
+  BucketTagsResponse,
+  BucketEncryptionConfig,
+  LifecycleConfiguration,
+  EncryptionStats,
+  DashboardBoard,
+  DashboardWidget,
+  CreateBoardRequest,
+  UpdateBoardRequest,
+  UpdateWidgetRequest,
 } from "./types";
 
 class ApiClient {
@@ -190,16 +206,34 @@ class ApiClient {
   async uploadObject(
     bucketName: string,
     key: string,
-    file: File,
+    fileOrData: File | Uint8Array,
+    contentType?: string,
+    sseCustomerKey?: string,
     onProgress?: (progress: number) => void,
   ): Promise<void> {
-    // Read file as ArrayBuffer
-    const fileBuffer = await file.arrayBuffer();
+    // Handle both File and Uint8Array
+    let data: ArrayBuffer;
+    let mimeType: string;
+
+    if (fileOrData instanceof File) {
+      data = await fileOrData.arrayBuffer();
+      mimeType = contentType || fileOrData.type || "application/octet-stream";
+    } else {
+      data = fileOrData.buffer as ArrayBuffer;
+      mimeType = contentType || "application/octet-stream";
+    }
+
+    const headers: Record<string, string> = {
+      "Content-Type": mimeType,
+    };
+
+    // Add SSE-C header if customer key provided
+    if (sseCustomerKey) {
+      headers["x-amz-server-side-encryption-customer-key"] = sseCustomerKey;
+    }
 
     const config: AxiosRequestConfig = {
-      headers: {
-        "Content-Type": file.type || "application/octet-stream",
-      },
+      headers,
       params: {
         key: key, // Send key as query parameter
       },
@@ -218,7 +252,7 @@ class ApiClient {
 
     await this.client.post(
       `/api/v1/buckets/${bucketName}/objects`,
-      fileBuffer,
+      data,
       config,
     );
   }
@@ -241,11 +275,19 @@ class ApiClient {
     return response.data;
   }
 
-  async downloadObject(bucketName: string, key: string): Promise<Blob> {
+  async downloadObject(bucketName: string, key: string, sseCustomerKey?: string): Promise<Blob> {
+    const headers: Record<string, string> = {};
+
+    // Add SSE-C header if customer key provided
+    if (sseCustomerKey) {
+      headers["x-amz-server-side-encryption-customer-key"] = sseCustomerKey;
+    }
+
     const response = await this.client.get(
       `/api/v1/buckets/${bucketName}/objects/${key}/download`,
       {
         responseType: "blob",
+        headers,
       },
     );
     return response.data;
@@ -253,10 +295,10 @@ class ApiClient {
 
   async copyObject(request: CopyObjectRequest): Promise<void> {
     await this.client.post(
-      `/api/v1/buckets/${request.destination_bucket}/objects/${request.destination_key}/copy`,
+      `/api/v1/buckets/${request.source_bucket}/objects/${encodeURIComponent(request.source_key)}/copy`,
       {
-        source_bucket: request.source_bucket,
-        source_key: request.source_key,
+        destination_bucket: request.destination_bucket,
+        destination_key: request.destination_key,
       },
     );
   }
@@ -267,7 +309,7 @@ class ApiClient {
     expiresIn: number = 3600,
   ): Promise<PresignedUrlResponse> {
     const response = await this.client.get<PresignedUrlResponse>(
-      `/api/v1/buckets/${bucketName}/objects/${key}/presigned-url`,
+      `/api/v1/buckets/${bucketName}/objects/${encodeURIComponent(key)}/presigned-url`,
       { params: { expires_in: expiresIn } },
     );
     return response.data;
@@ -288,6 +330,331 @@ class ApiClient {
     await this.client.put(`/api/v1/buckets/${bucketName}/objects/${key}/tags`, {
       tags,
     });
+  }
+
+  // ==================== Multipart Upload ====================
+  async initiateMultipartUpload(
+    bucketName: string,
+    key: string,
+    contentType: string = "application/octet-stream",
+    metadata: { [key: string]: string } = {},
+  ): Promise<MultipartUploadInfo> {
+    const response = await this.client.post<MultipartUploadInfo>(
+      `/api/v1/buckets/${bucketName}/uploads`,
+      { key, content_type: contentType, metadata },
+    );
+    return response.data;
+  }
+
+  async uploadPart(
+    bucketName: string,
+    uploadId: string,
+    partNumber: number,
+    key: string,
+    data: ArrayBuffer,
+    onProgress?: (progress: number) => void,
+  ): Promise<string> {
+    const config: AxiosRequestConfig = {
+      headers: { "Content-Type": "application/octet-stream" },
+      params: { key },
+    };
+    if (onProgress) {
+      config.onUploadProgress = (e) => {
+        if (e.total) onProgress(Math.round((e.loaded * 100) / e.total));
+      };
+    }
+    const response = await this.client.put(
+      `/api/v1/buckets/${bucketName}/uploads/${uploadId}/parts/${partNumber}`,
+      data,
+      config,
+    );
+    return response.data.etag;
+  }
+
+  async completeMultipartUpload(
+    bucketName: string,
+    uploadId: string,
+    key: string,
+    parts: CompletedPart[],
+  ): Promise<ObjectInfo> {
+    const response = await this.client.post<ObjectInfo>(
+      `/api/v1/buckets/${bucketName}/uploads/${uploadId}/complete`,
+      { key, parts },
+    );
+    return response.data;
+  }
+
+  async abortMultipartUpload(
+    bucketName: string,
+    uploadId: string,
+    key: string,
+  ): Promise<void> {
+    await this.client.delete(
+      `/api/v1/buckets/${bucketName}/uploads/${uploadId}`,
+      { params: { key } },
+    );
+  }
+
+  async listMultipartUploads(
+    bucketName: string,
+    prefix: string = "",
+  ): Promise<ListMultipartUploadsResponse> {
+    const response = await this.client.get<ListMultipartUploadsResponse>(
+      `/api/v1/buckets/${bucketName}/uploads`,
+      { params: { prefix } },
+    );
+    return response.data;
+  }
+
+  async listParts(
+    bucketName: string,
+    uploadId: string,
+    key: string,
+  ): Promise<MultipartUploadInfo> {
+    const response = await this.client.get<MultipartUploadInfo>(
+      `/api/v1/buckets/${bucketName}/uploads/${uploadId}/parts`,
+      { params: { key } },
+    );
+    return response.data;
+  }
+
+  // Advanced multipart upload with automatic chunking
+  async uploadLargeFile(
+    bucketName: string,
+    key: string,
+    file: File,
+    onProgress?: (progress: number) => void,
+    chunkSize: number = 10 * 1024 * 1024, // 10MB chunks
+  ): Promise<void> {
+    const totalSize = file.size;
+    const numParts = Math.ceil(totalSize / chunkSize);
+
+    // Initiate multipart upload
+    const uploadInfo = await this.initiateMultipartUpload(
+      bucketName,
+      key,
+      file.type || "application/octet-stream",
+    );
+
+    const completedParts: CompletedPart[] = [];
+    let uploadedBytes = 0;
+
+    try {
+      for (let i = 0; i < numParts; i++) {
+        const start = i * chunkSize;
+        const end = Math.min(start + chunkSize, totalSize);
+        const chunk = file.slice(start, end);
+        const chunkBuffer = await chunk.arrayBuffer();
+
+        const etag = await this.uploadPart(
+          bucketName,
+          uploadInfo.upload_id,
+          i + 1,
+          key,
+          chunkBuffer,
+        );
+
+        completedParts.push({ part_number: i + 1, etag });
+        uploadedBytes += (end - start);
+
+        if (onProgress) {
+          onProgress(Math.round((uploadedBytes * 100) / totalSize));
+        }
+      }
+
+      // Complete the upload
+      await this.completeMultipartUpload(
+        bucketName,
+        uploadInfo.upload_id,
+        key,
+        completedParts,
+      );
+    } catch (error) {
+      // Abort on failure
+      await this.abortMultipartUpload(bucketName, uploadInfo.upload_id, key);
+      throw error;
+    }
+  }
+
+  // ==================== Object Versioning ====================
+  async listObjectVersions(
+    bucketName: string,
+    key: string,
+  ): Promise<ListObjectVersionsResponse> {
+    const response = await this.client.get<ListObjectVersionsResponse>(
+      `/api/v1/buckets/${bucketName}/objects/${key}/versions`,
+    );
+    return response.data;
+  }
+
+  async getObjectVersion(
+    bucketName: string,
+    key: string,
+    versionId: string,
+  ): Promise<Blob> {
+    const response = await this.client.get(
+      `/api/v1/buckets/${bucketName}/objects/${key}/versions/${versionId}`,
+      { responseType: "blob" },
+    );
+    return response.data;
+  }
+
+  async deleteObjectVersion(
+    bucketName: string,
+    key: string,
+    versionId: string,
+  ): Promise<void> {
+    await this.client.delete(
+      `/api/v1/buckets/${bucketName}/objects/${key}/versions/${versionId}`,
+    );
+  }
+
+  async restoreObjectVersion(
+    bucketName: string,
+    key: string,
+    versionId: string,
+  ): Promise<ObjectInfo> {
+    const response = await this.client.post<ObjectInfo>(
+      `/api/v1/buckets/${bucketName}/objects/${key}/versions/${versionId}/restore`,
+    );
+    return response.data;
+  }
+
+  // ==================== Bucket Versioning ====================
+  async setBucketVersioning(
+    bucketName: string,
+    enabled: boolean,
+  ): Promise<void> {
+    await this.client.put(`/api/v1/buckets/${bucketName}/versioning`, {
+      enabled,
+    });
+  }
+
+  async getBucketVersioning(bucketName: string): Promise<{ enabled: boolean }> {
+    const response = await this.client.get(
+      `/api/v1/buckets/${bucketName}/versioning`,
+    );
+    return response.data;
+  }
+
+  // ==================== Bucket Tags ====================
+  async getBucketTags(bucketName: string): Promise<BucketTagsResponse> {
+    const response = await this.client.get<BucketTagsResponse>(
+      `/api/v1/buckets/${bucketName}/tags`,
+    );
+    return response.data;
+  }
+
+  async setBucketTags(
+    bucketName: string,
+    tags: { [key: string]: string },
+  ): Promise<void> {
+    await this.client.put(`/api/v1/buckets/${bucketName}/tags`, { tags });
+  }
+
+  async deleteBucketTags(bucketName: string): Promise<void> {
+    await this.client.delete(`/api/v1/buckets/${bucketName}/tags`);
+  }
+
+  // ==================== Bucket Encryption ====================
+  async getBucketEncryption(
+    bucketName: string,
+  ): Promise<BucketEncryptionConfig> {
+    const response = await this.client.get<BucketEncryptionConfig>(
+      `/api/v1/buckets/${bucketName}/encryption`,
+    );
+    return response.data;
+  }
+
+  async setBucketEncryption(
+    bucketName: string,
+    config: BucketEncryptionConfig,
+  ): Promise<void> {
+    await this.client.put(`/api/v1/buckets/${bucketName}/encryption`, config);
+  }
+
+  async deleteBucketEncryption(bucketName: string): Promise<void> {
+    await this.client.delete(`/api/v1/buckets/${bucketName}/encryption`);
+  }
+
+  // ==================== Bucket Lifecycle ====================
+  async getBucketLifecycle(
+    bucketName: string,
+  ): Promise<LifecycleConfiguration> {
+    const response = await this.client.get<LifecycleConfiguration>(
+      `/api/v1/buckets/${bucketName}/lifecycle`,
+    );
+    return response.data;
+  }
+
+  async setBucketLifecycle(
+    bucketName: string,
+    config: LifecycleConfiguration,
+  ): Promise<void> {
+    await this.client.put(`/api/v1/buckets/${bucketName}/lifecycle`, config);
+  }
+
+  async deleteBucketLifecycle(bucketName: string): Promise<void> {
+    await this.client.delete(`/api/v1/buckets/${bucketName}/lifecycle`);
+  }
+
+  // ==================== Object Lock ====================
+  async getBucketObjectLockConfig(
+    bucketName: string,
+  ): Promise<BucketObjectLockConfig> {
+    const response = await this.client.get<BucketObjectLockConfig>(
+      `/api/v1/buckets/${bucketName}/object-lock`,
+    );
+    return response.data;
+  }
+
+  async setBucketObjectLockConfig(
+    bucketName: string,
+    config: BucketObjectLockConfig,
+  ): Promise<void> {
+    await this.client.put(`/api/v1/buckets/${bucketName}/object-lock`, config);
+  }
+
+  async getObjectRetention(
+    bucketName: string,
+    key: string,
+  ): Promise<ObjectRetention> {
+    const response = await this.client.get<ObjectRetention>(
+      `/api/v1/buckets/${bucketName}/objects/${key}/retention`,
+    );
+    return response.data;
+  }
+
+  async setObjectRetention(
+    bucketName: string,
+    key: string,
+    retention: ObjectRetention,
+  ): Promise<void> {
+    await this.client.put(
+      `/api/v1/buckets/${bucketName}/objects/${key}/retention`,
+      retention,
+    );
+  }
+
+  async getObjectLegalHold(
+    bucketName: string,
+    key: string,
+  ): Promise<ObjectLegalHold> {
+    const response = await this.client.get<ObjectLegalHold>(
+      `/api/v1/buckets/${bucketName}/objects/${key}/legal-hold`,
+    );
+    return response.data;
+  }
+
+  async setObjectLegalHold(
+    bucketName: string,
+    key: string,
+    enabled: boolean,
+  ): Promise<void> {
+    await this.client.put(
+      `/api/v1/buckets/${bucketName}/objects/${key}/legal-hold`,
+      { status: enabled },
+    );
   }
 
   // Users APIs
@@ -394,6 +761,50 @@ class ApiClient {
 
   async getDataThroughputStats(): Promise<any> {
     const response = await this.client.get("/api/v1/stats/data-throughput");
+    return response.data;
+  }
+
+  async getEncryptionStats(): Promise<EncryptionStats> {
+    const response = await this.client.get("/api/v1/stats/encryption");
+    return response.data;
+  }
+
+  // ==================== Dashboard ====================
+  async listDashboardBoards(): Promise<DashboardBoard[]> {
+    const response = await this.client.get<DashboardBoard[]>("/api/v1/dashboard/boards");
+    return response.data;
+  }
+
+  async createDashboardBoard(request: CreateBoardRequest): Promise<DashboardBoard> {
+    const response = await this.client.post<DashboardBoard>("/api/v1/dashboard/boards", request);
+    return response.data;
+  }
+
+  async getDashboardBoard(id: string): Promise<DashboardBoard> {
+    const response = await this.client.get<DashboardBoard>(`/api/v1/dashboard/boards/${id}`);
+    return response.data;
+  }
+
+  async updateDashboardBoard(id: string, request: UpdateBoardRequest): Promise<DashboardBoard> {
+    const response = await this.client.put<DashboardBoard>(`/api/v1/dashboard/boards/${id}`, request);
+    return response.data;
+  }
+
+  async deleteDashboardBoard(id: string): Promise<void> {
+    await this.client.delete(`/api/v1/dashboard/boards/${id}`);
+  }
+
+  async listDashboardWidgets(boardId: string): Promise<DashboardWidget[]> {
+    const response = await this.client.get<DashboardWidget[]>(`/api/v1/dashboard/boards/${boardId}/widgets`);
+    return response.data;
+  }
+
+  async saveDashboardWidgets(boardId: string, widgets: DashboardWidget[]): Promise<void> {
+    await this.client.put(`/api/v1/dashboard/boards/${boardId}/widgets`, widgets);
+  }
+
+  async updateDashboardWidget(id: string, request: UpdateWidgetRequest): Promise<DashboardWidget> {
+    const response = await this.client.put<DashboardWidget>(`/api/v1/dashboard/widgets/${id}`, request);
     return response.data;
   }
 }

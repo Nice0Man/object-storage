@@ -1,0 +1,16 @@
+{
+  "bucket" : "mybucket",
+  "content_type" : "text/plain",
+  "encrypted" : true,
+  "encryption_algorithm" : "AES256",
+  "etag" : "293ea1ce440175ed30aa0dcccd235fe6",
+  "key" : "ssec-test.txt",
+  "last_modified" : 1765401169,
+  "legal_hold" : false,
+  "metadata" : {},
+  "original_size" : 52,
+  "size" : 80,
+  "sse_customer_key_md5" : "fe3a1ff59f3b89b2ad3d33f08984874b",
+  "sse_type" : "SSE-C",
+  "version_id" : "null"
+}

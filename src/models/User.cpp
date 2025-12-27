@@ -1,8 +1,7 @@
-
-//
 #include "console/models/User.hpp"
 
 #include <algorithm>
+#include <sstream>
 
 namespace console::models {
 
@@ -41,7 +40,12 @@ User::from_json(const Json::Value& json) {
         }
     }
 
-    // TODO(Nice0Man): Parse created_at date
+    // Parse created_at date if present
+    if (json.isMember("created_at")) {
+        info.created_at = parse_iso8601_date(json["created_at"].asString());
+    } else {
+        info.created_at = std::chrono::system_clock::now();
+    }
 
     return User(info);
 }
@@ -147,7 +151,17 @@ ServiceAccount::from_json(const Json::Value& json) {
         }
     }
 
-    // TODO(Nice0Man): Parse dates
+    // Parse created_at date if present
+    if (json.isMember("created_at")) {
+        sa.created_at = parse_iso8601_date(json["created_at"].asString());
+    } else {
+        sa.created_at = std::chrono::system_clock::now();
+    }
+
+    // Parse expires_at date if present
+    if (json.isMember("expires_at") && !json["expires_at"].isNull()) {
+        sa.expires_at = parse_iso8601_date(json["expires_at"].asString());
+    }
 
     return sa;
 }

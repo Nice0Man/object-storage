@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="92px" preserveAspectRatio="none" style="width:249px;height:92px;background:#000000;" version="1.1" viewBox="0 0 249 92" width="249px" zoomAndPan="magnify"><defs/><g><rect fill="#06220E" height="1" style="stroke: #06220E; stroke-width: 1.0;" width="1" x="0" y="0"/><rect fill="#33FF02" height="21.2969" style="stroke: #33FF02; stroke-width: 1.0;" width="243" x="5" y="5"/><text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="241" x="6" y="20">[From use-cases.wsd (line 2) ]</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="0" x="10" y="40.2969"/><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="165" x="5" y="56.5938">@startuml use-cases</text><text fill="#33FF02" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="98" x="5" y="72.8906">!theme plain</text><text fill="#FF0000" font-family="sans-serif" font-size="14" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="106" x="10" y="89.1875">Syntax Error?</text><!--MD5=[b6f4e815cd94e3be09c3e1c53bb4a2e0]
+@startuml use-cases
+!theme plain
+title Use Case Diagram: Object Storage Console
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Gray
+}
+
+actor "Пользователь" as User
+actor "Администратор" as Admin
+actor "Внешняя система" as ExternalSystem
+
+Admin - -|> User
+
+rectangle "Object Storage Console" {
+
+    package "Модуль аутентификации" {
+        usecase "UC-01\nАутентификация" as UC_Login
+        usecase "UC-02\nВыход из системы" as UC_Logout
+        usecase "UC-03\nСмена пароля" as UC_ChangePassword
+        usecase "UC-04\nОбновление токена" as UC_RefreshToken
+    }
+
+    package "Модуль управления бакетами" {
+        usecase "UC-05\nПросмотр списка бакетов" as UC_ListBuckets
+        usecase "UC-06\nСоздание бакета" as UC_CreateBucket
+        usecase "UC-07\nУдаление бакета" as UC_DeleteBucket
+        usecase "UC-08\nНастройка версионирования" as UC_ConfigureVersioning
+        usecase "UC-09\nНастройка шифрования" as UC_ConfigureEncryption
+        usecase "UC-10\nУстановка политики бакета" as UC_SetBucketPolicy
+        usecase "UC-11\nУправление тегами бакета" as UC_SetBucketTags
+        usecase "UC-12\nНастройка lifecycle правил" as UC_SetLifecycle
+    }
+
+    package "Модуль управления объектами" {
+        usecase "UC-13\nПросмотр объектов" as UC_ListObjects
+        usecase "UC-14\nЗагрузка объекта" as UC_UploadObject
+        usecase "UC-15\nСкачивание объекта" as UC_DownloadObject
+        usecase "UC-16\nУдаление объекта" as UC_DeleteObject
+        usecase "UC-17\nКопирование объекта" as UC_CopyObject
+        usecase "UC-18\nУправление тегами" as UC_SetObjectTags
+        usecase "UC-19\nГенерация Presigned URL" as UC_GeneratePresigned
+        usecase "UC-20\nПросмотр информации" as UC_ViewObjectInfo
+    }
+
+    package "Модуль управления пользователями" {
+        usecase "UC-21\nПросмотр пользователей" as UC_ListUsers
+        usecase "UC-22\nСоздание пользователя" as UC_CreateUser
+        usecase "UC-23\nУдаление пользователя" as UC_DeleteUser
+        usecase "UC-24\nРедактирование" as UC_UpdateUser
+        usecase "UC-25\nНазначение политики" as UC_AssignPolicy
+        usecase "UC-26\nУправление группами" as UC_ManageGroups
+    }
+
+    package "Модуль инфраструктуры" {
+        usecase "UC-27\nПросмотр серверов" as UC_ViewServers
+        usecase "UC-28\nПросмотр дисков" as UC_ViewDrives
+        usecase "UC-29\nПросмотр пулов" as UC_ViewPools
+        usecase "UC-30\nЗапуск восстановления" as UC_StartHeal
+        usecase "UC-31\nПросмотр статистики" as UC_ViewStats
+    }
+
+    package "Модуль публичного доступа" {
+        usecase "UC-32\nДоступ по Presigned URL" as UC_AccessPresigned
+        usecase "UC-33\nЗагрузка по Presigned URL" as UC_UploadPresigned
+    }
+}
+
+
+User - -> UC_Login
+User - -> UC_Logout
+User - -> UC_ChangePassword
+User - -> UC_ListBuckets
+User - -> UC_CreateBucket
+User - -> UC_ListObjects
+User - -> UC_UploadObject
+User - -> UC_DownloadObject
+User - -> UC_DeleteObject
+User - -> UC_CopyObject
+User - -> UC_SetObjectTags
+User - -> UC_GeneratePresigned
+User - -> UC_ViewObjectInfo
+
+Admin - -> UC_DeleteBucket
+Admin - -> UC_ConfigureVersioning
+Admin - -> UC_ConfigureEncryption
+Admin - -> UC_SetBucketPolicy
+Admin - -> UC_SetBucketTags
+Admin - -> UC_SetLifecycle
+Admin - -> UC_ListUsers
+Admin - -> UC_CreateUser
+Admin - -> UC_DeleteUser
+Admin - -> UC_UpdateUser
+Admin - -> UC_AssignPolicy
+Admin - -> UC_ManageGroups
+Admin - -> UC_ViewServers
+Admin - -> UC_ViewDrives
+Admin - -> UC_ViewPools
+Admin - -> UC_StartHeal
+Admin - -> UC_ViewStats
+
+ExternalSystem - -> UC_AccessPresigned
+ExternalSystem - -> UC_UploadPresigned
+ExternalSystem - -> UC_UploadObject
+ExternalSystem - -> UC_DownloadObject
+
+UC_UploadObject ..> UC_Login : <<include>>
+UC_DownloadObject ..> UC_Login : <<include>>
+UC_CreateBucket ..> UC_Login : <<include>>
+UC_DeleteObject ..> UC_Login : <<include>>
+UC_GeneratePresigned ..> UC_Login : <<include>>
+
+UC_ConfigureEncryption ..> UC_UploadObject : <<extend>>
+UC_ConfigureVersioning ..> UC_UploadObject : <<extend>>
+UC_DeleteObject ..> UC_DeleteBucket : <<extend>>
+
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 13:22:07 MSK 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 21.0.9+10-Ubuntu-124.04
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

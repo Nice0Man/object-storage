@@ -145,7 +145,12 @@ DocsController::swagger_spec(const drogon::HttpRequestPtr& req,
     resp->setStatusCode(drogon::k200OK);
     resp->addHeader("Access-Control-Allow-Origin", "*");
     resp->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    resp->addHeader("Access-Control-Allow-Headers",
+                    "Content-Type, Authorization, X-Requested-With, Accept, Origin, "
+                    "x-amz-server-side-encryption-customer-key, "
+                    "x-amz-server-side-encryption-customer-algorithm, "
+                    "x-amz-server-side-encryption-customer-key-md5, "
+                    "x-amz-content-sha256, x-amz-date, x-amz-meta-*");
     callback(resp);
 
     CONSOLE_LOG_DEBUG("Served OpenAPI specification");

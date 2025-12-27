@@ -17,6 +17,9 @@ import {
   useTheme,
   alpha,
   CircularProgress,
+  LinearProgress,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   CheckCircle,
@@ -27,16 +30,51 @@ import {
   Storage,
   Computer,
   Speed,
+  Dns,
+  SdStorage,
+  Layers,
+  Timeline,
+  Warning,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import apiClient from "../api/client";
 import type { HealthResponse, VersionResponse } from "../api/types";
+import ApiErrorsChart from "../components/Charts/ApiErrorsChart";
+import DataThroughputChart from "../components/Charts/DataThroughputChart";
+
+// Helper function to format bytes
+const formatBytes = (bytes: number, decimals: number = 2): string => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+};
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
+  <div hidden={value !== index} style={{ paddingTop: 16 }}>
+    {value === index && children}
+  </div>
+);
 
 const SystemHealthPage: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
+  const [tabValue, setTabValue] = useState(0);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [version, setVersion] = useState<VersionResponse | null>(null);
+  const [serverStats, setServerStats] = useState<any>(null);
+  const [driveStats, setDriveStats] = useState<any>(null);
+  const [poolStats, setPoolStats] = useState<any[]>([]);
+  const [apiErrorsData, setApiErrorsData] = useState<any[]>([]);
+  const [throughputData, setThroughputData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastCheck, setLastCheck] = useState<Date>(new Date());
@@ -52,6 +90,47 @@ const SystemHealthPage: React.FC = () => {
       setHealth(healthData);
       setVersion(versionData);
       setLastCheck(new Date());
+
+      // Load additional infrastructure stats
+      try {
+        const serverResponse = await apiClient.getServerStats();
+        setServerStats(serverResponse);
+      } catch (e) {
+        console.warn("Failed to fetch server stats:", e);
+        setServerStats({ servers: [], online_count: 0, offline_count: 0, total_count: 0 });
+      }
+
+      try {
+        const driveResponse = await apiClient.getDriveStats();
+        setDriveStats(driveResponse);
+      } catch (e) {
+        console.warn("Failed to fetch drive stats:", e);
+        setDriveStats({ drives: [], online_count: 0, offline_count: 0, total_count: 0 });
+      }
+
+      try {
+        const poolResponse = await apiClient.getPoolStats();
+        setPoolStats(Array.isArray(poolResponse) ? poolResponse : poolResponse?.pools || []);
+      } catch (e) {
+        console.warn("Failed to fetch pool stats:", e);
+        setPoolStats([]);
+      }
+
+      try {
+        const apiErrorsResponse = await apiClient.getApiErrorStats();
+        setApiErrorsData(apiErrorsResponse?.data || []);
+      } catch (e) {
+        console.warn("Failed to fetch API error stats:", e);
+        setApiErrorsData([]);
+      }
+
+      try {
+        const throughputResponse = await apiClient.getDataThroughputStats();
+        setThroughputData(throughputResponse?.data || []);
+      } catch (e) {
+        console.warn("Failed to fetch throughput stats:", e);
+        setThroughputData([]);
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to load system health");
     } finally {
@@ -183,7 +262,7 @@ const SystemHealthPage: React.FC = () => {
               >
                 {getStatusIcon(health?.status || "")}
               </Box>
-              <Box>
+              <Box sx={{ flex: 1 }}>
                 <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
                   {health?.status?.toUpperCase()}
                 </Typography>
@@ -194,11 +273,45 @@ const SystemHealthPage: React.FC = () => {
                     : ""}
                 </Typography>
               </Box>
+              {/* Quick Stats */}
+              <Box sx={{ display: "flex", gap: 3 }}>
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+                    {serverStats?.total_count || 0}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">Servers</Typography>
+                </Box>
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.success.main }}>
+                    {driveStats?.total_count || 0}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">Drives</Typography>
+                </Box>
+                <Box sx={{ textAlign: "center" }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.info.main }}>
+                    {poolStats?.length || 0}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">Pools</Typography>
+                </Box>
+              </Box>
             </Box>
           </Paper>
 
+          {/* Tabs */}
+          <Paper sx={{ mb: 3 }}>
+            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+              <Tab icon={<Speed />} label="Overview" iconPosition="start" />
+              <Tab icon={<Dns />} label="Servers" iconPosition="start" />
+              <Tab icon={<SdStorage />} label="Drives" iconPosition="start" />
+              <Tab icon={<Layers />} label="Pools" iconPosition="start" />
+              <Tab icon={<Timeline />} label="Metrics" iconPosition="start" />
+            </Tabs>
+          </Paper>
+
+          {/* Overview Tab */}
+          <TabPanel value={tabValue} index={0}>
+            <Grid container spacing={3}>
           {/* System Components */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
             {health?.checks &&
               Object.entries(health.checks).map(([component, status]) => (
                 <Grid item xs={12} sm={6} md={3} key={component}>
@@ -214,16 +327,11 @@ const SystemHealthPage: React.FC = () => {
                     }}
                   >
                     <CardContent>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", mb: 2 }}
-                      >
+                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                         <Box
                           sx={{
                             color: getStatusColor(status as string),
-                            backgroundColor: alpha(
-                              getStatusColor(status as string),
-                              0.1,
-                            ),
+                              backgroundColor: alpha(getStatusColor(status as string), 0.1),
                             borderRadius: 2,
                             p: 1,
                             mr: 2,
@@ -232,18 +340,13 @@ const SystemHealthPage: React.FC = () => {
                           {component === "s3" && <Cloud />}
                           {component === "storage" && <Storage />}
                           {component === "database" && <Computer />}
-                          {!["s3", "storage", "database"].includes(
-                            component,
-                          ) && <Speed />}
+                            {!["s3", "storage", "database"].includes(component) && <Speed />}
                         </Box>
                         <Box sx={{ color: getStatusColor(status as string) }}>
                           {getStatusIcon(status as string)}
                         </Box>
                       </Box>
-                      <Typography
-                        variant="h6"
-                        sx={{ textTransform: "capitalize", mb: 1 }}
-                      >
+                        <Typography variant="h6" sx={{ textTransform: "capitalize", mb: 1 }}>
                         {component}
                       </Typography>
                       <Chip
@@ -260,9 +363,9 @@ const SystemHealthPage: React.FC = () => {
                   </Card>
                 </Grid>
               ))}
-          </Grid>
 
-          {/* Version Information */}
+              {/* Version Info */}
+              <Grid item xs={12}>
           {version && (
             <TableContainer component={Paper}>
               <Table>
@@ -277,35 +380,294 @@ const SystemHealthPage: React.FC = () => {
                 </TableHead>
                 <TableBody>
                   <TableRow hover>
-                    <TableCell sx={{ fontWeight: 600, width: "200px" }}>
-                      {t("system.health.version")}
-                    </TableCell>
+                          <TableCell sx={{ fontWeight: 600, width: "200px" }}>Version</TableCell>
                     <TableCell>{version.version}</TableCell>
                   </TableRow>
                   <TableRow hover>
-                    <TableCell sx={{ fontWeight: 600 }}>
-                      {t("system.health.apiVersion")}
-                    </TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>API Version</TableCell>
                     <TableCell>{version.api_version}</TableCell>
                   </TableRow>
                   <TableRow hover>
-                    <TableCell sx={{ fontWeight: 600 }}>
-                      {t("system.health.buildDate")}
-                    </TableCell>
-                    <TableCell>
-                      {version.build_date} {version.build_time}
-                    </TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>Build Date</TableCell>
+                          <TableCell>{version.build_date} {version.build_time}</TableCell>
                   </TableRow>
                   <TableRow hover>
-                    <TableCell sx={{ fontWeight: 600 }}>
-                      {t("system.health.compiler")}
-                    </TableCell>
+                          <TableCell sx={{ fontWeight: 600 }}>Compiler</TableCell>
                     <TableCell>{version.compiler}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
             </TableContainer>
           )}
+              </Grid>
+            </Grid>
+          </TabPanel>
+
+          {/* Servers Tab */}
+          <TabPanel value={tabValue} index={1}>
+            <Grid container spacing={3}>
+              {/* Server Summary */}
+              <Grid item xs={12} md={4}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                      <Dns sx={{ fontSize: 40, color: theme.palette.primary.main }} />
+                      <Box>
+                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                          {serverStats?.total_count || 0}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">Total Servers</Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                      <Chip
+                        label={`${serverStats?.online_count || 0} Online`}
+                        color="success"
+                        size="small"
+                      />
+                      <Chip
+                        label={`${serverStats?.offline_count || 0} Offline`}
+                        color="error"
+                        size="small"
+                      />
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={serverStats?.total_count > 0 ? (serverStats.online_count / serverStats.total_count) * 100 : 0}
+                      sx={{ height: 8, borderRadius: 1 }}
+                    />
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Server List */}
+              <Grid item xs={12} md={8}>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Server Name</TableCell>
+                        <TableCell>Endpoint</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Uptime</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {(serverStats?.servers || []).length > 0 ? (
+                        serverStats.servers.map((server: any) => (
+                          <TableRow key={server.id} hover>
+                            <TableCell>{server.name || server.id}</TableCell>
+                            <TableCell sx={{ fontFamily: "monospace" }}>{server.endpoint}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={server.status}
+                                color={server.status === "online" ? "success" : "error"}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>{server.uptime ? `${Math.floor(server.uptime / 3600)}h` : "-"}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center">No servers configured</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+            </Grid>
+          </TabPanel>
+
+          {/* Drives Tab */}
+          <TabPanel value={tabValue} index={2}>
+            <Grid container spacing={3}>
+              {/* Drive Summary */}
+              <Grid item xs={12} md={4}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                      <SdStorage sx={{ fontSize: 40, color: theme.palette.success.main }} />
+                      <Box>
+                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                          {driveStats?.total_count || 0}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">Total Drives</Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                      <Chip
+                        label={`${driveStats?.online_count || 0} Online`}
+                        color="success"
+                        size="small"
+                      />
+                      <Chip
+                        label={`${driveStats?.offline_count || 0} Offline`}
+                        color="error"
+                        size="small"
+                      />
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={driveStats?.total_count > 0 ? (driveStats.online_count / driveStats.total_count) * 100 : 0}
+                      sx={{ height: 8, borderRadius: 1 }}
+                    />
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Drive List */}
+              <Grid item xs={12} md={8}>
+                <TableContainer component={Paper}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Drive Path</TableCell>
+                        <TableCell>Status</TableCell>
+                        <TableCell>Capacity</TableCell>
+                        <TableCell>Used</TableCell>
+                        <TableCell>Available</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {(driveStats?.drives || []).length > 0 ? (
+                        driveStats.drives.map((drive: any) => (
+                          <TableRow key={drive.id} hover>
+                            <TableCell sx={{ fontFamily: "monospace" }}>{drive.path}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={drive.status}
+                                color={drive.status === "online" ? "success" : "error"}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>{formatBytes(drive.capacity || 0)}</TableCell>
+                            <TableCell>{formatBytes(drive.used || 0)}</TableCell>
+                            <TableCell>{formatBytes(drive.available || 0)}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center">No drives configured</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+            </Grid>
+          </TabPanel>
+
+          {/* Pools Tab */}
+          <TabPanel value={tabValue} index={3}>
+            <Grid container spacing={3}>
+              {poolStats.length > 0 ? (
+                poolStats.map((pool: any) => (
+                  <Grid item xs={12} md={6} key={pool.id}>
+                    <Card>
+                      <CardContent>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                          <Layers sx={{ fontSize: 32, color: theme.palette.info.main }} />
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>{pool.name}</Typography>
+                        </Box>
+                        <Grid container spacing={2}>
+                          <Grid item xs={6}>
+                            <Typography variant="body2" color="text.secondary">Capacity</Typography>
+                            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                              {formatBytes(pool.capacity || 0)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="body2" color="text.secondary">Available</Typography>
+                            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                              {formatBytes(pool.available || 0)}
+                            </Typography>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                              Usage ({pool.capacity > 0 ? Math.round((pool.used / pool.capacity) * 100) : 0}%)
+                            </Typography>
+                            <LinearProgress
+                              variant="determinate"
+                              value={pool.capacity > 0 ? (pool.used / pool.capacity) * 100 : 0}
+                              sx={{ height: 8, borderRadius: 1 }}
+                            />
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Box sx={{ display: "flex", gap: 2 }}>
+                              <Chip
+                                label={`${pool.online_drives || 0} Online`}
+                                color="success"
+                                size="small"
+                              />
+                              <Chip
+                                label={`${pool.offline_drives || 0} Offline`}
+                                color="error"
+                                size="small"
+                              />
+                              <Chip
+                                label={`${pool.drives_count || 0} Total Drives`}
+                                size="small"
+                              />
+                            </Box>
+                          </Grid>
+                        </Grid>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))
+              ) : (
+                <Grid item xs={12}>
+                  <Paper sx={{ p: 4, textAlign: "center" }}>
+                    <Layers sx={{ fontSize: 60, color: "text.disabled", mb: 2 }} />
+                    <Typography variant="h6" color="text.secondary">No pools configured</Typography>
+                  </Paper>
+                </Grid>
+              )}
+            </Grid>
+          </TabPanel>
+
+          {/* Metrics Tab */}
+          <TabPanel value={tabValue} index={4}>
+            <Grid container spacing={3}>
+              {/* API Errors */}
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                      <Warning sx={{ color: theme.palette.error.main }} />
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>API Errors (24h)</Typography>
+                    </Box>
+                    <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
+                      {apiErrorsData.reduce((sum, item) => sum + (item.count || 0), 0)}
+                    </Typography>
+                    <Box sx={{ height: 200 }}>
+                      <ApiErrorsChart data={apiErrorsData} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Data Throughput */}
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                      <Timeline sx={{ color: theme.palette.info.main }} />
+                      <Typography variant="h6" sx={{ fontWeight: 600 }}>Data Throughput (24h)</Typography>
+                    </Box>
+                    <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
+                      {formatBytes(throughputData.reduce((sum, item) => sum + (item.total_bytes || 0), 0))}
+                    </Typography>
+                    <Box sx={{ height: 200 }}>
+                      <DataThroughputChart data={throughputData} formatBytes={formatBytes} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </TabPanel>
         </>
       )}
     </Box>

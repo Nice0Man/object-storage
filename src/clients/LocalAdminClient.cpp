@@ -28,7 +28,7 @@ LocalAdminClient::get_server_info() {
 
     // Get stats from database and add to backend map
     StringMap backend;
-    backend["storage_type"] = "local-sqlite";
+    backend["storage_type"] = "local-rocksdb";
 
     auto user_count = db_manager_->get_user_count();
     auto group_count = db_manager_->get_group_count();
@@ -79,7 +79,7 @@ LocalAdminClient::get_user(const String& access_key) {
 }
 
 Result<models::User, String>
-LocalAdminClient::create_user(const String& access_key, const String& secret_key) {
+LocalAdminClient::create_user(const String& access_key, const String& secret_key, bool is_admin) {
     // Check if user already exists
     auto exists_result = db_manager_->user_exists(access_key);
     if (exists_result && exists_result.value()) {
@@ -92,7 +92,7 @@ LocalAdminClient::create_user(const String& access_key, const String& secret_key
     db_user.secret_key = secret_key; // Should be hashed in production
     db_user.account_name = access_key;
     db_user.status = "active";
-    db_user.is_admin = false;
+    db_user.is_admin = is_admin;
     db_user.created_at = std::time(nullptr);
     db_user.updated_at = db_user.created_at;
     db_user.metadata = "{}";
@@ -102,7 +102,7 @@ LocalAdminClient::create_user(const String& access_key, const String& secret_key
         return Err<models::User, String>(create_result.error());
     }
 
-    CONSOLE_LOG_INFO("User created: {}", access_key);
+    CONSOLE_LOG_INFO("User created: {} (is_admin: {})", access_key, is_admin);
     return Ok<models::User, String>(db_user_to_model(db_user));
 }
 

@@ -4,6 +4,7 @@
 
 #include "console/common/Config.hpp"
 #include "console/common/Logger.hpp"
+#include "console/common/ServiceLocator.hpp"
 #include "console/storage/DatabaseManager.hpp"
 #include "console/utils/PasswordHash.hpp"
 #include "console/utils/TokenBlacklist.hpp"
@@ -362,9 +363,17 @@ AuthController::change_password(const drogon::HttpRequestPtr& req,
             return;
         }
 
-        // Update password in database
-        auto db_path = Config::instance().get<String>("database.path").value_or("console.db");
-        auto db_manager = std::make_shared<storage::DatabaseManager>(db_path);
+        // Update password in database - use existing DatabaseManager from ServiceLocator
+        auto db_manager = ServiceLocator::database();
+        if (!db_manager) {
+            CONSOLE_LOG_ERROR("Database not initialized");
+            Json::Value error;
+            error["error"] = "Database not available";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
 
         // Get current user from database
         auto db_user_result = db_manager->get_user(user->access_key);
@@ -436,11 +445,12 @@ AuthController::generate_jwt_token(const UserInfo& user) const {
 Optional<UserInfo>
 AuthController::validate_credentials(const String& username, const String& password) const {
     try {
-        // Get database path from config
-        auto db_path = Config::instance().get<String>("database.path").value_or("console.db");
-
-        // Create DatabaseManager instance
-        auto db_manager = std::make_shared<storage::DatabaseManager>(db_path);
+        // Use existing DatabaseManager from ServiceLocator
+        auto db_manager = ServiceLocator::database();
+        if (!db_manager) {
+            CONSOLE_LOG_ERROR("Database not initialized for authentication");
+            return std::nullopt;
+        }
 
         // Look up user by access_key (username)
         auto user_result = db_manager->get_user(username);

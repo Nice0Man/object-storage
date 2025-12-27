@@ -4,6 +4,8 @@
 #include "console/clients/LocalStorageClient.hpp"
 #include "console/services/AuthService.hpp"
 #include "console/services/BucketService.hpp"
+#include "console/services/EncryptionService.hpp"
+#include "console/services/InfrastructureService.hpp"
 #include "console/services/ObjectService.hpp"
 #include "console/services/StatsCollector.hpp"
 #include "console/services/UserService.hpp"
@@ -20,6 +22,8 @@ std::shared_ptr<services::BucketService> ServiceLocator::bucket_service_;
 std::shared_ptr<services::UserService> ServiceLocator::user_service_;
 std::shared_ptr<services::AuthService> ServiceLocator::auth_service_;
 std::shared_ptr<services::StatsCollector> ServiceLocator::stats_collector_;
+std::shared_ptr<services::InfrastructureService> ServiceLocator::infrastructure_service_;
+std::shared_ptr<services::EncryptionService> ServiceLocator::encryption_service_;
 
 // Getters
 std::shared_ptr<clients::LocalStorageClient>
@@ -60,6 +64,16 @@ ServiceLocator::auth_service() {
 std::shared_ptr<services::StatsCollector>
 ServiceLocator::stats_collector() {
     return stats_collector_;
+}
+
+std::shared_ptr<services::InfrastructureService>
+ServiceLocator::infrastructure_service() {
+    return infrastructure_service_;
+}
+
+std::shared_ptr<services::EncryptionService>
+ServiceLocator::encryption_service() {
+    return encryption_service_;
 }
 
 // Setters
@@ -103,6 +117,16 @@ ServiceLocator::set_stats_collector(std::shared_ptr<services::StatsCollector> co
     stats_collector_ = collector;
 }
 
+void
+ServiceLocator::set_infrastructure_service(std::shared_ptr<services::InfrastructureService> service) {
+    infrastructure_service_ = service;
+}
+
+void
+ServiceLocator::set_encryption_service(std::shared_ptr<services::EncryptionService> service) {
+    encryption_service_ = service;
+}
+
 // Cleanup - clear all services in reverse order of initialization
 void
 ServiceLocator::clear() {
@@ -113,6 +137,8 @@ ServiceLocator::clear() {
     }
 
     // Clear services
+    infrastructure_service_.reset();
+    encryption_service_.reset();
     auth_service_.reset();
     user_service_.reset();
     bucket_service_.reset();

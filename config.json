@@ -32,7 +32,11 @@
     "enabled": true
   },
   "database": {
-    "path": "console.db"
+    "path": "./data/rocksdb",
+    "encryption_key": ""
+  },
+  "storage": {
+    "root_path": "./storage"
   },
   "features": {
     "enable_upload": true,

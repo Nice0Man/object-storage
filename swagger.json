@@ -45,6 +45,18 @@
       "description": "Управление пользователями системы"
     },
     {
+      "name": "Infrastructure",
+      "description": "Управление инфраструктурой хранилища (серверы, диски, пулы)"
+    },
+    {
+      "name": "Statistics",
+      "description": "Статистика и метрики системы"
+    },
+    {
+      "name": "Presigned",
+      "description": "Публичный доступ к объектам через подписанные URL"
+    },
+    {
       "name": "Documentation",
       "description": "API документация"
     }
@@ -54,7 +66,7 @@
       "get": {
         "tags": ["Health"],
         "summary": "Проверка состояния сервиса",
-        "description": "Возвращает состояние здоровья сервиса и его зависимостей (S3, БД)",
+        "description": "Возвращает состояние здоровья сервиса и его зависимостей",
         "operationId": "getHealth",
         "responses": {
           "200": {
@@ -176,16 +188,6 @@
                 }
               }
             }
-          },
-          "500": {
-            "description": "Внутренняя ошибка сервера",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -196,11 +198,7 @@
         "summary": "Выход из системы",
         "description": "Завершение сессии пользователя",
         "operationId": "logout",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "responses": {
           "200": {
             "description": "Успешный выход",
@@ -221,11 +219,7 @@
         "summary": "Обновление токена",
         "description": "Получение нового JWT токена с обновленным сроком действия",
         "operationId": "refresh",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "responses": {
           "200": {
             "description": "Токен обновлен",
@@ -256,11 +250,7 @@
         "summary": "Информация о текущем пользователе",
         "description": "Получение информации о текущем аутентифицированном пользователе",
         "operationId": "getCurrentUser",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "responses": {
           "200": {
             "description": "Информация о пользователе",
@@ -291,11 +281,7 @@
         "summary": "Смена пароля",
         "description": "Изменение пароля текущего пользователя",
         "operationId": "changePassword",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
           "content": {
@@ -316,16 +302,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Не реализовано",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -336,11 +312,7 @@
         "summary": "Список бакетов",
         "description": "Получение списка всех доступных бакетов",
         "operationId": "listBuckets",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "responses": {
           "200": {
             "description": "Список бакетов",
@@ -348,16 +320,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BucketsListResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -369,11 +331,7 @@
         "summary": "Создание бакета",
         "description": "Создание нового бакета для хранения объектов",
         "operationId": "createBucket",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
           "content": {
@@ -391,16 +349,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MessageResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Некорректные данные",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -424,19 +372,13 @@
         "summary": "Информация о бакете",
         "description": "Получение детальной информации о конкретном бакете",
         "operationId": "getBucket",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
           {
             "name": "bucketName",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "schema": {"type": "string"},
             "description": "Имя бакета"
           }
         ],
@@ -468,19 +410,13 @@
         "summary": "Удаление бакета",
         "description": "Удаление пустого бакета",
         "operationId": "deleteBucket",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
           {
             "name": "bucketName",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            },
+            "schema": {"type": "string"},
             "description": "Имя бакета"
           }
         ],
@@ -504,16 +440,6 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Бакет не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -522,23 +448,10 @@
       "get": {
         "tags": ["Buckets"],
         "summary": "Получить политику бакета",
-        "description": "Получение политики доступа для указанного бакета",
         "operationId": "getBucketPolicy",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucketName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          }
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
@@ -548,21 +461,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "policy": {
-                      "type": "string",
-                      "description": "JSON строка с политикой доступа"
-                    }
+                    "policy": {"type": "string"}
                   }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Бакет не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -572,23 +472,10 @@
       "put": {
         "tags": ["Buckets"],
         "summary": "Установить политику бакета",
-        "description": "Установка политики доступа для указанного бакета",
         "operationId": "setBucketPolicy",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucketName",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          }
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "requestBody": {
           "required": true,
@@ -598,10 +485,7 @@
                 "type": "object",
                 "required": ["policy"],
                 "properties": {
-                  "policy": {
-                    "type": "string",
-                    "description": "JSON строка с политикой доступа"
-                  }
+                  "policy": {"type": "string"}
                 }
               }
             }
@@ -612,29 +496,326 @@
             "description": "Политика установлена",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
-          },
-          "400": {
-            "description": "Некорректная политика",
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucketName}/versioning": {
+      "get": {
+        "tags": ["Buckets"],
+        "summary": "Получить статус версионирования",
+        "operationId": "getBucketVersioning",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус версионирования",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "enabled": {"type": "boolean"}
+                  }
                 }
               }
             }
-          },
-          "404": {
-            "description": "Бакет не найден",
+          }
+        }
+      },
+      "put": {
+        "tags": ["Buckets"],
+        "summary": "Установить версионирование",
+        "operationId": "setBucketVersioning",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["enabled"],
+                "properties": {
+                  "enabled": {"type": "boolean"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Версионирование настроено",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucketName}/tags": {
+      "get": {
+        "tags": ["Buckets"],
+        "summary": "Получить теги бакета",
+        "operationId": "getBucketTags",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Теги бакета",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "tags": {"type": "object", "additionalProperties": {"type": "string"}}
+                  }
                 }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Buckets"],
+        "summary": "Установить теги бакета",
+        "operationId": "setBucketTags",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tags"],
+                "properties": {
+                  "tags": {"type": "object", "additionalProperties": {"type": "string"}}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Теги установлены",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Buckets"],
+        "summary": "Удалить теги бакета",
+        "operationId": "deleteBucketTags",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Теги удалены",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucketName}/encryption": {
+      "get": {
+        "tags": ["Buckets"],
+        "summary": "Получить настройки шифрования",
+        "operationId": "getBucketEncryption",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Настройки шифрования",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/EncryptionConfig"}
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Buckets"],
+        "summary": "Установить шифрование",
+        "operationId": "setBucketEncryption",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/EncryptionConfig"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Шифрование настроено",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Buckets"],
+        "summary": "Отключить шифрование",
+        "operationId": "deleteBucketEncryption",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Шифрование отключено",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucketName}/lifecycle": {
+      "get": {
+        "tags": ["Buckets"],
+        "summary": "Получить правила жизненного цикла",
+        "operationId": "getBucketLifecycle",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Правила жизненного цикла",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/LifecycleConfig"}
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Buckets"],
+        "summary": "Установить правила жизненного цикла",
+        "operationId": "setBucketLifecycle",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/LifecycleConfig"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Правила установлены",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Buckets"],
+        "summary": "Удалить правила жизненного цикла",
+        "operationId": "deleteBucketLifecycle",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Правила удалены",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/buckets/{bucketName}/object-lock": {
+      "get": {
+        "tags": ["Buckets"],
+        "summary": "Получить настройки блокировки объектов",
+        "operationId": "getBucketObjectLock",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Настройки блокировки",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ObjectLockConfig"}
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Buckets"],
+        "summary": "Установить блокировку объектов",
+        "operationId": "setBucketObjectLock",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "bucketName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/ObjectLockConfig"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Блокировка настроена",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
           }
@@ -645,83 +826,20 @@
       "get": {
         "tags": ["Objects"],
         "summary": "Список объектов в бакете",
-        "description": "Получение списка объектов в указанном бакете с возможностью фильтрации",
         "operationId": "listObjects",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          },
-          {
-            "name": "prefix",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Префикс для фильтрации объектов"
-          },
-          {
-            "name": "recursive",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            },
-            "description": "Рекурсивный поиск по вложенным директориям"
-          },
-          {
-            "name": "max_keys",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 1000,
-              "minimum": 1,
-              "maximum": 10000
-            },
-            "description": "Максимальное количество возвращаемых объектов"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "prefix", "in": "query", "schema": {"type": "string"}},
+          {"name": "recursive", "in": "query", "schema": {"type": "boolean", "default": false}},
+          {"name": "max_keys", "in": "query", "schema": {"type": "integer", "default": 1000}}
         ],
         "responses": {
           "200": {
             "description": "Список объектов",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ObjectsListResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Бакет не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/ObjectsListResponse"}
               }
             }
           }
@@ -730,23 +848,10 @@
       "post": {
         "tags": ["Objects"],
         "summary": "Загрузка объекта",
-        "description": "Загрузка нового объекта в бакет",
         "operationId": "uploadObject",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "requestBody": {
           "required": true,
@@ -755,15 +860,8 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary",
-                    "description": "Файл для загрузки"
-                  },
-                  "key": {
-                    "type": "string",
-                    "description": "Ключ (путь) объекта в бакете"
-                  }
+                  "file": {"type": "string", "format": "binary"},
+                  "key": {"type": "string"}
                 },
                 "required": ["file", "key"]
               }
@@ -775,19 +873,7 @@
             "description": "Объект загружен",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UploadResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Некорректные данные",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/UploadResponse"}
               }
             }
           }
@@ -798,52 +884,18 @@
       "get": {
         "tags": ["Objects"],
         "summary": "Скачивание объекта",
-        "description": "Получение содержимого объекта или временной ссылки для скачивания",
         "operationId": "getObject",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          },
-          {
-            "name": "objectKey",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Ключ объекта"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "objectKey", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
             "description": "Содержимое объекта",
             "content": {
               "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Объект не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"type": "string", "format": "binary"}
               }
             }
           }
@@ -852,51 +904,18 @@
       "delete": {
         "tags": ["Objects"],
         "summary": "Удаление объекта",
-        "description": "Удаление объекта из бакета",
         "operationId": "deleteObject",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          },
-          {
-            "name": "objectKey",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Ключ объекта"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "objectKey", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
             "description": "Объект удален",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Объект не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
           }
@@ -907,51 +926,18 @@
       "get": {
         "tags": ["Objects"],
         "summary": "Информация об объекте",
-        "description": "Получение метаданных объекта без скачивания содержимого",
         "operationId": "getObjectInfo",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Ключ объекта"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "key", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
             "description": "Информация об объекте",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ObjectInfo"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Объект не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/ObjectInfo"}
               }
             }
           }
@@ -962,52 +948,18 @@
       "get": {
         "tags": ["Objects"],
         "summary": "Скачать объект",
-        "description": "Прямое скачивание объекта с соответствующими заголовками",
         "operationId": "downloadObject",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Ключ объекта"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "key", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
             "description": "Файл для скачивания",
             "content": {
               "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Объект не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"type": "string", "format": "binary"}
               }
             }
           }
@@ -1018,32 +970,11 @@
       "post": {
         "tags": ["Objects"],
         "summary": "Копировать объект",
-        "description": "Копирование объекта в другое местоположение",
         "operationId": "copyObject",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Исходный бакет"
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Исходный ключ объекта"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "key", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "requestBody": {
           "required": true,
@@ -1053,14 +984,8 @@
                 "type": "object",
                 "required": ["destination_bucket", "destination_key"],
                 "properties": {
-                  "destination_bucket": {
-                    "type": "string",
-                    "description": "Целевой бакет"
-                  },
-                  "destination_key": {
-                    "type": "string",
-                    "description": "Целевой ключ объекта"
-                  }
+                  "destination_bucket": {"type": "string"},
+                  "destination_key": {"type": "string"}
                 }
               }
             }
@@ -1071,19 +996,7 @@
             "description": "Объект скопирован",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Исходный объект не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
           }
@@ -1094,42 +1007,12 @@
       "get": {
         "tags": ["Objects"],
         "summary": "Получить presigned URL",
-        "description": "Генерация временной подписанной ссылки для доступа к объекту",
         "operationId": "getPresignedUrl",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Ключ объекта"
-          },
-          {
-            "name": "expires",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 3600
-            },
-            "description": "Время жизни ссылки в секундах"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "key", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "expires", "in": "query", "schema": {"type": "integer", "default": 3600}}
         ],
         "responses": {
           "200": {
@@ -1139,26 +1022,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "url": {
-                      "type": "string",
-                      "description": "Подписанная ссылка"
-                    },
-                    "expires_at": {
-                      "type": "string",
-                      "format": "date-time",
-                      "description": "Время истечения срока действия"
-                    }
+                    "url": {"type": "string"},
+                    "expires_at": {"type": "string", "format": "date-time"}
                   }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Объект не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1170,32 +1036,11 @@
       "get": {
         "tags": ["Objects"],
         "summary": "Получить теги объекта",
-        "description": "Получение тегов для указанного объекта",
         "operationId": "getObjectTags",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Ключ объекта"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "key", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
@@ -1205,23 +1050,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "tags": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "string"
-                      }
-                    }
+                    "tags": {"type": "object", "additionalProperties": {"type": "string"}}
                   }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Объект не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1231,32 +1061,11 @@
       "put": {
         "tags": ["Objects"],
         "summary": "Установить теги объекта",
-        "description": "Установка тегов для указанного объекта",
         "operationId": "setObjectTags",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          },
-          {
-            "name": "key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Ключ объекта"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "key", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "requestBody": {
           "required": true,
@@ -1266,13 +1075,7 @@
                 "type": "object",
                 "required": ["tags"],
                 "properties": {
-                  "tags": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "string"
-                    },
-                    "description": "Пары ключ-значение тегов"
-                  }
+                  "tags": {"type": "object", "additionalProperties": {"type": "string"}}
                 }
               }
             }
@@ -1283,19 +1086,7 @@
             "description": "Теги установлены",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Объект не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
           }
@@ -1306,23 +1097,10 @@
       "post": {
         "tags": ["Objects"],
         "summary": "Пакетное удаление объектов",
-        "description": "Удаление нескольких объектов за один запрос",
         "operationId": "batchDeleteObjects",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "bucket",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя бакета"
-          }
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "requestBody": {
           "required": true,
@@ -1332,13 +1110,7 @@
                 "type": "object",
                 "required": ["keys"],
                 "properties": {
-                  "keys": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": "Список ключей объектов для удаления"
-                  }
+                  "keys": {"type": "array", "items": {"type": "string"}}
                 }
               }
             }
@@ -1352,40 +1124,72 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "deleted": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      },
-                      "description": "Успешно удаленные объекты"
-                    },
-                    "errors": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "key": {
-                            "type": "string"
-                          },
-                          "error": {
-                            "type": "string"
-                          }
-                        }
-                      },
-                      "description": "Ошибки при удалении"
-                    }
+                    "deleted": {"type": "array", "items": {"type": "string"}},
+                    "errors": {"type": "array", "items": {"type": "object"}}
                   }
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/v1/objects/{bucket}/{key}": {
+      "get": {
+        "tags": ["Presigned"],
+        "summary": "Доступ к объекту через presigned URL",
+        "description": "Публичный доступ к объекту по подписанной ссылке",
+        "operationId": "accessPresignedObject",
+        "parameters": [
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "key", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "expires", "in": "query", "required": true, "schema": {"type": "integer"}},
+          {"name": "signature", "in": "query", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Содержимое объекта",
+            "content": {
+              "application/octet-stream": {
+                "schema": {"type": "string", "format": "binary"}
+              }
+            }
           },
-          "400": {
-            "description": "Некорректный запрос",
+          "403": {
+            "description": "Недействительная или просроченная подпись",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Presigned"],
+        "summary": "Загрузка объекта через presigned URL",
+        "description": "Публичная загрузка объекта по подписанной ссылке",
+        "operationId": "uploadPresignedObject",
+        "parameters": [
+          {"name": "bucket", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "key", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "expires", "in": "query", "required": true, "schema": {"type": "integer"}},
+          {"name": "signature", "in": "query", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/octet-stream": {
+              "schema": {"type": "string", "format": "binary"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Объект загружен",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
           }
@@ -1396,31 +1200,14 @@
       "get": {
         "tags": ["Users"],
         "summary": "Список пользователей",
-        "description": "Получение списка всех пользователей системы (только для администраторов)",
         "operationId": "listUsers",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "responses": {
           "200": {
             "description": "Список пользователей",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UsersListResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Не авторизован",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/UsersListResponse"}
               }
             }
           },
@@ -1428,9 +1215,7 @@
             "description": "Недостаточно прав",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
               }
             }
           }
@@ -1439,20 +1224,13 @@
       "post": {
         "tags": ["Users"],
         "summary": "Создание пользователя",
-        "description": "Создание нового пользователя (только для администраторов)",
         "operationId": "createUser",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateUserRequest"
-              }
+              "schema": {"$ref": "#/components/schemas/CreateUserRequest"}
             }
           }
         },
@@ -1461,39 +1239,7 @@
             "description": "Пользователь создан",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserInfo"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Некорректные данные",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Недостаточно прав",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Пользователь уже существует",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/UserInfo"}
               }
             }
           }
@@ -1504,42 +1250,17 @@
       "get": {
         "tags": ["Users"],
         "summary": "Информация о пользователе",
-        "description": "Получение детальной информации о пользователе",
         "operationId": "getUser",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "accessKey",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Access Key пользователя"
-          }
+          {"name": "accessKey", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
             "description": "Информация о пользователе",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserInfo"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Пользователь не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/UserInfo"}
               }
             }
           }
@@ -1548,31 +1269,16 @@
       "put": {
         "tags": ["Users"],
         "summary": "Обновление пользователя",
-        "description": "Обновление информации о пользователе (только для администраторов)",
         "operationId": "updateUser",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "accessKey",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Access Key пользователя"
-          }
+          {"name": "accessKey", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserRequest"
-              }
+              "schema": {"$ref": "#/components/schemas/UpdateUserRequest"}
             }
           }
         },
@@ -1581,29 +1287,7 @@
             "description": "Пользователь обновлен",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserInfo"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Некорректные данные",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Пользователь не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
           }
@@ -1612,73 +1296,35 @@
       "delete": {
         "tags": ["Users"],
         "summary": "Удаление пользователя",
-        "description": "Удаление пользователя из системы (только для администраторов)",
         "operationId": "deleteUser",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "accessKey",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Access Key пользователя"
-          }
+          {"name": "accessKey", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
             "description": "Пользователь удален",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Пользователь не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
           }
         }
       }
     },
-    "/api/v1/users/{access_key}/policies": {
+    "/api/v1/users/{accessKey}/policies": {
       "get": {
         "tags": ["Users"],
-        "summary": "Получить политики пользователя",
-        "description": "Получение списка политик доступа, назначенных пользователю",
+        "summary": "Политики пользователя",
         "operationId": "getUserPolicies",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "access_key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Access Key пользователя"
-          }
+          {"name": "accessKey", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
-            "description": "Список политик пользователя",
+            "description": "Список политик",
             "content": {
               "application/json": {
                 "schema": {
@@ -1689,14 +1335,8 @@
                       "items": {
                         "type": "object",
                         "properties": {
-                          "name": {
-                            "type": "string",
-                            "description": "Имя политики"
-                          },
-                          "policy": {
-                            "type": "string",
-                            "description": "JSON-документ политики"
-                          }
+                          "name": {"type": "string"},
+                          "policy": {"type": "string"}
                         }
                       }
                     }
@@ -1704,50 +1344,19 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "Пользователь не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
           }
         }
       }
     },
-    "/api/v1/users/{access_key}/policies/{policy_name}": {
+    "/api/v1/users/{accessKey}/policies/{policyName}": {
       "put": {
         "tags": ["Users"],
-        "summary": "Назначить политику пользователю",
-        "description": "Назначение или обновление политики доступа для пользователя",
+        "summary": "Назначить политику",
         "operationId": "assignUserPolicy",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "access_key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Access Key пользователя"
-          },
-          {
-            "name": "policy_name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя политики"
-          }
+          {"name": "accessKey", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "policyName", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "requestBody": {
           "required": true,
@@ -1757,10 +1366,7 @@
                 "type": "object",
                 "required": ["policy"],
                 "properties": {
-                  "policy": {
-                    "type": "string",
-                    "description": "JSON-документ политики доступа"
-                  }
+                  "policy": {"type": "string"}
                 }
               }
             }
@@ -1771,29 +1377,7 @@
             "description": "Политика назначена",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Некорректная политика",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Пользователь не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
           }
@@ -1801,51 +1385,506 @@
       },
       "delete": {
         "tags": ["Users"],
-        "summary": "Удалить политику пользователя",
-        "description": "Удаление назначенной политики доступа у пользователя",
+        "summary": "Удалить политику",
         "operationId": "removeUserPolicy",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "security": [{"bearerAuth": []}],
         "parameters": [
-          {
-            "name": "access_key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Access Key пользователя"
-          },
-          {
-            "name": "policy_name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя политики для удаления"
-          }
+          {"name": "accessKey", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "policyName", "in": "path", "required": true, "schema": {"type": "string"}}
         ],
         "responses": {
           "200": {
             "description": "Политика удалена",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
               }
             }
-          },
-          "404": {
-            "description": "Пользователь или политика не найдены",
+          }
+        }
+      }
+    },
+    "/api/v1/users/{accessKey}/groups/{groupName}": {
+      "put": {
+        "tags": ["Users"],
+        "summary": "Добавить в группу",
+        "operationId": "addUserToGroup",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "accessKey", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "groupName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь добавлен в группу",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Удалить из группы",
+        "operationId": "removeUserFromGroup",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "accessKey", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "groupName", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Пользователь удален из группы",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/summary": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Сводка по инфраструктуре",
+        "operationId": "getInfrastructureSummary",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Сводка инфраструктуры",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/InfrastructureSummary"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/servers": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Список серверов",
+        "operationId": "listServers",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Список серверов",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "servers": {"type": "array", "items": {"$ref": "#/components/schemas/Server"}}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Infrastructure"],
+        "summary": "Добавить сервер",
+        "operationId": "addServer",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/AddServerRequest"}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Сервер добавлен",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Server"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/servers/{id}": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Информация о сервере",
+        "operationId": "getServer",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о сервере",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Server"}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Infrastructure"],
+        "summary": "Удалить сервер",
+        "operationId": "removeServer",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Сервер удален",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/servers/{id}/health": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Проверка здоровья сервера",
+        "operationId": "checkServerHealth",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус здоровья",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ServerHealth"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/drives": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Список дисков",
+        "operationId": "listDrives",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Список дисков",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "drives": {"type": "array", "items": {"$ref": "#/components/schemas/Drive"}}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Infrastructure"],
+        "summary": "Добавить диск",
+        "operationId": "addDrive",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/AddDriveRequest"}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Диск добавлен",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Drive"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/drives/{id}": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Информация о диске",
+        "operationId": "getDrive",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о диске",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Drive"}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Infrastructure"],
+        "summary": "Удалить диск",
+        "operationId": "removeDrive",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Диск удален",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/drives/{id}/status": {
+      "put": {
+        "tags": ["Infrastructure"],
+        "summary": "Изменить статус диска",
+        "operationId": "setDriveStatus",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {"type": "string", "enum": ["online", "offline", "maintenance"]}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Статус изменен",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/pools": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Список пулов",
+        "operationId": "listPools",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Список пулов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pools": {"type": "array", "items": {"$ref": "#/components/schemas/Pool"}}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Infrastructure"],
+        "summary": "Создать пул",
+        "operationId": "configurePool",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/ConfigurePoolRequest"}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Пул создан",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Pool"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/pools/{id}": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Информация о пуле",
+        "operationId": "getPool",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о пуле",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Pool"}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Infrastructure"],
+        "summary": "Удалить пул",
+        "operationId": "decommissionPool",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Пул удален",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/infrastructure/heal": {
+      "get": {
+        "tags": ["Infrastructure"],
+        "summary": "Статус восстановления",
+        "operationId": "getHealStatus",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Статус восстановления",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/HealStatus"}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Infrastructure"],
+        "summary": "Запустить восстановление",
+        "operationId": "startHeal",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Восстановление запущено",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/MessageResponse"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/system": {
+      "get": {
+        "tags": ["Statistics"],
+        "summary": "Системная статистика",
+        "operationId": "getSystemStats",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Системная статистика",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/SystemStats"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/capacity": {
+      "get": {
+        "tags": ["Statistics"],
+        "summary": "Статистика емкости",
+        "operationId": "getCapacityStats",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Статистика емкости",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/CapacityStats"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/activity": {
+      "get": {
+        "tags": ["Statistics"],
+        "summary": "Последняя активность",
+        "operationId": "getActivityStats",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Активность",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ActivityStats"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/servers": {
+      "get": {
+        "tags": ["Statistics"],
+        "summary": "Статистика серверов",
+        "operationId": "getServerStats",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Статистика серверов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "servers": {"type": "array", "items": {"$ref": "#/components/schemas/ServerStats"}}
+                  }
                 }
               }
             }
@@ -1853,108 +1892,82 @@
         }
       }
     },
-    "/api/v1/users/{access_key}/groups/{group_name}": {
-      "put": {
-        "tags": ["Users"],
-        "summary": "Добавить пользователя в группу",
-        "description": "Добавление пользователя в указанную группу",
-        "operationId": "addUserToGroup",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "access_key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Access Key пользователя"
-          },
-          {
-            "name": "group_name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя группы"
-          }
-        ],
+    "/api/v1/stats/drives": {
+      "get": {
+        "tags": ["Statistics"],
+        "summary": "Статистика дисков",
+        "operationId": "getDriveStats",
+        "security": [{"bearerAuth": []}],
         "responses": {
           "200": {
-            "description": "Пользователь добавлен в группу",
+            "description": "Статистика дисков",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Пользователь или группа не найдены",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "drives": {"type": "array", "items": {"$ref": "#/components/schemas/DriveStats"}}
+                  }
                 }
               }
             }
           }
         }
-      },
-      "delete": {
-        "tags": ["Users"],
-        "summary": "Удалить пользователя из группы",
-        "description": "Удаление пользователя из указанной группы",
-        "operationId": "removeUserFromGroup",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "access_key",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Access Key пользователя"
-          },
-          {
-            "name": "group_name",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Имя группы"
-          }
-        ],
+      }
+    },
+    "/api/v1/stats/pools": {
+      "get": {
+        "tags": ["Statistics"],
+        "summary": "Статистика пулов",
+        "operationId": "getPoolStats",
+        "security": [{"bearerAuth": []}],
         "responses": {
           "200": {
-            "description": "Пользователь удален из группы",
+            "description": "Статистика пулов",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
+                  "type": "object",
+                  "properties": {
+                    "pools": {"type": "array", "items": {"$ref": "#/components/schemas/PoolStats"}}
+                  }
                 }
               }
             }
-          },
-          "404": {
-            "description": "Пользователь или группа не найдены",
+          }
+        }
+      }
+    },
+    "/api/v1/stats/api-errors": {
+      "get": {
+        "tags": ["Statistics"],
+        "summary": "Статистика API ошибок",
+        "operationId": "getApiErrorStats",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Статистика ошибок",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
+                "schema": {"$ref": "#/components/schemas/ApiErrorStats"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stats/data-throughput": {
+      "get": {
+        "tags": ["Statistics"],
+        "summary": "Пропускная способность",
+        "operationId": "getDataThroughput",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Данные о пропускной способности",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/ThroughputStats"}
               }
             }
           }
@@ -1965,18 +1978,11 @@
       "get": {
         "tags": ["Documentation"],
         "summary": "Swagger UI",
-        "description": "Интерактивная документация API на основе Swagger UI",
         "operationId": "swaggerUI",
         "responses": {
           "200": {
             "description": "HTML страница Swagger UI",
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
+            "content": {"text/html": {"schema": {"type": "string"}}}
           }
         }
       }
@@ -1985,29 +1991,11 @@
       "get": {
         "tags": ["Documentation"],
         "summary": "OpenAPI спецификация",
-        "description": "Файл OpenAPI спецификации в формате JSON",
         "operationId": "swaggerSpec",
         "responses": {
           "200": {
             "description": "OpenAPI спецификация",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "description": "OpenAPI 3.0 спецификация"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Файл спецификации не найден",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+            "content": {"application/json": {"schema": {"type": "object"}}}
           }
         }
       }
@@ -2018,390 +2006,384 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "JWT токен для аутентификации. Получается через эндпоинт /auth/login"
+        "bearerFormat": "JWT"
       }
     },
     "schemas": {
       "HealthResponse": {
         "type": "object",
         "properties": {
-          "status": {
-            "type": "string",
-            "example": "healthy"
-          },
-          "service": {
-            "type": "string",
-            "example": "object-storage-console"
-          },
-          "timestamp": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1704067200000
-          },
-          "checks": {
-            "type": "object",
-            "properties": {
-              "s3": {
-                "type": "string",
-                "example": "ok"
-              },
-              "storage": {
-                "type": "string",
-                "example": "ok"
-              }
-            }
-          }
+          "status": {"type": "string"},
+          "service": {"type": "string"},
+          "timestamp": {"type": "integer", "format": "int64"},
+          "checks": {"type": "object"}
         }
       },
       "ReadyResponse": {
         "type": "object",
         "properties": {
-          "ready": {
-            "type": "boolean",
-            "example": true
-          },
-          "service": {
-            "type": "string",
-            "example": "object-storage-console"
-          }
+          "ready": {"type": "boolean"},
+          "service": {"type": "string"}
         }
       },
       "LiveResponse": {
         "type": "object",
         "properties": {
-          "alive": {
-            "type": "boolean",
-            "example": true
-          }
+          "alive": {"type": "boolean"}
         }
       },
       "VersionResponse": {
         "type": "object",
         "properties": {
-          "version": {
-            "type": "string",
-            "example": "1.0.0"
-          },
-          "api_version": {
-            "type": "string",
-            "example": "v1"
-          },
-          "build_date": {
-            "type": "string",
-            "example": "Nov 12 2025"
-          },
-          "build_time": {
-            "type": "string",
-            "example": "10:30:00"
-          },
-          "compiler": {
-            "type": "string",
-            "example": "GCC 11.4.0"
-          }
+          "version": {"type": "string"},
+          "api_version": {"type": "string"},
+          "build_date": {"type": "string"},
+          "compiler": {"type": "string"}
         }
       },
       "LoginRequest": {
         "type": "object",
-        "description": "Поддерживает два формата: username/password или accessKey/secretKey",
         "properties": {
-          "username": {
-            "type": "string",
-            "description": "Имя пользователя (альтернатива accessKey)",
-            "example": "admin"
-          },
-          "password": {
-            "type": "string",
-            "format": "password",
-            "description": "Пароль пользователя (альтернатива secretKey)",
-            "example": "changeme"
-          },
-          "accessKey": {
-            "type": "string",
-            "description": "Access Key (альтернатива username)",
-            "example": "AKIAIOSFODNN7EXAMPLE"
-          },
-          "secretKey": {
-            "type": "string",
-            "format": "password",
-            "description": "Secret Key (альтернатива password)",
-            "example": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-          }
-        },
-        "oneOf": [
-          {
-            "required": ["username", "password"]
-          },
-          {
-            "required": ["accessKey", "secretKey"]
-          }
-        ]
+          "username": {"type": "string"},
+          "password": {"type": "string", "format": "password"},
+          "accessKey": {"type": "string"},
+          "secretKey": {"type": "string", "format": "password"}
+        }
       },
       "LoginResponse": {
         "type": "object",
         "properties": {
-          "token": {
-            "type": "string",
-            "description": "JWT токен для последующих запросов",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          },
-          "user": {
-            "$ref": "#/components/schemas/UserInfo"
-          }
+          "token": {"type": "string"},
+          "user": {"$ref": "#/components/schemas/UserInfo"}
         }
       },
       "UserInfo": {
         "type": "object",
         "properties": {
-          "username": {
-            "type": "string",
-            "example": "admin"
-          },
-          "access_key": {
-            "type": "string",
-            "example": "AKIAIOSFODNN7EXAMPLE"
-          },
-          "is_admin": {
-            "type": "boolean",
-            "example": true
-          }
+          "username": {"type": "string"},
+          "access_key": {"type": "string"},
+          "is_admin": {"type": "boolean"},
+          "policies": {"type": "array", "items": {"type": "string"}},
+          "created_at": {"type": "string", "format": "date-time"}
         }
       },
       "ChangePasswordRequest": {
         "type": "object",
         "required": ["old_password", "new_password"],
         "properties": {
-          "old_password": {
-            "type": "string",
-            "format": "password"
-          },
-          "new_password": {
-            "type": "string",
-            "format": "password",
-            "minLength": 8
-          }
+          "old_password": {"type": "string", "format": "password"},
+          "new_password": {"type": "string", "format": "password"}
         }
       },
       "BucketsListResponse": {
         "type": "object",
         "properties": {
-          "buckets": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BucketInfo"
-            }
-          }
+          "buckets": {"type": "array", "items": {"$ref": "#/components/schemas/BucketInfo"}}
         }
       },
       "BucketInfo": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "example": "my-bucket"
-          },
-          "creation_date": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2025-01-01T00:00:00Z"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1024000
-          },
-          "objects_count": {
-            "type": "integer",
-            "example": 42
-          },
-          "region": {
-            "type": "string",
-            "example": "us-east-1"
-          },
-          "versioning": {
-            "type": "boolean",
-            "example": false
-          }
+          "name": {"type": "string"},
+          "creation_date": {"type": "string", "format": "date-time"},
+          "size": {"type": "integer", "format": "int64"},
+          "objects_count": {"type": "integer"},
+          "region": {"type": "string"},
+          "versioning": {"type": "boolean"}
         }
       },
       "CreateBucketRequest": {
         "type": "object",
         "required": ["name"],
         "properties": {
-          "name": {
-            "type": "string",
-            "pattern": "^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$",
-            "example": "my-new-bucket"
-          },
-          "region": {
-            "type": "string",
-            "example": "us-east-1"
-          },
-          "versioning": {
-            "type": "boolean",
-            "default": false
-          }
+          "name": {"type": "string"},
+          "region": {"type": "string"},
+          "versioning": {"type": "boolean", "default": false}
         }
       },
       "ObjectsListResponse": {
         "type": "object",
         "properties": {
-          "objects": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ObjectInfo"
-            }
-          },
-          "is_truncated": {
-            "type": "boolean",
-            "description": "Есть ли еще объекты для получения"
-          },
-          "next_marker": {
-            "type": "string",
-            "description": "Маркер для следующей страницы результатов"
-          }
+          "objects": {"type": "array", "items": {"$ref": "#/components/schemas/ObjectInfo"}},
+          "is_truncated": {"type": "boolean"},
+          "next_marker": {"type": "string"}
+        }
+      },
+      "ObjectInfo": {
+        "type": "object",
+        "properties": {
+          "key": {"type": "string"},
+          "size": {"type": "integer", "format": "int64"},
+          "etag": {"type": "string"},
+          "last_modified": {"type": "string", "format": "date-time"},
+          "content_type": {"type": "string"},
+          "metadata": {"type": "object"}
         }
       },
       "UploadResponse": {
         "type": "object",
         "properties": {
-          "message": {
-            "type": "string",
-            "example": "Object uploaded successfully"
-          },
-          "key": {
-            "type": "string",
-            "example": "folder/file.txt"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int64",
-            "example": 1024
-          },
-          "etag": {
-            "type": "string",
-            "example": "d41d8cd98f00b204e9800998ecf8427e"
-          }
+          "message": {"type": "string"},
+          "key": {"type": "string"},
+          "size": {"type": "integer", "format": "int64"},
+          "etag": {"type": "string"}
         }
       },
       "UsersListResponse": {
         "type": "object",
         "properties": {
-          "users": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/UserInfo"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "example": 10
-          }
+          "users": {"type": "array", "items": {"$ref": "#/components/schemas/UserInfo"}},
+          "total": {"type": "integer"}
         }
       },
       "CreateUserRequest": {
         "type": "object",
         "required": ["username", "password"],
         "properties": {
-          "username": {
-            "type": "string",
-            "minLength": 3,
-            "maxLength": 64,
-            "example": "newuser"
-          },
-          "password": {
-            "type": "string",
-            "format": "password",
-            "minLength": 8,
-            "example": "SecurePass123!"
-          },
-          "is_admin": {
-            "type": "boolean",
-            "default": false,
-            "example": false
-          }
+          "username": {"type": "string"},
+          "password": {"type": "string", "format": "password"},
+          "is_admin": {"type": "boolean", "default": false}
         }
       },
       "UpdateUserRequest": {
         "type": "object",
         "properties": {
-          "password": {
-            "type": "string",
-            "format": "password",
-            "minLength": 8
-          },
-          "is_admin": {
-            "type": "boolean"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["active", "disabled"],
-            "example": "active"
-          }
+          "password": {"type": "string", "format": "password"},
+          "is_admin": {"type": "boolean"},
+          "status": {"type": "string", "enum": ["active", "disabled"]}
         }
       },
       "MessageResponse": {
         "type": "object",
         "properties": {
-          "message": {
-            "type": "string",
-            "example": "Operation completed successfully"
-          }
-        }
-      },
-      "ObjectInfo": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Ключ объекта",
-            "example": "documents/report.pdf"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Размер объекта в байтах",
-            "example": 1048576
-          },
-          "etag": {
-            "type": "string",
-            "description": "ETag объекта",
-            "example": "\"d41d8cd98f00b204e9800998ecf8427e\""
-          },
-          "last_modified": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Дата последнего изменения",
-            "example": "2025-11-12T10:30:00Z"
-          },
-          "content_type": {
-            "type": "string",
-            "description": "MIME тип содержимого",
-            "example": "application/pdf"
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "Пользовательские метаданные"
-          }
+          "message": {"type": "string"}
         }
       },
       "ErrorResponse": {
         "type": "object",
         "properties": {
-          "error": {
-            "type": "string",
-            "example": "Error description"
-          },
-          "code": {
-            "type": "integer",
-            "example": 400
-          },
-          "details": {
-            "type": "object",
-            "description": "Дополнительные детали ошибки"
+          "error": {"type": "string"},
+          "code": {"type": "integer"},
+          "details": {"type": "object"}
+        }
+      },
+      "EncryptionConfig": {
+        "type": "object",
+        "properties": {
+          "enabled": {"type": "boolean"},
+          "algorithm": {"type": "string", "enum": ["AES256", "aws:kms"]},
+          "kms_key_id": {"type": "string"}
+        }
+      },
+      "LifecycleConfig": {
+        "type": "object",
+        "properties": {
+          "rules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "string"},
+                "prefix": {"type": "string"},
+                "status": {"type": "string", "enum": ["Enabled", "Disabled"]},
+                "expiration_days": {"type": "integer"},
+                "transition_days": {"type": "integer"},
+                "storage_class": {"type": "string"}
+              }
+            }
+          }
+        }
+      },
+      "ObjectLockConfig": {
+        "type": "object",
+        "properties": {
+          "enabled": {"type": "boolean"},
+          "mode": {"type": "string", "enum": ["GOVERNANCE", "COMPLIANCE"]},
+          "days": {"type": "integer"},
+          "years": {"type": "integer"}
+        }
+      },
+      "InfrastructureSummary": {
+        "type": "object",
+        "properties": {
+          "total_servers": {"type": "integer"},
+          "online_servers": {"type": "integer"},
+          "total_drives": {"type": "integer"},
+          "online_drives": {"type": "integer"},
+          "total_capacity": {"type": "integer", "format": "int64"},
+          "used_capacity": {"type": "integer", "format": "int64"},
+          "pools_count": {"type": "integer"}
+        }
+      },
+      "Server": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "hostname": {"type": "string"},
+          "endpoint": {"type": "string"},
+          "status": {"type": "string", "enum": ["online", "offline", "maintenance"]},
+          "drives_count": {"type": "integer"},
+          "uptime": {"type": "integer"},
+          "created_at": {"type": "string", "format": "date-time"}
+        }
+      },
+      "AddServerRequest": {
+        "type": "object",
+        "required": ["hostname", "endpoint"],
+        "properties": {
+          "hostname": {"type": "string"},
+          "endpoint": {"type": "string"},
+          "pool_id": {"type": "string"}
+        }
+      },
+      "ServerHealth": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "cpu_usage": {"type": "number"},
+          "memory_usage": {"type": "number"},
+          "network_in": {"type": "integer", "format": "int64"},
+          "network_out": {"type": "integer", "format": "int64"}
+        }
+      },
+      "Drive": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "server_id": {"type": "string"},
+          "path": {"type": "string"},
+          "status": {"type": "string", "enum": ["online", "offline", "faulty", "healing"]},
+          "total_space": {"type": "integer", "format": "int64"},
+          "used_space": {"type": "integer", "format": "int64"},
+          "model": {"type": "string"},
+          "serial": {"type": "string"}
+        }
+      },
+      "AddDriveRequest": {
+        "type": "object",
+        "required": ["server_id", "path"],
+        "properties": {
+          "server_id": {"type": "string"},
+          "path": {"type": "string"}
+        }
+      },
+      "Pool": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "status": {"type": "string"},
+          "servers": {"type": "array", "items": {"type": "string"}},
+          "erasure_set_size": {"type": "integer"},
+          "parity_drives": {"type": "integer"},
+          "total_capacity": {"type": "integer", "format": "int64"},
+          "used_capacity": {"type": "integer", "format": "int64"}
+        }
+      },
+      "ConfigurePoolRequest": {
+        "type": "object",
+        "required": ["name", "server_ids"],
+        "properties": {
+          "name": {"type": "string"},
+          "server_ids": {"type": "array", "items": {"type": "string"}},
+          "erasure_set_size": {"type": "integer"},
+          "parity_drives": {"type": "integer"}
+        }
+      },
+      "HealStatus": {
+        "type": "object",
+        "properties": {
+          "in_progress": {"type": "boolean"},
+          "objects_healed": {"type": "integer"},
+          "objects_failed": {"type": "integer"},
+          "bytes_healed": {"type": "integer", "format": "int64"},
+          "started_at": {"type": "string", "format": "date-time"},
+          "estimated_completion": {"type": "string", "format": "date-time"}
+        }
+      },
+      "SystemStats": {
+        "type": "object",
+        "properties": {
+          "uptime": {"type": "integer"},
+          "total_buckets": {"type": "integer"},
+          "total_objects": {"type": "integer"},
+          "total_storage_used": {"type": "integer", "format": "int64"},
+          "total_storage_capacity": {"type": "integer", "format": "int64"},
+          "active_connections": {"type": "integer"}
+        }
+      },
+      "CapacityStats": {
+        "type": "object",
+        "properties": {
+          "total": {"type": "integer", "format": "int64"},
+          "used": {"type": "integer", "format": "int64"},
+          "available": {"type": "integer", "format": "int64"},
+          "usage_percent": {"type": "number"}
+        }
+      },
+      "ActivityStats": {
+        "type": "object",
+        "properties": {
+          "recent_uploads": {"type": "array", "items": {"type": "object"}},
+          "recent_downloads": {"type": "array", "items": {"type": "object"}},
+          "recent_deletes": {"type": "array", "items": {"type": "object"}}
+        }
+      },
+      "ServerStats": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "hostname": {"type": "string"},
+          "cpu_usage": {"type": "number"},
+          "memory_usage": {"type": "number"},
+          "disk_io_read": {"type": "integer", "format": "int64"},
+          "disk_io_write": {"type": "integer", "format": "int64"}
+        }
+      },
+      "DriveStats": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "used_percent": {"type": "number"},
+          "iops": {"type": "integer"},
+          "latency_ms": {"type": "number"},
+          "errors_count": {"type": "integer"}
+        }
+      },
+      "PoolStats": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "used_percent": {"type": "number"},
+          "objects_count": {"type": "integer"},
+          "healing_objects": {"type": "integer"}
+        }
+      },
+      "ApiErrorStats": {
+        "type": "object",
+        "properties": {
+          "total_errors": {"type": "integer"},
+          "errors_by_code": {"type": "object", "additionalProperties": {"type": "integer"}},
+          "errors_by_endpoint": {"type": "object", "additionalProperties": {"type": "integer"}}
+        }
+      },
+      "ThroughputStats": {
+        "type": "object",
+        "properties": {
+          "read_bytes_per_sec": {"type": "integer", "format": "int64"},
+          "write_bytes_per_sec": {"type": "integer", "format": "int64"},
+          "requests_per_sec": {"type": "number"},
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": {"type": "string", "format": "date-time"},
+                "read": {"type": "integer", "format": "int64"},
+                "write": {"type": "integer", "format": "int64"}
+              }
+            }
           }
         }
       }

@@ -33,6 +33,22 @@ class MockStorageClient : public IStorageClient {
     MOCK_METHOD((Result<bool, String>), create_bucket, (const String&, const String&), (override));
     MOCK_METHOD((Result<bool, String>), delete_bucket, (const String&), (override));
     MOCK_METHOD((Result<bool, String>), bucket_exists, (const String&), (override));
+
+    // Bucket policy, versioning, tags, encryption, lifecycle, object lock
+    MOCK_METHOD((Result<void, String>), set_bucket_policy, (const String&, const String&), (override));
+    MOCK_METHOD((Result<String, String>), get_bucket_policy, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_versioning, (const String&, bool), (override));
+    MOCK_METHOD((Result<bool, String>), get_bucket_versioning, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_tags, (const String&, const StringMap&), (override));
+    MOCK_METHOD((Result<StringMap, String>), get_bucket_tags, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), delete_bucket_tags, (const String&), (override));
+    MOCK_METHOD((Result<Json::Value, String>), get_bucket_encryption, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_encryption, (const String&, const Json::Value&), (override));
+    MOCK_METHOD((Result<Json::Value, String>), get_bucket_lifecycle, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_lifecycle, (const String&, const Json::Value&), (override));
+    MOCK_METHOD((Result<Json::Value, String>), get_bucket_object_lock, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_object_lock, (const String&, const Json::Value&), (override));
+
     MOCK_METHOD((Result<ListObjectsResponse, String>),
                 list_objects,
                 (const String&, const ListObjectsOptions&),
@@ -59,6 +75,73 @@ class MockStorageClient : public IStorageClient {
                 generate_presigned_url,
                 (const String&, const String&, int64_t, const String&),
                 (override));
+
+    // Multipart upload operations
+    MOCK_METHOD((Result<MultipartUploadInfo, String>),
+                initiate_multipart_upload,
+                (const String&, const String&, const String&, const StringMap&),
+                (override));
+    MOCK_METHOD((Result<String, String>),
+                upload_part,
+                (const String&, const String&, const String&, int, const ByteArray&),
+                (override));
+    MOCK_METHOD((Result<Object, String>),
+                complete_multipart_upload,
+                (const String&, const String&, const String&, const Vector<CompletedPart>&),
+                (override));
+    MOCK_METHOD((Result<void, String>),
+                abort_multipart_upload,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<MultipartUploadInfo, String>),
+                list_parts,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<Vector<MultipartUploadInfo>, String>),
+                list_multipart_uploads,
+                (const String&, const String&),
+                (override));
+
+    // Object versioning operations
+    MOCK_METHOD((Result<Vector<ObjectVersion>, String>),
+                list_object_versions,
+                (const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<ByteArray, String>),
+                get_object_version,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<void, String>),
+                delete_object_version,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<Object, String>),
+                restore_object_version,
+                (const String&, const String&, const String&),
+                (override));
+
+    // Object lock and retention operations
+    MOCK_METHOD((Result<void, String>),
+                set_object_retention,
+                (const String&, const String&, const String&, int64_t, const String&),
+                (override));
+    MOCK_METHOD((Result<std::pair<String, int64_t>, String>),
+                get_object_retention,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<void, String>),
+                set_object_legal_hold,
+                (const String&, const String&, bool, const String&),
+                (override));
+    MOCK_METHOD((Result<bool, String>),
+                get_object_legal_hold,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<void, String>),
+                set_bucket_object_lock_configuration,
+                (const String&, bool, const String&, int, int),
+                (override));
+    MOCK_METHOD((Result<Json::Value, String>), get_bucket_object_lock_configuration, (const String&), (override));
 };
 
 class MockAdminClient : public IMinioAdminClient {
@@ -69,7 +152,7 @@ class MockAdminClient : public IMinioAdminClient {
     // User management
     MOCK_METHOD((Result<Vector<User>, String>), list_users, (), (override));
     MOCK_METHOD((Result<User, String>), get_user, (const String&), (override));
-    MOCK_METHOD((Result<User, String>), create_user, (const String&, const String&), (override));
+    MOCK_METHOD((Result<User, String>), create_user, (const String&, const String&, bool), (override));
     MOCK_METHOD((Result<void, String>), delete_user, (const String&), (override));
     MOCK_METHOD((Result<void, String>), set_user_policy, (const String&, const String&), (override));
     MOCK_METHOD((Result<void, String>), update_user_groups, (const String&, const Vector<String>&), (override));
@@ -280,8 +363,7 @@ TEST_F(StatsControllerTest, SystemStats_WithData) {
 }
 
 TEST_F(StatsControllerTest, SystemStats_StorageCapacityCalculation) {
-    // Test capacity calculations
-    const int64_t EXPECTED_TOTAL = 10LL * 1024 * 1024 * 1024 * 1024; // 10 TiB
+    // Test capacity calculations - now uses real filesystem data
 
     Vector<Bucket> buckets;
     Vector<User> users;
@@ -308,13 +390,16 @@ TEST_F(StatsControllerTest, SystemStats_StorageCapacityCalculation) {
 
     ASSERT_TRUE(callback_called);
 
-    // Verify capacity calculations
+    // Verify capacity calculations (uses real filesystem data)
     int64_t total = response_json["storage_total"].asInt64();
     int64_t used = response_json["storage_used"].asInt64();
     int64_t available = response_json["storage_available"].asInt64();
 
-    EXPECT_EQ(total, EXPECTED_TOTAL);
+    // Verify storage capacity is positive
+    EXPECT_GT(total, 0) << "Storage total should be > 0 (from real filesystem)";
+    // Verify available = total - used
     EXPECT_EQ(available, total - used);
+    // Verify used is within valid range
     EXPECT_GE(used, 0);
     EXPECT_LE(used, total);
 }

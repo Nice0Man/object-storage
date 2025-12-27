@@ -1,0 +1,13 @@
+{
+  "creation_date" : 1765651313,
+  "name" : "rocksdb-test-bucket",
+  "object_locking" : false,
+  "owner" : "",
+  "region" : "us-east-1",
+  "statistics" :
+  {
+    "object_count" : 0,
+    "total_size_bytes" : 0
+  },
+  "versioning_enabled" : false
+}

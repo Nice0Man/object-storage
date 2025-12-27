@@ -106,7 +106,8 @@ export interface PoolInfo {
 export interface ApiErrorData {
   timestamp: number;
   time: string;
-  count: number;
+  requests: number;      // Total requests in this period
+  count?: number;        // Deprecated, use requests
   error_4xx: number;
   error_5xx: number;
 }
@@ -134,6 +135,18 @@ export interface DataThroughputStats {
   total_write: number;
   average_throughput: number;
   peak_throughput: number;
+}
+
+// Encryption Stats
+export interface EncryptionStats {
+  total_objects: number;
+  encrypted_objects: number;
+  unencrypted_objects: number;
+  sse_s3_count: number;
+  sse_c_count: number;
+  encrypted_size: number;
+  unencrypted_size: number;
+  encryption_percentage: number;
 }
 
 // Authentication
@@ -211,6 +224,12 @@ export interface S3Object {
     id: string;
     display_name: string;
   };
+  // Encryption fields
+  encrypted?: boolean;
+  encryption_algorithm?: string;
+  sse_type?: string;
+  sse_customer_key_md5?: string;
+  original_size?: number;
 }
 
 export interface ListObjectsResponse {
@@ -230,11 +249,17 @@ export interface UploadObjectRequest {
 export interface ObjectInfo {
   key: string;
   size: number;
+  original_size?: number;
   last_modified: string;
   etag: string;
   content_type: string;
   metadata: { [key: string]: string };
   tags: { [key: string]: string };
+  // Server-Side Encryption fields
+  encrypted?: boolean;
+  encryption_algorithm?: string;
+  sse_type?: "SSE-S3" | "SSE-C";
+  sse_customer_key_md5?: string;
 }
 
 export interface PresignedUrlResponse {
@@ -303,4 +328,200 @@ export interface ListObjectsParams extends PaginationParams {
   delimiter?: string;
   marker?: string;
   max_keys?: number;
+}
+
+// ============================================================================
+// Multipart Upload Types
+// ============================================================================
+
+export interface MultipartUploadInfo {
+  upload_id: string;
+  bucket: string;
+  key: string;
+  content_type: string;
+  initiated: number;
+  parts: UploadPart[];
+}
+
+export interface UploadPart {
+  part_number: number;
+  etag: string;
+  size: number;
+}
+
+export interface CompletedPart {
+  part_number: number;
+  etag: string;
+}
+
+export interface InitiateMultipartUploadRequest {
+  key: string;
+  content_type?: string;
+  metadata?: { [key: string]: string };
+}
+
+export interface CompleteMultipartUploadRequest {
+  key: string;
+  parts: CompletedPart[];
+}
+
+export interface ListMultipartUploadsResponse {
+  uploads: MultipartUploadInfo[];
+  bucket: string;
+  prefix: string;
+}
+
+// ============================================================================
+// Object Versioning Types
+// ============================================================================
+
+export interface ObjectVersion {
+  version_id: string;
+  key: string;
+  bucket: string;
+  size: number;
+  last_modified: number;
+  etag: string;
+  is_latest: boolean;
+  is_delete_marker: boolean;
+}
+
+export interface ListObjectVersionsResponse {
+  versions: ObjectVersion[];
+  bucket: string;
+  key: string;
+}
+
+// ============================================================================
+// Object Lock and Retention Types
+// ============================================================================
+
+export interface ObjectRetention {
+  mode: 'GOVERNANCE' | 'COMPLIANCE';
+  retain_until_date: number;
+}
+
+export interface ObjectLegalHold {
+  status: boolean;
+}
+
+export interface BucketObjectLockConfig {
+  object_lock_enabled: boolean;
+  default_retention?: {
+    mode: string;
+    days?: number;
+    years?: number;
+  };
+}
+
+// ============================================================================
+// Bucket Configuration Types
+// ============================================================================
+
+export interface BucketTagsResponse {
+  tags: { [key: string]: string };
+}
+
+export interface BucketEncryptionConfig {
+  enabled: boolean;
+  algorithm: 'AES256' | 'aws:kms';
+  kms_master_key_id?: string;
+}
+
+export interface LifecycleRule {
+  id: string;
+  status: 'Enabled' | 'Disabled';
+  filter: {
+    prefix?: string;
+    tags?: { [key: string]: string };
+    object_size_greater_than?: number;
+    object_size_less_than?: number;
+  };
+  actions: LifecycleAction[];
+}
+
+export interface LifecycleAction {
+  type: 'Expiration' | 'AbortIncompleteMultipartUpload' | 'NoncurrentVersionExpiration' | 'Transition';
+  days?: number;
+  noncurrent_days?: number;
+  storage_class?: string;
+}
+
+export interface LifecycleConfiguration {
+  rules: LifecycleRule[];
+}
+
+// ============================================================================
+// Dashboard Types
+// ============================================================================
+
+export type WidgetType =
+  | 'capacity'
+  | 'servers'
+  | 'drives'
+  | 'buckets'
+  | 'api_errors'
+  | 'throughput'
+  | 'encryption'
+  | 'pools'
+  | 'quick_actions';
+
+export interface DashboardBoard {
+  id: string;
+  name: string;
+  order_index: number;
+  created_at?: number;
+  updated_at?: number;
+}
+
+export interface WidgetPosition {
+  x: number;
+  y: number;
+}
+
+export interface WidgetSize {
+  w: number;
+  h: number;
+}
+
+export interface WidgetSettings {
+  timeRange?: '1h' | '6h' | '24h' | '7d';
+  chartMode?: 'stacked' | 'line' | 'bar';
+  showLegend?: boolean;
+  [key: string]: unknown;
+}
+
+export interface DashboardWidget {
+  id: string;
+  board_id: string;
+  widget_type: WidgetType;
+  position: WidgetPosition;
+  size: WidgetSize;
+  visible: boolean;
+  refresh_interval: number; // seconds, 0 = disabled
+  settings: WidgetSettings;
+  order_index: number;
+}
+
+export interface CreateBoardRequest {
+  name: string;
+  order_index?: number;
+}
+
+export interface UpdateBoardRequest {
+  name?: string;
+  order_index?: number;
+}
+
+export interface SaveWidgetsRequest {
+  widgets: DashboardWidget[];
+}
+
+export interface UpdateWidgetRequest {
+  position?: WidgetPosition;
+  size?: WidgetSize;
+  visible?: boolean;
+  refresh_interval?: number;
+  settings?: WidgetSettings;
+  order_index?: number;
 }

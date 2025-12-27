@@ -69,10 +69,28 @@ ObjectMetadata::to_json() const {
 
     // Custom metadata
     Json::Value meta_json(Json::objectValue);
-    for (const auto& [key, value] : metadata) {
-        meta_json[key] = value;
+    for (const auto& [k, v] : metadata) {
+        meta_json[k] = v;
     }
     json["metadata"] = meta_json;
+
+    // Object Lock and Retention
+    if (!retention_mode.empty()) {
+        json["retention_mode"] = retention_mode;
+        json["retention_until"] = static_cast<Json::Int64>(retention_until);
+    }
+    json["legal_hold"] = legal_hold;
+
+    // Server-Side Encryption
+    if (encrypted) {
+        json["encrypted"] = encrypted;
+        json["original_size"] = static_cast<Json::Value::UInt64>(original_size);
+        json["encryption_algorithm"] = encryption_algorithm;
+        json["sse_type"] = sse_type;
+        if (!sse_customer_key_md5.empty()) {
+            json["sse_customer_key_md5"] = sse_customer_key_md5;
+        }
+    }
 
     return json;
 }
@@ -98,10 +116,22 @@ ObjectMetadata::from_json(const Json::Value& json) {
     // Custom metadata
     if (json.isMember("metadata")) {
         auto meta_json = json["metadata"];
-        for (const auto& key : meta_json.getMemberNames()) {
-            meta.metadata[key] = meta_json[key].asString();
+        for (const auto& k : meta_json.getMemberNames()) {
+            meta.metadata[k] = meta_json[k].asString();
         }
     }
+
+    // Object Lock and Retention
+    meta.retention_mode = json.get("retention_mode", "").asString();
+    meta.retention_until = json.get("retention_until", 0).asInt64();
+    meta.legal_hold = json.get("legal_hold", false).asBool();
+
+    // Server-Side Encryption
+    meta.encrypted = json.get("encrypted", false).asBool();
+    meta.original_size = json.get("original_size", 0).asUInt64();
+    meta.encryption_algorithm = json.get("encryption_algorithm", "").asString();
+    meta.sse_type = json.get("sse_type", "").asString();
+    meta.sse_customer_key_md5 = json.get("sse_customer_key_md5", "").asString();
 
     return meta;
 }
@@ -280,6 +310,11 @@ MetadataManager::bucket_metadata_to_model(const BucketMetadata& meta) const {
     info.region = meta.region;
     info.creation_date = meta.creation_date;
     info.versioning_enabled = meta.versioning_enabled;
+    info.encryption_enabled = meta.encryption_enabled;
+    info.encryption_type = meta.encryption_type;
+    info.size_bytes = static_cast<int64_t>(meta.total_size_bytes);
+    info.size_with_metadata = static_cast<int64_t>(meta.size_with_metadata);
+    info.object_count = static_cast<int64_t>(meta.object_count);
     return models::Bucket(info);
 }
 
@@ -293,6 +328,12 @@ MetadataManager::object_metadata_to_model(const ObjectMetadata& meta) const {
     info.last_modified = meta.last_modified;
     info.content_type = meta.content_type;
     info.metadata = meta.metadata;
+    // Encryption fields
+    info.encrypted = meta.encrypted;
+    info.encryption_algorithm = meta.encryption_algorithm;
+    info.sse_type = meta.sse_type;
+    info.sse_customer_key_md5 = meta.sse_customer_key_md5;
+    info.original_size = meta.original_size;
     return models::Object(info);
 }
 

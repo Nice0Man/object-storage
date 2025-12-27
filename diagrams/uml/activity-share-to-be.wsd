@@ -1,0 +1,100 @@
+@startuml activity-share-to-be
+title Activity Diagram: Предоставление доступа к файлу TO-BE (Object Storage Console)
+
+skinparam activity {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Gray
+}
+
+|#E3F2FD|Пользователь|
+start
+
+:Открыть Object Storage Console;
+
+:Перейти к нужному бакету;
+
+:Выбрать объект для
+предоставления доступа;
+
+:Открыть меню «Поделиться»;
+
+if (Метод доступа?) then (Presigned URL)
+    :Установить время жизни ссылки;
+    note right
+        Опции: 1 час, 24 часа,
+        7 дней, кастомный
+    end note
+
+    |#E8F5E9|ObjectService|
+    :Генерация Presigned URL
+    с HMAC-SHA256 подписью;
+    note right
+        Мгновенный доступ
+        Автоматическое истечение
+    end note
+
+    |#E3F2FD|Пользователь|
+    :Скопировать URL в буфер обмена;
+
+    :Отправить ссылку получателю
+    (email/мессенджер);
+
+    |#E0E0E0|StatsCollector|
+    :Логирование операции share;
+
+    |#E3F2FD|Пользователь|
+    #90EE90:Ссылка отправлена;
+    stop
+
+elseif (Политика бакета) then
+    :Открыть редактор политик;
+
+    :Выбрать тип политики:
+    public-read / пользователь / группа;
+
+    |#E8F5E9|BucketService|
+    :Применить IAM политику;
+
+    |#FFF3E0|PolicyEvaluator|
+    :Валидация политики;
+    note right
+        Автоматическая проверка
+        синтаксиса и прав
+    end note
+
+    if (Политика валидна?) then (Нет)
+        #FFEBEE:Показать ошибку политики;
+        |#E3F2FD|Пользователь|
+        detach
+    else (Да)
+    endif
+
+    |#E8F5E9|BucketService|
+    :Сохранение политики в metadata;
+
+    :Уведомление затронутых пользователей;
+
+    |#E0E0E0|StatsCollector|
+    :Логирование изменения политики;
+
+    |#E3F2FD|Пользователь|
+    #90EE90:Политика применена;
+    stop
+
+else (Shared bucket)
+    :Выбрать shared бакет;
+
+    |#E8F5E9|ObjectService|
+    :Копирование объекта;
+
+    :Обновление метаданных копии;
+
+    |#E3F2FD|Пользователь|
+    :Уведомить получателей;
+
+    #90EE90:Объект скопирован в shared бакет;
+    stop
+endif
+
+@enduml

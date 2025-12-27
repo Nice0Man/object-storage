@@ -1,5 +1,7 @@
 #include "console/clients/LocalStorageClient.hpp"
 
+#include "console/common/Config.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -17,6 +19,23 @@ class LocalStorageClientTest : public ::testing::Test {
         if (fs::exists(test_storage_root_)) {
             fs::remove_all(test_storage_root_);
         }
+
+        // Create test config with required secrets
+        String test_config_path = test_storage_root_ + "/test_config.json";
+        fs::create_directories(test_storage_root_);
+        std::ofstream config_file(test_config_path);
+        config_file << R"({
+            "auth": {
+                "jwt_secret": "test-jwt-secret-that-is-long-enough-for-testing"
+            },
+            "presigned_url": {
+                "secret_key": "test-presigned-secret-that-is-long-enough"
+            }
+        })";
+        config_file.close();
+
+        // Initialize config for tests
+        Config::instance().load_from_file(test_config_path);
 
         client_ = std::make_unique<LocalStorageClient>(test_storage_root_);
     }

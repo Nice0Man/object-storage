@@ -32,7 +32,7 @@ function App() {
               <Route path="buckets" element={<BucketsPage />} />
               <Route path="objects" element={<ObjectsPage />} />
               <Route path="users" element={<UsersPage />} />
-              <Route path="system" element={<SystemHealthPage />} />
+              <Route path="system-health" element={<SystemHealthPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
           </Routes>

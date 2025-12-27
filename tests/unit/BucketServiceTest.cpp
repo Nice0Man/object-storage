@@ -21,6 +21,22 @@ class MockStorageClient : public IStorageClient {
     MOCK_METHOD((Result<bool, String>), create_bucket, (const String&, const String&), (override));
     MOCK_METHOD((Result<bool, String>), delete_bucket, (const String&), (override));
     MOCK_METHOD((Result<bool, String>), bucket_exists, (const String&), (override));
+
+    // Bucket policy, versioning, tags, encryption, lifecycle, object lock
+    MOCK_METHOD((Result<void, String>), set_bucket_policy, (const String&, const String&), (override));
+    MOCK_METHOD((Result<String, String>), get_bucket_policy, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_versioning, (const String&, bool), (override));
+    MOCK_METHOD((Result<bool, String>), get_bucket_versioning, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_tags, (const String&, const StringMap&), (override));
+    MOCK_METHOD((Result<StringMap, String>), get_bucket_tags, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), delete_bucket_tags, (const String&), (override));
+    MOCK_METHOD((Result<Json::Value, String>), get_bucket_encryption, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_encryption, (const String&, const Json::Value&), (override));
+    MOCK_METHOD((Result<Json::Value, String>), get_bucket_lifecycle, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_lifecycle, (const String&, const Json::Value&), (override));
+    MOCK_METHOD((Result<Json::Value, String>), get_bucket_object_lock, (const String&), (override));
+    MOCK_METHOD((Result<void, String>), set_bucket_object_lock, (const String&, const Json::Value&), (override));
+
     MOCK_METHOD((Result<models::ListObjectsResponse, String>),
                 list_objects,
                 (const String&, const ListObjectsOptions&),
@@ -47,6 +63,73 @@ class MockStorageClient : public IStorageClient {
                 generate_presigned_url,
                 (const String&, const String&, int64_t, const String&),
                 (override));
+
+    // Multipart upload operations
+    MOCK_METHOD((Result<MultipartUploadInfo, String>),
+                initiate_multipart_upload,
+                (const String&, const String&, const String&, const StringMap&),
+                (override));
+    MOCK_METHOD((Result<String, String>),
+                upload_part,
+                (const String&, const String&, const String&, int, const ByteArray&),
+                (override));
+    MOCK_METHOD((Result<models::Object, String>),
+                complete_multipart_upload,
+                (const String&, const String&, const String&, const Vector<CompletedPart>&),
+                (override));
+    MOCK_METHOD((Result<void, String>),
+                abort_multipart_upload,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<MultipartUploadInfo, String>),
+                list_parts,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<Vector<MultipartUploadInfo>, String>),
+                list_multipart_uploads,
+                (const String&, const String&),
+                (override));
+
+    // Object versioning operations
+    MOCK_METHOD((Result<Vector<ObjectVersion>, String>),
+                list_object_versions,
+                (const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<ByteArray, String>),
+                get_object_version,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<void, String>),
+                delete_object_version,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<models::Object, String>),
+                restore_object_version,
+                (const String&, const String&, const String&),
+                (override));
+
+    // Object lock and retention operations
+    MOCK_METHOD((Result<void, String>),
+                set_object_retention,
+                (const String&, const String&, const String&, int64_t, const String&),
+                (override));
+    MOCK_METHOD((Result<std::pair<String, int64_t>, String>),
+                get_object_retention,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<void, String>),
+                set_object_legal_hold,
+                (const String&, const String&, bool, const String&),
+                (override));
+    MOCK_METHOD((Result<bool, String>),
+                get_object_legal_hold,
+                (const String&, const String&, const String&),
+                (override));
+    MOCK_METHOD((Result<void, String>),
+                set_bucket_object_lock_configuration,
+                (const String&, bool, const String&, int, int),
+                (override));
+    MOCK_METHOD((Result<Json::Value, String>), get_bucket_object_lock_configuration, (const String&), (override));
 };
 
 class BucketServiceTest : public ::testing::Test {

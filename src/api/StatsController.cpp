@@ -1,8 +1,10 @@
 #include "console/api/StatsController.hpp"
 
+#include "console/clients/LocalAdminClient.hpp"
 #include "console/common/Logger.hpp"
 #include "console/common/ServiceLocator.hpp"
 #include "console/services/BucketService.hpp"
+#include "console/services/ObjectService.hpp"
 #include "console/services/UserService.hpp"
 #include "console/storage/DatabaseManager.hpp"
 
@@ -56,13 +58,24 @@ StatsController::get_system_stats(const drogon::HttpRequestPtr& req,
             }
         }
 
-        // Get user count
-        auto user_service = ServiceLocator::user_service();
+        // Get user count (only if user is admin to avoid warning logs)
         int user_count = 0;
-        if (user_service) {
-            auto users_result = user_service->list_users(user_info);
-            if (users_result.is_ok()) {
-                user_count = users_result.value().size();
+        if (user_info.is_admin) {
+            auto user_service = ServiceLocator::user_service();
+            if (user_service) {
+                auto users_result = user_service->list_users(user_info);
+                if (users_result.is_ok()) {
+                    user_count = users_result.value().size();
+                }
+            }
+        } else {
+            // For non-admin users, try to get user count from admin client directly
+            auto admin_client = ServiceLocator::admin_client();
+            if (admin_client) {
+                auto users_result = admin_client->list_users();
+                if (users_result.is_ok()) {
+                    user_count = users_result.value().size();
+                }
             }
         }
 
@@ -72,9 +85,32 @@ StatsController::get_system_stats(const drogon::HttpRequestPtr& req,
         stats["users"] = user_count;
         stats["storage_used"] = static_cast<Json::Int64>(total_size);
 
-        // Storage capacity (mock for now - could be from config)
-        stats["storage_total"] = static_cast<Json::Int64>(10LL * 1024 * 1024 * 1024 * 1024); // 10 TiB
-        stats["storage_available"] = static_cast<Json::Int64>(stats["storage_total"].asInt64() - total_size);
+        // Get storage capacity from pools/drives
+        int64_t storage_total = 0;
+        auto db_manager = ServiceLocator::database();
+        if (db_manager) {
+            auto pools_result = db_manager->list_storage_pools();
+            if (pools_result) {
+                for (const auto& pool : pools_result.value()) {
+                    storage_total += pool.capacity;
+                }
+            }
+            // If no pools, try drives directly
+            if (storage_total == 0) {
+                auto drives_result = db_manager->list_drives();
+                if (drives_result) {
+                    for (const auto& drive : drives_result.value()) {
+                        storage_total += drive.capacity;
+                    }
+                }
+            }
+        }
+        // Fallback to reasonable default if no infrastructure data
+        if (storage_total == 0) {
+            storage_total = 1LL * 1024 * 1024 * 1024 * 1024; // 1 TiB default
+        }
+        stats["storage_total"] = static_cast<Json::Int64>(storage_total);
+        stats["storage_available"] = static_cast<Json::Int64>(storage_total - total_size);
 
         // System status
         stats["status"] = "online";
@@ -120,13 +156,34 @@ StatsController::get_capacity(const drogon::HttpRequestPtr& req,
             }
         }
 
+        // Get storage capacity from pools/drives
+        int64_t storage_total = 0;
+        auto db_manager = ServiceLocator::database();
+        if (db_manager) {
+            auto pools_result = db_manager->list_storage_pools();
+            if (pools_result) {
+                for (const auto& pool : pools_result.value()) {
+                    storage_total += pool.capacity;
+                }
+            }
+            if (storage_total == 0) {
+                auto drives_result = db_manager->list_drives();
+                if (drives_result) {
+                    for (const auto& drive : drives_result.value()) {
+                        storage_total += drive.capacity;
+                    }
+                }
+            }
+        }
+        if (storage_total == 0) {
+            storage_total = 1LL * 1024 * 1024 * 1024 * 1024; // 1 TiB default
+        }
+
         // Capacity information
-        capacity["total"] = static_cast<Json::Int64>(10LL * 1024 * 1024 * 1024 * 1024); // 10 TiB
+        capacity["total"] = static_cast<Json::Int64>(storage_total);
         capacity["used"] = static_cast<Json::Int64>(total_size);
-        capacity["available"] = static_cast<Json::Int64>(capacity["total"].asInt64() - total_size);
-        capacity["usage_percent"] = total_size > 0
-                                        ? static_cast<double>(total_size) / capacity["total"].asInt64() * 100.0
-                                        : 0.0;
+        capacity["available"] = static_cast<Json::Int64>(storage_total - total_size);
+        capacity["usage_percent"] = storage_total > 0 ? static_cast<double>(total_size) / storage_total * 100.0 : 0.0;
 
         auto resp = drogon::HttpResponse::newHttpJsonResponse(capacity);
         callback(resp);
@@ -238,6 +295,7 @@ StatsController::get_servers(const drogon::HttpRequestPtr& req,
         Json::Value servers(Json::arrayValue);
         int online_count = 0;
         int offline_count = 0;
+        auto now = std::time(nullptr);
 
         for (const auto& server : servers_result.value()) {
             Json::Value server_json;
@@ -245,7 +303,16 @@ StatsController::get_servers(const drogon::HttpRequestPtr& req,
             server_json["name"] = server.name;
             server_json["status"] = server.status;
             server_json["endpoint"] = server.endpoint;
-            server_json["uptime"] = static_cast<Json::Int64>(server.uptime);
+
+            // Calculate uptime in seconds from start timestamp
+            // server.uptime stores the start timestamp when server came online
+            int64_t uptime_seconds = 0;
+            if (server.status == "online" && server.uptime > 0) {
+                uptime_seconds = now - server.uptime;
+                if (uptime_seconds < 0)
+                    uptime_seconds = 0;
+            }
+            server_json["uptime"] = static_cast<Json::Int64>(uptime_seconds);
 
             servers.append(server_json);
 
@@ -441,6 +508,7 @@ StatsController::get_api_errors(const drogon::HttpRequestPtr& req,
         }
 
         Json::Value data(Json::arrayValue);
+        int total_requests = 0;
         int total_errors = 0;
 
         // Fill in missing hours with zeros
@@ -449,10 +517,10 @@ StatsController::get_api_errors(const drogon::HttpRequestPtr& req,
             hour_ts = (hour_ts / 3600) * 3600;
 
             auto it = hourly_stats.find(hour_ts);
-            int count = 0, error_4xx = 0, error_5xx = 0;
+            int requests = 0, error_4xx = 0, error_5xx = 0;
 
             if (it != hourly_stats.end()) {
-                count = std::get<0>(it->second);
+                requests = std::get<0>(it->second);
                 error_4xx = std::get<1>(it->second);
                 error_5xx = std::get<2>(it->second);
             }
@@ -463,17 +531,21 @@ StatsController::get_api_errors(const drogon::HttpRequestPtr& req,
 
             point["timestamp"] = static_cast<Json::Int64>(hour_ts);
             point["time"] = time_buf;
-            point["count"] = count;
+            point["requests"] = requests;
             point["error_4xx"] = error_4xx;
             point["error_5xx"] = error_5xx;
 
-            total_errors += count;
+            total_requests += requests;
+            total_errors += (error_4xx + error_5xx);
             data.append(point);
         }
 
         response["data"] = data;
+        response["total_requests"] = total_requests;
         response["total_errors"] = total_errors;
-        response["error_rate"] = total_errors > 0 ? (total_errors / 24.0) : 0.0;
+        // error_rate as percentage of failed requests
+        response["error_rate"] = total_requests > 0 ? (static_cast<double>(total_errors) / total_requests * 100.0)
+                                                    : 0.0;
 
         auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
         callback(resp);
@@ -583,6 +655,92 @@ StatsController::get_data_throughput(const drogon::HttpRequestPtr& req,
 
     } catch (const std::exception& e) {
         CONSOLE_LOG_ERROR("Error getting data throughput stats: {}", e.what());
+        Json::Value error;
+        error["error"] = "Internal server error";
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+        resp->setStatusCode(drogon::k500InternalServerError);
+        callback(resp);
+    }
+}
+
+void
+StatsController::get_encryption_stats(const drogon::HttpRequestPtr& req,
+                                      std::function<void(const drogon::HttpResponsePtr&)>&& callback) {
+    auto user_info = get_user_from_request(req);
+
+    Json::Value response;
+
+    try {
+        auto bucket_service = ServiceLocator::bucket_service();
+        auto object_service = ServiceLocator::object_service();
+
+        if (!bucket_service || !object_service) {
+            Json::Value error;
+            error["error"] = "Service not available";
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+            resp->setStatusCode(drogon::k500InternalServerError);
+            callback(resp);
+            return;
+        }
+
+        int64_t total_objects = 0;
+        int64_t encrypted_objects = 0;
+        int64_t sse_s3_count = 0;
+        int64_t sse_c_count = 0;
+        int64_t unencrypted_objects = 0;
+        int64_t encrypted_size = 0;
+        int64_t unencrypted_size = 0;
+
+        // Get all buckets
+        auto buckets_result = bucket_service->list_buckets(user_info);
+        if (buckets_result.is_ok()) {
+            for (const auto& bucket : buckets_result.value()) {
+                // List objects in each bucket
+                auto objects_result = object_service->list_objects(user_info, bucket.name(), "", true, 10000);
+                if (objects_result.is_ok()) {
+                    for (const auto& obj : objects_result.value()) {
+                        total_objects++;
+
+                        // Get object info for encryption details
+                        auto info_result = object_service->get_object_info(user_info, bucket.name(), obj.key());
+                        if (info_result.is_ok()) {
+                            const auto& info = info_result.value();
+                            if (info.encrypted()) {
+                                encrypted_objects++;
+                                encrypted_size += info.size();
+
+                                if (info.sse_type() == "SSE-S3") {
+                                    sse_s3_count++;
+                                } else if (info.sse_type() == "SSE-C") {
+                                    sse_c_count++;
+                                }
+                            } else {
+                                unencrypted_objects++;
+                                unencrypted_size += info.size();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Build response
+        response["total_objects"] = static_cast<Json::Int64>(total_objects);
+        response["encrypted_objects"] = static_cast<Json::Int64>(encrypted_objects);
+        response["unencrypted_objects"] = static_cast<Json::Int64>(unencrypted_objects);
+        response["sse_s3_count"] = static_cast<Json::Int64>(sse_s3_count);
+        response["sse_c_count"] = static_cast<Json::Int64>(sse_c_count);
+        response["encrypted_size"] = static_cast<Json::Int64>(encrypted_size);
+        response["unencrypted_size"] = static_cast<Json::Int64>(unencrypted_size);
+        response["encryption_percentage"] = total_objects > 0
+                                                ? (static_cast<double>(encrypted_objects) / total_objects * 100.0)
+                                                : 0.0;
+
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
+        callback(resp);
+
+    } catch (const std::exception& e) {
+        CONSOLE_LOG_ERROR("Error getting encryption stats: {}", e.what());
         Json::Value error;
         error["error"] = "Internal server error";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(error);

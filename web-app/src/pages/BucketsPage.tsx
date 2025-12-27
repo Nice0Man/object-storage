@@ -16,6 +16,10 @@ import {
   Chip,
   FormControlLabel,
   Switch,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import {
   Add,
@@ -23,6 +27,7 @@ import {
   Folder,
   Refresh,
   Policy as PolicyIcon,
+  Settings,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../hooks/useAppDispatch';
@@ -39,6 +44,7 @@ import {
 import Loader from '../components/Common/Loader';
 import ErrorAlert from '../components/Common/ErrorAlert';
 import BucketPolicyDialog from '../components/Buckets/BucketPolicyDialog';
+import BucketSettingsDialog from '../components/Buckets/BucketSettingsDialog';
 
 const BucketsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -50,10 +56,27 @@ const BucketsPage: React.FC = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [policyDialogOpen, setPolicyDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [selectedBucket, setSelectedBucket] = useState<string | null>(null);
   const [newBucketName, setNewBucketName] = useState('');
+  const [newBucketRegion, setNewBucketRegion] = useState('us-east-1');
   const [versioning, setVersioning] = useState(false);
   const [objectLocking, setObjectLocking] = useState(false);
+
+  // Available regions
+  const regions = [
+    { value: 'us-east-1', label: 'US East (N. Virginia)' },
+    { value: 'us-east-2', label: 'US East (Ohio)' },
+    { value: 'us-west-1', label: 'US West (N. California)' },
+    { value: 'us-west-2', label: 'US West (Oregon)' },
+    { value: 'eu-west-1', label: 'EU (Ireland)' },
+    { value: 'eu-west-2', label: 'EU (London)' },
+    { value: 'eu-central-1', label: 'EU (Frankfurt)' },
+    { value: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
+    { value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
+    { value: 'ap-southeast-2', label: 'Asia Pacific (Sydney)' },
+    { value: 'local', label: 'Local Storage' },
+  ];
 
   useEffect(() => {
     dispatch(fetchBuckets());
@@ -70,12 +93,14 @@ const BucketsPage: React.FC = () => {
       await dispatch(
         createBucket({
           name: newBucketName,
+          region: newBucketRegion,
           versioning,
           object_locking: objectLocking,
         })
       ).unwrap();
       setCreateDialogOpen(false);
       setNewBucketName('');
+      setNewBucketRegion('us-east-1');
       setVersioning(false);
       setObjectLocking(false);
     } catch (err) {
@@ -105,8 +130,16 @@ const BucketsPage: React.FC = () => {
     setPolicyDialogOpen(true);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+  const openSettingsDialog = (bucketName: string) => {
+    setSelectedBucket(bucketName);
+    setSettingsDialogOpen(true);
+  };
+
+  const formatDate = (dateString: string | undefined | null) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleString();
   };
 
   const formatSize = (bytes: number) => {
@@ -170,17 +203,24 @@ const BucketsPage: React.FC = () => {
                       {bucket.name}
                     </Typography>
                   </Box>
-                  <Box sx={{ mb: 1 }}>
+                  <Box sx={{ mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     <Chip
                       label={`${bucket.objects_count || 0} objects`}
                       size="small"
-                      sx={{ mr: 1 }}
                     />
                     <Chip
                       label={formatSize(bucket.size || 0)}
                       size="small"
                       color="primary"
                     />
+                    {bucket.region && (
+                      <Chip
+                        label={bucket.region}
+                        size="small"
+                        variant="outlined"
+                        color="secondary"
+                      />
+                    )}
                   </Box>
                   <Typography variant="caption" color="text.secondary" display="block">
                     Created: {formatDate(bucket.creation_date)}
@@ -201,6 +241,14 @@ const BucketsPage: React.FC = () => {
                     title="Manage Policy"
                   >
                     <PolicyIcon />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    color="default"
+                    onClick={() => openSettingsDialog(bucket.name)}
+                    title="Bucket Settings"
+                  >
+                    <Settings />
                   </IconButton>
                   <IconButton
                     size="small"
@@ -230,6 +278,20 @@ const BucketsPage: React.FC = () => {
             onChange={(e) => setNewBucketName(e.target.value)}
             helperText="Bucket names must be unique and follow DNS naming conventions"
           />
+          <FormControl fullWidth margin="dense" sx={{ mt: 2 }}>
+            <InputLabel>Region</InputLabel>
+            <Select
+              value={newBucketRegion}
+              label="Region"
+              onChange={(e) => setNewBucketRegion(e.target.value)}
+            >
+              {regions.map((region) => (
+                <MenuItem key={region.value} value={region.value}>
+                  {region.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <FormControlLabel
             control={
               <Switch
@@ -293,9 +355,21 @@ const BucketsPage: React.FC = () => {
           bucketName={selectedBucket}
         />
       )}
+
+      {/* Bucket Settings Dialog */}
+      {selectedBucket && (
+        <BucketSettingsDialog
+          open={settingsDialogOpen}
+          onClose={() => {
+            setSettingsDialogOpen(false);
+            setSelectedBucket(null);
+          }}
+          bucketName={selectedBucket}
+          onSuccess={handleRefresh}
+        />
+      )}
     </Box>
   );
 };
 
 export default BucketsPage;
-

@@ -2,6 +2,7 @@
 
 #include "console/common/Logger.hpp"
 
+#include <algorithm>
 #include <regex>
 
 namespace console::services {
@@ -55,8 +56,9 @@ Result<User, ApiError>
 UserService::create_user(const UserInfo& admin_info,
                          const String& access_key,
                          const String& secret_key,
-                         const Vector<String>& policies) {
-    CONSOLE_LOG_INFO("Creating user: {}", access_key);
+                         const Vector<String>& policies,
+                         bool is_admin) {
+    CONSOLE_LOG_INFO("Creating user: {} (is_admin: {})", access_key, is_admin);
 
     if (auto error = require_admin(admin_info)) {
         return Err<User>(*error);
@@ -70,8 +72,8 @@ UserService::create_user(const UserInfo& admin_info,
         return Err<User>(*error);
     }
 
-    // Create user
-    auto result = admin_client_->create_user(access_key, secret_key);
+    // Create user with admin flag
+    auto result = admin_client_->create_user(access_key, secret_key, is_admin);
     if (!result) {
         CONSOLE_LOG_ERROR("Failed to create user {}: {}", access_key, result.error());
         return Err<User>(ApiError(HttpStatus::InternalServerError, "Failed to create user: " + result.error()));
@@ -309,12 +311,25 @@ UserService::validate_secret_key(const String& secret_key) {
         return ApiError(HttpStatus::BadRequest, "Secret key is required");
     }
 
-    if (secret_key.length() < 8) {
-        return ApiError(HttpStatus::BadRequest, "Secret key must be at least 8 characters long");
+    // SECURITY: Increased minimum from 8 to 16 for stronger secrets
+    if (secret_key.length() < 16) {
+        return ApiError(HttpStatus::BadRequest, "Secret key must be at least 16 characters long");
     }
 
     if (secret_key.length() > 128) {
         return ApiError(HttpStatus::BadRequest, "Secret key exceeds maximum length of 128 characters");
+    }
+
+    // SECURITY: Check for common weak patterns
+    const std::vector<String> weak_patterns = {"password", "12345678", "qwerty", "admin123", "secret"};
+
+    String lower_key = secret_key;
+    std::transform(lower_key.begin(), lower_key.end(), lower_key.begin(), ::tolower);
+
+    for (const auto& weak : weak_patterns) {
+        if (lower_key.find(weak) != String::npos) {
+            return ApiError(HttpStatus::BadRequest, "Secret key contains weak patterns - use a stronger key");
+        }
     }
 
     return std::nullopt;

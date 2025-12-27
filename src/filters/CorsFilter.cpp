@@ -20,7 +20,12 @@ CorsFilter::doFilter(const HttpRequestPtr& req, FilterCallback&& fcb, FilterChai
         resp->setStatusCode(k204NoContent);
         resp->addHeader("Access-Control-Allow-Origin", origin);
         resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+        resp->addHeader("Access-Control-Allow-Headers",
+                        "Content-Type, Authorization, X-Requested-With, Accept, Origin, "
+                        "x-amz-server-side-encryption-customer-key, "
+                        "x-amz-server-side-encryption-customer-algorithm, "
+                        "x-amz-server-side-encryption-customer-key-md5, "
+                        "x-amz-content-sha256, x-amz-date, x-amz-meta-*");
         resp->addHeader("Access-Control-Allow-Credentials", "false");
         resp->addHeader("Access-Control-Max-Age", "86400");
         resp->addHeader("Vary", "Origin");
@@ -37,7 +42,12 @@ CorsFilter::doFilter(const HttpRequestPtr& req, FilterCallback&& fcb, FilterChai
     auto callback_wrapper = [origin, fcb = std::move(fcb)](const HttpResponsePtr& resp) {
         resp->addHeader("Access-Control-Allow-Origin", origin);
         resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        resp->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+        resp->addHeader("Access-Control-Allow-Headers",
+                        "Content-Type, Authorization, X-Requested-With, Accept, Origin, "
+                        "x-amz-server-side-encryption-customer-key, "
+                        "x-amz-server-side-encryption-customer-algorithm, "
+                        "x-amz-server-side-encryption-customer-key-md5, "
+                        "x-amz-content-sha256, x-amz-date, x-amz-meta-*");
         resp->addHeader("Access-Control-Allow-Credentials", "false");
         resp->addHeader("Vary", "Origin");
 

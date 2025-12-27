@@ -103,8 +103,8 @@ AuthService::get_current_user(const String& token) {
 
     auto& user_info = validate_result.value();
 
-    // Get user details from Object Storage Admin API - TODO: implement get_user_info
-    // For now, create User from UserInfo
+    // Create User model from validated UserInfo
+    // User details are already populated from JWT token validation
     models::User user(user_info);
 
     return Ok<models::User, models::ApiError>(user);

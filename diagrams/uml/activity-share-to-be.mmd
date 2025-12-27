@@ -1,0 +1,152 @@
+---
+title: "Activity Diagram: Предоставление доступа к файлу TO-BE (Object Storage Console)"
+config:
+  theme: default
+---
+flowchart TD
+    %% ==================== LEGEND ====================
+    subgraph legend ["📋 Легенда UML Activity"]
+        direction LR
+        L_Start(( )):::startEnd
+        L_End((◉)):::finalEnd
+        L_Action["Действие<br/>пользователя"]:::userAction
+        L_System[["Автоматическое<br/>действие"]]:::systemAction
+        L_Decision{"Решение"}:::decision
+    end
+
+    %% ==================== USER ACTIONS ====================
+    subgraph user_lane ["👤 Пользователь (Браузер)"]
+        direction TB
+        Start(( )):::startEnd
+        Start --> OpenConsole["🌐 Открыть<br/>Object Storage Console"]
+
+        OpenConsole --> Navigate["📁 Перейти к<br/>нужному бакету"]
+
+        Navigate --> SelectObject["📄 Выбрать объект для<br/>предоставления доступа"]
+
+        SelectObject --> OpenShareMenu["📤 Открыть меню<br/>«Поделиться»"]
+
+        OpenShareMenu --> ChooseMethod{"Выбрать метод<br/>доступа"}
+    end
+
+    %% ==================== PRESIGNED URL PATH ====================
+    subgraph presigned_lane ["🔗 Presigned URL"]
+        direction TB
+        ChooseMethod -->|Presigned URL| SetExpiry["⏱️ Установить время<br/>жизни ссылки"]
+
+        SetExpiry --> SelectExpiry{"Срок<br/>действия"}
+        SelectExpiry -->|1 час| Expiry1h["expiry = 3600"]
+        SelectExpiry -->|24 часа| Expiry24h["expiry = 86400"]
+        SelectExpiry -->|7 дней| Expiry7d["expiry = 604800"]
+        SelectExpiry -->|Кастомный| CustomExpiry["⌨️ Ввести<br/>кастомный срок"]
+
+        Expiry1h --> GenerateURL
+        Expiry24h --> GenerateURL
+        Expiry7d --> GenerateURL
+        CustomExpiry --> GenerateURL
+    end
+
+    %% ==================== OBJECT SERVICE ====================
+    subgraph object_service ["📦 ObjectService"]
+        direction TB
+        GenerateURL[["🔐 Генерация Presigned URL<br/>с HMAC-SHA256 подписью"]]
+
+        GenerateURL --> CopyURL["📋 Скопировать URL<br/>в буфер обмена"]
+    end
+
+    %% ==================== SHARE VIA ====================
+    subgraph share_lane ["📨 Отправка"]
+        direction TB
+        CopyURL --> ShareVia{"Способ<br/>отправки"}
+        ShareVia -->|Email| SendEmail["📧 Отправить<br/>ссылку по email"]
+        ShareVia -->|Мессенджер| SendMessenger["💬 Отправить<br/>в мессенджер"]
+        ShareVia -->|Вручную| ManualShare["📋 Вставить<br/>ссылку вручную"]
+
+        SendEmail --> LogShare
+        SendMessenger --> LogShare
+        ManualShare --> LogShare
+    end
+
+    %% ==================== STATS COLLECTOR ====================
+    subgraph stats_lane ["📊 StatsCollector"]
+        direction TB
+        LogShare[["📝 Логирование<br/>операции share"]]
+
+        LogShare --> EndPresigned((◉)):::successEnd
+    end
+
+    %% ==================== BUCKET POLICY PATH ====================
+    subgraph policy_lane ["🛡️ Bucket Policy"]
+        direction TB
+        ChooseMethod -->|Политика бакета| OpenPolicyEditor["📋 Открыть<br/>редактор политик"]
+
+        OpenPolicyEditor --> SelectPolicyType{"Тип<br/>политики"}
+
+        SelectPolicyType -->|Публичный доступ| SetPublicRead["🌍 Установить<br/>public-read"]
+        SelectPolicyType -->|Для пользователя| SelectUser["👤 Выбрать<br/>пользователя"]
+        SelectPolicyType -->|Для группы| SelectGroup["👥 Выбрать<br/>группу"]
+
+        SetPublicRead --> ConfigurePolicy
+        SelectUser --> SetUserPermissions["🔧 Настроить права<br/>пользователя"]
+        SetUserPermissions --> ConfigurePolicy
+        SelectGroup --> SetGroupPermissions["🔧 Настроить права<br/>группы"]
+        SetGroupPermissions --> ConfigurePolicy
+    end
+
+    %% ==================== BUCKET SERVICE ====================
+    subgraph bucket_service ["📁 BucketService"]
+        direction TB
+        ConfigurePolicy[["⚙️ Применить<br/>IAM политику"]]
+
+        ConfigurePolicy --> ValidatePolicy[["✔️ Валидация<br/>политики"]]
+
+        ValidatePolicy --> PolicyValid{"Политика<br/>валидна?"}
+
+        PolicyValid -->|Нет| ShowPolicyError["❌ Показать<br/>ошибку политики"]
+        ShowPolicyError --> OpenPolicyEditor
+
+        PolicyValid -->|Да| SavePolicy[["💾 Сохранение<br/>политики в metadata"]]
+
+        SavePolicy --> NotifyUsers[["📨 Уведомление<br/>затронутых пользователей"]]
+
+        NotifyUsers --> LogPolicyChange[["📝 Логирование<br/>изменения политики"]]
+
+        LogPolicyChange --> EndPolicy((◉)):::successEnd
+    end
+
+    %% ==================== DIRECT SHARE PATH ====================
+    subgraph direct_lane ["📂 Shared Bucket"]
+        direction TB
+        ChooseMethod -->|Shared bucket| SelectSharedBucket["📁 Выбрать<br/>shared бакет"]
+
+        SelectSharedBucket --> CopyObject[["📄 Копирование<br/>объекта"]]
+
+        CopyObject --> UpdateMetadata[["📋 Обновление<br/>метаданных копии"]]
+
+        UpdateMetadata --> NotifyRecipients["📨 Уведомить<br/>получателей"]
+
+        NotifyRecipients --> EndDirect((◉)):::successEnd
+    end
+
+    %% ==================== NOTES ====================
+    N1>"⚡ Мгновенный<br/>доступ"]
+    GenerateURL -.-> N1
+
+    N2>"🔒 Автоматическая<br/>валидация IAM"]
+    ValidatePolicy -.-> N2
+
+    %% ==================== STYLING ====================
+    classDef startEnd fill:#000000,stroke:#000000,color:#000000
+    classDef successEnd fill:#4CAF50,stroke:#2E7D32,color:#ffffff
+    classDef userAction fill:#E3F2FD,stroke:#1976D2,stroke-width:1px
+    classDef systemAction fill:#E8F5E9,stroke:#388E3C,stroke-width:2px
+    classDef decision fill:#FFFFFF,stroke:#424242,stroke-width:1px
+    classDef errorAction fill:#FFEBEE,stroke:#C62828
+    classDef note fill:#FFF9C4,stroke:#F9A825,stroke-width:1px
+
+    class Start startEnd
+    class EndPresigned,EndPolicy,EndDirect successEnd
+    class OpenConsole,Navigate,SelectObject,OpenShareMenu,SetExpiry,Expiry1h,Expiry24h,Expiry7d,CustomExpiry,CopyURL,SendEmail,SendMessenger,ManualShare,OpenPolicyEditor,SetPublicRead,SelectUser,SelectGroup,SetUserPermissions,SetGroupPermissions,SelectSharedBucket,NotifyRecipients userAction
+    class GenerateURL,ConfigurePolicy,ValidatePolicy,SavePolicy,NotifyUsers,LogPolicyChange,CopyObject,UpdateMetadata,LogShare systemAction
+    class ShowPolicyError errorAction
+    class N1,N2 note

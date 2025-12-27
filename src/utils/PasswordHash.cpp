@@ -50,11 +50,10 @@ PasswordHash::verify(const String& password, const String& hash) {
     }
 
     try {
-        // Check if this is a hashed password
+        // SECURITY: Reject unhashed passwords - no plaintext comparison allowed
         if (!is_hashed(hash)) {
-            // For backward compatibility: plain text comparison
-            CONSOLE_LOG_WARN("Comparing against unhashed password - this is insecure!");
-            return password == hash;
+            CONSOLE_LOG_ERROR("Security: Attempted to verify against unhashed password - rejected");
+            return false;
         }
 
         // Parse hash format: $pbkdf2-sha256$iterations$salt$hash

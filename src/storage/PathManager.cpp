@@ -56,7 +56,26 @@ PathManager::objects_root(const String& bucket_name) const {
 
 std::filesystem::path
 PathManager::object_path(const String& bucket_name, const String& object_key) const {
-    return objects_root(bucket_name) / sanitize_key(object_key);
+    auto sanitized_key = sanitize_key(object_key);
+    auto result_path = objects_root(bucket_name) / sanitized_key;
+
+    // SECURITY: Verify the resulting path is still within the objects root
+    // This is a defense-in-depth check against path traversal
+    auto canonical_objects_root = std::filesystem::weakly_canonical(objects_root(bucket_name));
+    auto canonical_result = std::filesystem::weakly_canonical(result_path);
+
+    // Check that result path starts with objects root
+    auto objects_root_str = canonical_objects_root.string();
+    auto result_str = canonical_result.string();
+
+    if (result_str.find(objects_root_str) != 0) {
+        CONSOLE_LOG_ERROR("Security: Path traversal detected! Key '{}' resolved outside storage",
+                          object_key.substr(0, 50));
+        // Return a safe path that won't exist
+        return objects_root(bucket_name) / "_security_violation_";
+    }
+
+    return result_path;
 }
 
 std::filesystem::path
@@ -196,6 +215,8 @@ PathManager::is_valid_object_key(const String& key) const {
     // - 1-1024 characters
     // - UTF-8 characters
     // - Cannot be empty
+    // - No path traversal sequences
+    // - No control characters
 
     if (key.empty() || key.length() > 1024) {
         return false;
@@ -204,6 +225,26 @@ PathManager::is_valid_object_key(const String& key) const {
     // Check for null bytes
     if (key.find('\0') != String::npos) {
         return false;
+    }
+
+    // SECURITY: Block path traversal attempts
+    if (key.find("..") != String::npos) {
+        CONSOLE_LOG_WARN("Security: Blocked path traversal attempt in object key: {}", key.substr(0, 50));
+        return false;
+    }
+
+    // Block absolute paths
+    if (!key.empty() && (key[0] == '/' || key[0] == '\\')) {
+        CONSOLE_LOG_WARN("Security: Blocked absolute path in object key");
+        return false;
+    }
+
+    // Check for control characters (0x00-0x1F except tab, newline, carriage return)
+    for (unsigned char c : key) {
+        if (c < 0x20 && c != '\t' && c != '\n' && c != '\r') {
+            CONSOLE_LOG_WARN("Security: Blocked control character in object key");
+            return false;
+        }
     }
 
     return true;
@@ -215,11 +256,63 @@ PathManager::is_valid_object_key(const String& key) const {
 
 String
 PathManager::sanitize_key(const String& key) const {
-    // Replace unsafe characters for filesystem
+    // SECURITY: Comprehensive path sanitization to prevent path traversal attacks
+
+    if (key.empty()) {
+        return key;
+    }
+
     String sanitized = key;
 
-    // Replace path separators with underscores in base filename
-    // but preserve directory structure
+    // 1. Remove null bytes
+    sanitized.erase(std::remove(sanitized.begin(), sanitized.end(), '\0'), sanitized.end());
+
+    // 2. Normalize path separators to forward slash
+    std::replace(sanitized.begin(), sanitized.end(), '\\', '/');
+
+    // 3. Remove leading slashes (prevent absolute paths)
+    while (!sanitized.empty() && sanitized[0] == '/') {
+        sanitized.erase(0, 1);
+    }
+
+    // 4. Remove path traversal sequences (..)
+    // Replace all ".." with empty string
+    size_t pos;
+    while ((pos = sanitized.find("..")) != String::npos) {
+        sanitized.erase(pos, 2);
+        // Also remove any resulting double slashes
+        while (pos < sanitized.size() && sanitized[pos] == '/') {
+            sanitized.erase(pos, 1);
+        }
+    }
+
+    // 5. Collapse multiple consecutive slashes
+    String result;
+    result.reserve(sanitized.size());
+    bool last_was_slash = false;
+    for (char c : sanitized) {
+        if (c == '/') {
+            if (!last_was_slash) {
+                result += c;
+                last_was_slash = true;
+            }
+        } else {
+            result += c;
+            last_was_slash = false;
+        }
+    }
+    sanitized = std::move(result);
+
+    // 6. Remove trailing slashes
+    while (!sanitized.empty() && sanitized.back() == '/') {
+        sanitized.pop_back();
+    }
+
+    // 7. If empty after sanitization, use a safe default
+    if (sanitized.empty()) {
+        sanitized = "_invalid_key_";
+    }
+
     return sanitized;
 }
 
