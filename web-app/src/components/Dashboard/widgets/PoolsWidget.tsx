@@ -11,6 +11,7 @@ interface PoolsWidgetProps {
   editMode?: boolean;
   onSettingsClick?: () => void;
   onVisibilityToggle?: () => void;
+  onDelete?: () => void;
   onClick?: () => void;
   dragHandleProps?: Record<string, unknown>;
 }
@@ -25,6 +26,7 @@ const PoolsWidget: React.FC<PoolsWidgetProps> = ({
   editMode = false,
   onSettingsClick,
   onVisibilityToggle,
+  onDelete,
   onClick,
   dragHandleProps,
 }) => {
@@ -83,6 +85,7 @@ const PoolsWidget: React.FC<PoolsWidgetProps> = ({
       onRefresh={refresh}
       onSettingsClick={onSettingsClick}
       onVisibilityToggle={onVisibilityToggle}
+      onDelete={onDelete}
       onClick={onClick}
       dragHandleProps={dragHandleProps}
     >

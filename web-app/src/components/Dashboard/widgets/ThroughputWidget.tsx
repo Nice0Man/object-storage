@@ -12,6 +12,7 @@ interface ThroughputWidgetProps {
   editMode?: boolean;
   onSettingsClick?: () => void;
   onVisibilityToggle?: () => void;
+  onDelete?: () => void;
   onClick?: () => void;
   dragHandleProps?: Record<string, unknown>;
 }
@@ -30,6 +31,7 @@ const ThroughputWidget: React.FC<ThroughputWidgetProps> = ({
   editMode = false,
   onSettingsClick,
   onVisibilityToggle,
+  onDelete,
   onClick,
   dragHandleProps,
 }) => {
@@ -50,7 +52,7 @@ const ThroughputWidget: React.FC<ThroughputWidgetProps> = ({
   });
 
   const timeRange = widget.settings?.timeRange || "24h";
-  const rawChartMode = widget.settings?.chartMode;
+  const rawChartMode = widget.settings?.chartMode as string | undefined;
   // Ensure chartMode is a valid value for DataThroughputChart
   const chartMode: "stacked" | "lines" | "total" =
     rawChartMode === "lines" || rawChartMode === "total" ? rawChartMode : "stacked";
@@ -68,6 +70,7 @@ const ThroughputWidget: React.FC<ThroughputWidgetProps> = ({
       onRefresh={refresh}
       onSettingsClick={onSettingsClick}
       onVisibilityToggle={onVisibilityToggle}
+      onDelete={onDelete}
       onClick={onClick}
       dragHandleProps={dragHandleProps}
     >

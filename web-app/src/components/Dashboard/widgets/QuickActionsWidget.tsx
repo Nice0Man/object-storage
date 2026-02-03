@@ -10,6 +10,7 @@ interface QuickActionsWidgetProps {
   editMode?: boolean;
   onSettingsClick?: () => void;
   onVisibilityToggle?: () => void;
+  onDelete?: () => void;
   dragHandleProps?: Record<string, unknown>;
 }
 
@@ -18,6 +19,7 @@ const QuickActionsWidget: React.FC<QuickActionsWidgetProps> = ({
   editMode = false,
   onSettingsClick,
   onVisibilityToggle,
+  onDelete,
   dragHandleProps,
 }) => {
   const theme = useTheme();
@@ -55,6 +57,7 @@ const QuickActionsWidget: React.FC<QuickActionsWidgetProps> = ({
       editMode={editMode}
       onSettingsClick={onSettingsClick}
       onVisibilityToggle={onVisibilityToggle}
+      onDelete={onDelete}
       dragHandleProps={dragHandleProps}
     >
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>

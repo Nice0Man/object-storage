@@ -1,0 +1,324 @@
+<mxfile host="app.diagrams.net" modified="2026-02-03T12:00:00.000Z" agent="5.0" version="21.0.0" type="device">
+  <diagram name="Диаграмма трассировки требований" id="traceability-requirements">
+    <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Заголовок -->
+        <mxCell id="title" value="Рисунок 4.1 — Диаграмма трассировки требований" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="10" width="400" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Вертикальные колонки (swimlanes) -->
+        
+        <!-- Колонка: Шаги процесса -->
+        <mxCell id="lane_steps" value="&lt;b&gt;Шаги процесса&lt;/b&gt;" style="swimlane;startSize=30;horizontal=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;swimlaneFillColor=#fffef0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="200" height="1300" as="geometry" />
+        </mxCell>
+        
+        <!-- Колонка: Требования -->
+        <mxCell id="lane_requirements" value="&lt;b&gt;Требования&lt;/b&gt;" style="swimlane;startSize=30;horizontal=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;swimlaneFillColor=#fafafa;" vertex="1" parent="1">
+          <mxGeometry x="240" y="50" width="400" height="1300" as="geometry" />
+        </mxCell>
+        
+        <!-- Колонка: Функции -->
+        <mxCell id="lane_functions" value="&lt;b&gt;Функции&lt;/b&gt;" style="swimlane;startSize=30;horizontal=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;swimlaneFillColor=#f0f8ff;" vertex="1" parent="1">
+          <mxGeometry x="640" y="50" width="220" height="1300" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== 1. Аутентификация ========== -->
+        
+        <mxCell id="step1" value="1.1. Аутентификация&#xa;пользователя" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="100" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="req1" value="&lt;b&gt;Description&lt;/b&gt;&#xa;В системе д.б. реализована&#xa;возможность аутентификации&#xa;пользователя по access_key&#xa;и secret_key с выдачей&#xa;JWT токена" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="270" y="80" width="180" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func1_1" value="Проверить credentials" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="80" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func1_2" value="Сгенерировать JWT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="120" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func1_3" value="Валидировать токен" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="160" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== 2. Авторизация ========== -->
+        
+        <mxCell id="step2" value="1.2. Проверка&#xa;прав доступа" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="220" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="req2" value="&lt;b&gt;Description&lt;/b&gt;&#xa;В системе д.б. реализована&#xa;возможность проверки прав&#xa;пользователя на основе&#xa;политик доступа (policies)&#xa;для бакетов и объектов" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="270" y="200" width="180" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func2_1" value="Получить политики" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="210" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func2_2" value="Оценить разрешения" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="250" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== 3. Управление бакетами ========== -->
+        
+        <mxCell id="step3" value="1.3. Управление&#xa;бакетами" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="340" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="req3" value="&lt;b&gt;Description&lt;/b&gt;&#xa;В системе д.б. реализованы&#xa;операции CRUD для бакетов:&#xa;создание, удаление, получение&#xa;списка, получение информации" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="270" y="320" width="180" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func3_1" value="Создать бакет" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="320" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func3_2" value="Удалить бакет" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="360" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func3_3" value="Получить список бакетов" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="400" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== 4. Загрузка объектов ========== -->
+        
+        <mxCell id="step4" value="1.4. Загрузка&#xa;объектов" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="460" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="req4" value="&lt;b&gt;Description&lt;/b&gt;&#xa;В системе д.б. реализована&#xa;возможность загрузки&#xa;объектов в бакет с проверкой&#xa;прав и опциональным&#xa;шифрованием данных" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="270" y="440" width="180" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func4_1" value="Валидировать данные" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="440" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func4_2" value="Зашифровать данные" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="480" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func4_3" value="Сохранить объект" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="520" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== 5. Скачивание объектов ========== -->
+        
+        <mxCell id="step5" value="1.5. Скачивание&#xa;объектов" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="580" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="req5" value="&lt;b&gt;Description&lt;/b&gt;&#xa;В системе д.б. реализована&#xa;возможность скачивания&#xa;объектов из бакета с&#xa;автоматической расшифровкой" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="270" y="560" width="180" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func5_1" value="Получить объект" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="560" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func5_2" value="Расшифровать данные" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="600" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func5_3" value="Передать клиенту" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="640" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== 6. Удаление объектов ========== -->
+        
+        <mxCell id="step6" value="1.6. Удаление&#xa;объектов" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="700" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="req6" value="&lt;b&gt;Description&lt;/b&gt;&#xa;В системе д.б. реализована&#xa;возможность удаления&#xa;объектов с проверкой&#xa;retention политик" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="270" y="680" width="180" height="90" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func6_1" value="Проверить retention" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="680" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func6_2" value="Удалить объект" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="720" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== 7. Presigned URL ========== -->
+        
+        <mxCell id="step7" value="2.1. Генерация&#xa;presigned URL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="810" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="req7" value="&lt;b&gt;Description&lt;/b&gt;&#xa;В системе д.б. реализована&#xa;возможность генерации&#xa;временных ссылок для&#xa;доступа к объектам" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="270" y="790" width="180" height="90" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func7_1" value="Сформировать URL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="790" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func7_2" value="Подписать URL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="830" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== 8. Шифрование ========== -->
+        
+        <mxCell id="step8" value="3.1. Шифрование&#xa;данных" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="920" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="req8" value="&lt;b&gt;Description&lt;/b&gt;&#xa;В системе д.б. реализовано&#xa;шифрование данных по&#xa;алгоритму AES-256-GCM&#xa;с производной ключа PBKDF2" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="270" y="900" width="180" height="90" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func8_1" value="Сгенерировать ключ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="900" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func8_2" value="Зашифровать AES-256" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="940" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== 9. Метаданные ========== -->
+        
+        <mxCell id="step9" value="3.2. Управление&#xa;метаданными" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=center;" vertex="1" parent="1">
+          <mxGeometry x="55" y="1020" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="req9" value="&lt;b&gt;Description&lt;/b&gt;&#xa;В системе д.б. реализовано&#xa;хранение и управление&#xa;метаданными объектов&#xa;(content-type, size, etag)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=5;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="270" y="1000" width="180" height="90" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func9_1" value="Сохранить метаданные" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1000" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="func9_2" value="Вычислить ETag" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1040" width="180" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- ========== CONNECTIONS ========== -->
+        
+        <!-- Step1 -> Req1 -> Functions -->
+        <mxCell id="conn1_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="step1" target="req1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn1_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req1" target="func1_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn1_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req1" target="func1_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn1_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req1" target="func1_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step2 -> Req2 -> Functions -->
+        <mxCell id="conn2_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="step2" target="req2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn2_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req2" target="func2_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn2_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req2" target="func2_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step3 -> Req3 -> Functions -->
+        <mxCell id="conn3_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="step3" target="req3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn3_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req3" target="func3_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn3_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req3" target="func3_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn3_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req3" target="func3_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step4 -> Req4 -> Functions -->
+        <mxCell id="conn4_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="step4" target="req4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn4_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req4" target="func4_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn4_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req4" target="func4_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn4_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req4" target="func4_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step5 -> Req5 -> Functions -->
+        <mxCell id="conn5_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="step5" target="req5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn5_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req5" target="func5_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn5_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req5" target="func5_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn5_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req5" target="func5_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step6 -> Req6 -> Functions -->
+        <mxCell id="conn6_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="step6" target="req6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn6_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req6" target="func6_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn6_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req6" target="func6_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step7 -> Req7 -> Functions -->
+        <mxCell id="conn7_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="step7" target="req7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn7_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req7" target="func7_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn7_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req7" target="func7_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step8 -> Req8 -> Functions -->
+        <mxCell id="conn8_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="step8" target="req8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn8_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req8" target="func8_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn8_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req8" target="func8_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+        <!-- Step9 -> Req9 -> Functions -->
+        <mxCell id="conn9_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="step9" target="req9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn9_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req9" target="func9_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn9_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="req9" target="func9_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

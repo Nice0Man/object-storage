@@ -14,15 +14,48 @@ import {
   Divider,
   useTheme,
   alpha,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  ListItemButton,
 } from "@mui/material";
-import { Close, Save } from "@mui/icons-material";
-import type { DashboardWidget, WidgetSettings } from "../../api/types";
+import {
+  Close,
+  Save,
+  Storage,
+  Dns,
+  SdStorage,
+  Inventory2,
+  ErrorOutline,
+  ShowChart,
+  Security,
+  Pool,
+  FlashOn,
+} from "@mui/icons-material";
+import type { DashboardWidget, WidgetSettings, WidgetType } from "../../api/types";
+
+// Available widget types with metadata
+const AVAILABLE_WIDGETS: { type: WidgetType; name: string; description: string; icon: React.ReactNode }[] = [
+  { type: "capacity", name: "Capacity", description: "Storage capacity overview", icon: <Storage /> },
+  { type: "servers", name: "Servers", description: "Server status monitoring", icon: <Dns /> },
+  { type: "drives", name: "Drives", description: "Drive health and status", icon: <SdStorage /> },
+  { type: "buckets", name: "Buckets", description: "Bucket statistics", icon: <Inventory2 /> },
+  { type: "api_errors", name: "API Errors", description: "API error tracking", icon: <ErrorOutline /> },
+  { type: "throughput", name: "Throughput", description: "Data throughput charts", icon: <ShowChart /> },
+  { type: "encryption", name: "Encryption", description: "Encryption status", icon: <Security /> },
+  { type: "pools", name: "Storage Pools", description: "Pool management", icon: <Pool /> },
+  { type: "quick_actions", name: "Quick Actions", description: "Common actions shortcuts", icon: <FlashOn /> },
+];
 
 interface WidgetSettingsPanelProps {
   open: boolean;
-  widget: DashboardWidget;
+  widget: DashboardWidget | null;
   onClose: () => void;
   onSave: (widget: DashboardWidget) => void;
+  onAddWidget?: (widgetType: WidgetType) => void;
+  existingWidgetTypes?: WidgetType[];
+  mode?: "edit" | "add";
 }
 
 const refreshIntervalOptions = [
@@ -53,19 +86,25 @@ const WidgetSettingsPanel: React.FC<WidgetSettingsPanelProps> = ({
   widget,
   onClose,
   onSave,
+  onAddWidget,
+  existingWidgetTypes = [],
+  mode = "edit",
 }) => {
   const theme = useTheme();
-  const [refreshInterval, setRefreshInterval] = useState(widget.refresh_interval);
-  const [visible, setVisible] = useState(widget.visible);
-  const [settings, setSettings] = useState<WidgetSettings>(widget.settings || {});
+  const [refreshInterval, setRefreshInterval] = useState(widget?.refresh_interval ?? 30);
+  const [visible, setVisible] = useState(widget?.visible ?? true);
+  const [settings, setSettings] = useState<WidgetSettings>(widget?.settings || {});
 
   useEffect(() => {
-    setRefreshInterval(widget.refresh_interval);
-    setVisible(widget.visible);
-    setSettings(widget.settings || {});
+    if (widget) {
+      setRefreshInterval(widget.refresh_interval);
+      setVisible(widget.visible);
+      setSettings(widget.settings || {});
+    }
   }, [widget]);
 
   const handleSave = () => {
+    if (!widget) return;
     onSave({
       ...widget,
       refresh_interval: refreshInterval,
@@ -75,21 +114,103 @@ const WidgetSettingsPanel: React.FC<WidgetSettingsPanelProps> = ({
   };
 
   const getWidgetTypeName = (type: string) => {
-    const names: Record<string, string> = {
-      capacity: "Capacity",
-      servers: "Servers",
-      drives: "Drives",
-      buckets: "Buckets",
-      api_errors: "API Errors",
-      throughput: "Throughput",
-      encryption: "Encryption",
-      pools: "Storage Pools",
-      quick_actions: "Quick Actions",
-    };
-    return names[type] || type;
+    const widgetInfo = AVAILABLE_WIDGETS.find((w) => w.type === type);
+    return widgetInfo?.name || type;
   };
 
-  const hasChartSettings = ["api_errors", "throughput"].includes(widget.widget_type);
+  const hasChartSettings = widget ? ["api_errors", "throughput"].includes(widget.widget_type) : false;
+
+  // Available widgets that are not already on the dashboard
+  const availableToAdd = AVAILABLE_WIDGETS.filter(
+    (w) => !existingWidgetTypes.includes(w.type)
+  );
+
+  // Render Add Widget mode
+  if (mode === "add") {
+    return (
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={onClose}
+        PaperProps={{
+          sx: {
+            width: 360,
+            bgcolor: theme.palette.mode === "dark" ? "#1E293B" : "#FFFFFF",
+          },
+        }}
+      >
+        <Box sx={{ p: 3, height: "100%", display: "flex", flexDirection: "column" }}>
+          {/* Header */}
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Add Widget
+            </Typography>
+            <IconButton onClick={onClose} size="small">
+              <Close />
+            </IconButton>
+          </Box>
+
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Select a widget to add to your dashboard
+          </Typography>
+
+          {/* Available Widgets List */}
+          <Box sx={{ flex: 1, overflow: "auto" }}>
+            <List disablePadding>
+              {availableToAdd.length > 0 ? (
+                availableToAdd.map((widgetInfo) => (
+                  <ListItem key={widgetInfo.type} disablePadding sx={{ mb: 1 }}>
+                    <ListItemButton
+                      onClick={() => onAddWidget?.(widgetInfo.type)}
+                      sx={{
+                        borderRadius: 1,
+                        border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
+                        "&:hover": {
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          borderColor: theme.palette.primary.main,
+                        },
+                      }}
+                    >
+                      <ListItemIcon
+                        sx={{
+                          minWidth: 40,
+                          color: theme.palette.primary.main,
+                        }}
+                      >
+                        {widgetInfo.icon}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={widgetInfo.name}
+                        secondary={widgetInfo.description}
+                        primaryTypographyProps={{ fontWeight: 600 }}
+                        secondaryTypographyProps={{ variant: "caption" }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                ))
+              ) : (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    All widgets are already added to this dashboard
+                  </Typography>
+                </Box>
+              )}
+            </List>
+          </Box>
+
+          {/* Close Button */}
+          <Box sx={{ mt: 3 }}>
+            <Button variant="outlined" onClick={onClose} fullWidth>
+              Close
+            </Button>
+          </Box>
+        </Box>
+      </Drawer>
+    );
+  }
+
+  // Render Edit Widget mode
+  if (!widget) return null;
 
   return (
     <Drawer

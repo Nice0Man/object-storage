@@ -90,12 +90,20 @@ export function useWidgetRefresh({
     }
   }, [interval]);
 
-  // Initial fetch on mount
+  // Ref for refresh to avoid dependency cycle
+  const refreshRef = useRef(refresh);
   useEffect(() => {
-    if (fetchOnMount && enabled) {
-      refresh();
+    refreshRef.current = refresh;
+  }, [refresh]);
+
+  // Initial fetch on mount - only run once
+  const initialFetchDone = useRef(false);
+  useEffect(() => {
+    if (fetchOnMount && enabled && !initialFetchDone.current) {
+      initialFetchDone.current = true;
+      refreshRef.current();
     }
-  }, [fetchOnMount, enabled, refresh]);
+  }, [fetchOnMount, enabled]);
 
   // Set up interval for auto-refresh
   useEffect(() => {
@@ -118,7 +126,7 @@ export function useWidgetRefresh({
     // Initialize countdown
     setNextRefreshIn(interval);
 
-    // Set up countdown timer (updates every second)
+    // Countdown timer - updates every second
     countdownRef.current = setInterval(() => {
       if (mountedRef.current) {
         setNextRefreshIn((prev) => {
@@ -131,7 +139,7 @@ export function useWidgetRefresh({
     // Set up refresh interval
     intervalRef.current = setInterval(() => {
       if (mountedRef.current) {
-        refresh();
+        refreshRef.current();
       }
     }, interval * 1000);
 
@@ -143,7 +151,7 @@ export function useWidgetRefresh({
         clearInterval(countdownRef.current);
       }
     };
-  }, [enabled, interval, refresh]);
+  }, [enabled, interval]);
 
   return {
     loading,

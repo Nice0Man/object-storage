@@ -12,6 +12,7 @@ interface BucketsWidgetProps {
   editMode?: boolean;
   onSettingsClick?: () => void;
   onVisibilityToggle?: () => void;
+  onDelete?: () => void;
   dragHandleProps?: Record<string, unknown>;
 }
 
@@ -25,6 +26,7 @@ const BucketsWidget: React.FC<BucketsWidgetProps> = ({
   editMode = false,
   onSettingsClick,
   onVisibilityToggle,
+  onDelete,
   dragHandleProps,
 }) => {
   const theme = useTheme();
@@ -66,6 +68,7 @@ const BucketsWidget: React.FC<BucketsWidgetProps> = ({
       onRefresh={refresh}
       onSettingsClick={onSettingsClick}
       onVisibilityToggle={onVisibilityToggle}
+      onDelete={onDelete}
       onClick={handleClick}
       dragHandleProps={dragHandleProps}
     >

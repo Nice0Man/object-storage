@@ -12,6 +12,7 @@ interface ApiErrorsWidgetProps {
   editMode?: boolean;
   onSettingsClick?: () => void;
   onVisibilityToggle?: () => void;
+  onDelete?: () => void;
   onClick?: () => void;
   dragHandleProps?: Record<string, unknown>;
 }
@@ -21,6 +22,7 @@ const ApiErrorsWidget: React.FC<ApiErrorsWidgetProps> = ({
   editMode = false,
   onSettingsClick,
   onVisibilityToggle,
+  onDelete,
   onClick,
   dragHandleProps,
 }) => {
@@ -55,6 +57,7 @@ const ApiErrorsWidget: React.FC<ApiErrorsWidgetProps> = ({
       onRefresh={refresh}
       onSettingsClick={onSettingsClick}
       onVisibilityToggle={onVisibilityToggle}
+      onDelete={onDelete}
       onClick={onClick}
       dragHandleProps={dragHandleProps}
     >

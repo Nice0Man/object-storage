@@ -1,0 +1,249 @@
+<mxfile host="app.diagrams.net" modified="2026-01-30T12:00:00.000Z" agent="5.0" version="21.0.0" type="device">
+  <diagram name="Class Diagram - Models and Services" id="class-models-services">
+    <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;Диаграмма классов: Модели и Сервисы Object Storage&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="400" y="20" width="600" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Package: models -->
+        <mxCell id="pkg_models" value="&lt;&lt;package&gt;&gt;&#xa;console::models" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=50;tabHeight=14;tabPosition=left;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="40" y="70" width="600" height="450" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: Object -->
+        <mxCell id="class_object" value="&lt;b&gt;Object&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#dae8fc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="60" y="120" width="200" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="object_attrs" value="- info_: ObjectInfo&#xa;- key_: String&#xa;- bucket_: String&#xa;- size_: int64_t&#xa;- last_modified_: TimePoint&#xa;- etag_: String&#xa;- content_type_: String&#xa;- encrypted_: bool&#xa;- encryption_algorithm_: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_object">
+          <mxGeometry y="26" width="200" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="object_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_object">
+          <mxGeometry y="156" width="200" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="object_methods" value="+ to_json(): Json::Value&#xa;+ from_json(json): Object&#xa;+ extension(): String&#xa;+ is_directory(): bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_object">
+          <mxGeometry y="164" width="200" height="46" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: Bucket -->
+        <mxCell id="class_bucket" value="&lt;b&gt;Bucket&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#dae8fc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="290" y="120" width="180" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="bucket_attrs" value="- info_: BucketInfo&#xa;- name_: String&#xa;- region_: String&#xa;- creation_date_: TimePoint&#xa;- size_bytes_: int64_t&#xa;- object_count_: int64_t&#xa;- versioning_enabled_: bool&#xa;- encryption_enabled_: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_bucket">
+          <mxGeometry y="26" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="bucket_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_bucket">
+          <mxGeometry y="136" width="180" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="bucket_methods" value="+ to_json(): Json::Value&#xa;+ from_json(json): Bucket" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_bucket">
+          <mxGeometry y="144" width="180" height="36" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: User -->
+        <mxCell id="class_user" value="&lt;b&gt;User&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#dae8fc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="500" y="120" width="180" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="user_attrs" value="- info_: UserInfo&#xa;- access_key_: String&#xa;- secret_key_: String&#xa;- account_name_: String&#xa;- policies_: Vector&lt;String&gt;&#xa;- is_admin_: bool&#xa;- created_at_: TimePoint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_user">
+          <mxGeometry y="26" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="user_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_user">
+          <mxGeometry y="136" width="180" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="user_methods" value="+ to_json(): Json::Value&#xa;+ from_json(json): User&#xa;+ add_policy(policy): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_user">
+          <mxGeometry y="144" width="180" height="36" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: Policy -->
+        <mxCell id="class_policy" value="&lt;b&gt;Policy&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#dae8fc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="60" y="350" width="180" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_attrs" value="- name_: String&#xa;- version_: String&#xa;- statements_: Vector&lt;Statement&gt;&#xa;- effect_: Effect (Allow/Deny)&#xa;- actions_: Vector&lt;String&gt;&#xa;- resources_: Vector&lt;String&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_policy">
+          <mxGeometry y="26" width="180" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_policy">
+          <mxGeometry y="116" width="180" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="policy_methods" value="+ to_json(): Json::Value&#xa;+ from_json(json): Policy" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_policy">
+          <mxGeometry y="124" width="180" height="26" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: ObjectRetention -->
+        <mxCell id="class_retention" value="&lt;b&gt;ObjectRetention&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#dae8fc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="280" y="350" width="180" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="retention_attrs" value="- mode_: Mode (Governance/Compliance)&#xa;- retain_until_date_: TimePoint" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_retention">
+          <mxGeometry y="26" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="retention_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_retention">
+          <mxGeometry y="76" width="180" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="retention_methods" value="+ to_json(): Json::Value" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_retention">
+          <mxGeometry y="84" width="180" height="26" as="geometry" />
+        </mxCell>
+        
+        <!-- Package: services -->
+        <mxCell id="pkg_services" value="&lt;&lt;package&gt;&gt;&#xa;console::services" style="shape=folder;fontStyle=1;spacingTop=10;tabWidth=50;tabHeight=14;tabPosition=left;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="680" y="70" width="680" height="680" as="geometry" />
+        </mxCell>
+        
+        <!-- Interface: IObjectService -->
+        <mxCell id="iface_iobject" value="&lt;b&gt;&lt;&lt;interface&gt;&gt;&#xa;IObjectService&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=40;fillColor=#fff2cc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="700" y="120" width="280" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="iobject_methods" value="+ list_objects(user, bucket, prefix): Result&lt;Vector&lt;Object&gt;&gt;&#xa;+ get_object_info(user, bucket, key): Result&lt;Object&gt;&#xa;+ download_object(user, bucket, key): Result&lt;ByteArray&gt;&#xa;+ upload_object(user, bucket, key, data): Result&lt;Object&gt;&#xa;+ delete_object(user, bucket, key): Result&lt;void&gt;&#xa;+ copy_object(user, src, dest): Result&lt;Object&gt;&#xa;+ set_object_metadata(user, bucket, key, meta): Result&#xa;+ generate_presigned_url(user, bucket, key): Result&lt;String&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="iface_iobject">
+          <mxGeometry y="40" width="280" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- Interface: IBucketService -->
+        <mxCell id="iface_ibucket" value="&lt;b&gt;&lt;&lt;interface&gt;&gt;&#xa;IBucketService&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=40;fillColor=#fff2cc;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="120" width="280" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="ibucket_methods" value="+ list_buckets(user): Result&lt;Vector&lt;Bucket&gt;&gt;&#xa;+ create_bucket(user, name, region): Result&lt;Bucket&gt;&#xa;+ delete_bucket(user, name): Result&lt;void&gt;&#xa;+ get_bucket_info(user, name): Result&lt;Bucket&gt;&#xa;+ set_bucket_policy(user, name, policy): Result&#xa;+ set_bucket_versioning(user, name, enabled): Result&#xa;+ set_bucket_encryption(user, name, config): Result&#xa;+ get_bucket_lifecycle(user, name): Result&lt;Json&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="iface_ibucket">
+          <mxGeometry y="40" width="280" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: ObjectService -->
+        <mxCell id="class_objectservice" value="&lt;b&gt;ObjectService&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="700" y="330" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="objectservice_attrs" value="- storage_client_: IStorageClient*&#xa;- encryption_service_: EncryptionService*&#xa;- policy_evaluator_: PolicyEvaluator*&#xa;- metadata_manager_: MetadataManager*" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_objectservice">
+          <mxGeometry y="26" width="280" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="objectservice_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_objectservice">
+          <mxGeometry y="96" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="objectservice_methods" value="+ (реализует IObjectService)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_objectservice">
+          <mxGeometry y="104" width="280" height="26" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: BucketService -->
+        <mxCell id="class_bucketservice" value="&lt;b&gt;BucketService&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="330" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="bucketservice_attrs" value="- storage_client_: IStorageClient*&#xa;- path_manager_: PathManager*&#xa;- lifecycle_service_: LifecycleService*" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_bucketservice">
+          <mxGeometry y="26" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="bucketservice_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_bucketservice">
+          <mxGeometry y="86" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="bucketservice_methods" value="+ (реализует IBucketService)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_bucketservice">
+          <mxGeometry y="94" width="280" height="36" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: AuthService -->
+        <mxCell id="class_authservice" value="&lt;b&gt;AuthService&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="700" y="490" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="authservice_attrs" value="- jwt_: JWT*&#xa;- password_hash_: PasswordHash*&#xa;- token_blacklist_: TokenBlacklist*&#xa;- user_service_: IUserService*" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_authservice">
+          <mxGeometry y="26" width="280" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="authservice_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_authservice">
+          <mxGeometry y="86" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="authservice_methods" value="+ login(access_key, secret_key): Result&lt;Token&gt;&#xa;+ validate_token(token): Result&lt;UserInfo&gt;&#xa;+ logout(token): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_authservice">
+          <mxGeometry y="94" width="280" height="36" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: EncryptionService -->
+        <mxCell id="class_encryptionservice" value="&lt;b&gt;EncryptionService&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="490" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="encryptionservice_attrs" value="- algorithm_: String (AES-256-GCM)&#xa;- key_derivation_: String (PBKDF2)" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_encryptionservice">
+          <mxGeometry y="26" width="280" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="encryptionservice_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_encryptionservice">
+          <mxGeometry y="76" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="encryptionservice_methods" value="+ encrypt(data, key): ByteArray&#xa;+ decrypt(data, key): ByteArray&#xa;+ generate_key(): String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_encryptionservice">
+          <mxGeometry y="84" width="280" height="46" as="geometry" />
+        </mxCell>
+        
+        <!-- Class: PolicyEvaluator -->
+        <mxCell id="class_policyevaluator" value="&lt;b&gt;PolicyEvaluator&lt;/b&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="700" y="650" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="policyevaluator_sep" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="class_policyevaluator">
+          <mxGeometry y="26" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="policyevaluator_methods" value="+ evaluate(user, action, resource): bool&#xa;+ check_bucket_access(user, bucket, action): bool&#xa;+ check_object_access(user, bucket, key, action): bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="class_policyevaluator">
+          <mxGeometry y="34" width="280" height="56" as="geometry" />
+        </mxCell>
+        
+        <!-- Relationships -->
+        <!-- ObjectService implements IObjectService -->
+        <mxCell id="rel1" value="" style="endArrow=block;endSize=16;endFill=0;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="class_objectservice" target="iface_iobject">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="840" y="320" as="sourcePoint" />
+            <mxPoint x="840" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- BucketService implements IBucketService -->
+        <mxCell id="rel2" value="" style="endArrow=block;endSize=16;endFill=0;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="class_bucketservice" target="iface_ibucket">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="1150" y="320" as="sourcePoint" />
+            <mxPoint x="1150" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- ObjectService uses EncryptionService -->
+        <mxCell id="rel3" value="uses" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="class_objectservice" target="class_encryptionservice">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="980" y="400" as="sourcePoint" />
+            <mxPoint x="1010" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- ObjectService uses PolicyEvaluator -->
+        <mxCell id="rel4" value="uses" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" edge="1" parent="1" source="class_objectservice" target="class_policyevaluator">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="840" y="460" as="sourcePoint" />
+            <mxPoint x="840" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- User has Policy (composition) -->
+        <mxCell id="rel5" value="1..*" style="endArrow=diamondThin;endFill=0;endSize=16;html=1;rounded=0;" edge="1" parent="1" source="class_policy" target="class_user">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="240" y="350" as="sourcePoint" />
+            <mxPoint x="500" y="250" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="400" y="425" />
+              <mxPoint x="500" y="425" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Object has Retention -->
+        <mxCell id="rel6" value="0..1" style="endArrow=diamondThin;endFill=0;endSize=16;html=1;rounded=0;" edge="1" parent="1" source="class_retention" target="class_object">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="280" y="400" as="sourcePoint" />
+            <mxPoint x="160" y="330" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="250" y="405" />
+              <mxPoint x="160" y="405" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Bucket contains Objects -->
+        <mxCell id="rel7" value="*" style="endArrow=diamondThin;endFill=1;endSize=16;html=1;rounded=0;" edge="1" parent="1" source="class_object" target="class_bucket">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="260" y="220" as="sourcePoint" />
+            <mxPoint x="290" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend" value="&lt;b&gt;Легенда:&lt;/b&gt;&#xa;━━━▷ Реализация интерфейса&#xa;- - -▷ Зависимость (uses)&#xa;◇━━━ Агрегация&#xa;◆━━━ Композиция" style="text;html=1;strokeColor=#666666;fillColor=#f5f5f5;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="40" y="550" width="200" height="90" as="geometry" />
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

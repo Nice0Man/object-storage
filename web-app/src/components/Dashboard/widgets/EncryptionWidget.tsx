@@ -11,6 +11,7 @@ interface EncryptionWidgetProps {
   editMode?: boolean;
   onSettingsClick?: () => void;
   onVisibilityToggle?: () => void;
+  onDelete?: () => void;
   onClick?: () => void;
   dragHandleProps?: Record<string, unknown>;
 }
@@ -20,6 +21,7 @@ const EncryptionWidget: React.FC<EncryptionWidgetProps> = ({
   editMode = false,
   onSettingsClick,
   onVisibilityToggle,
+  onDelete,
   onClick,
   dragHandleProps,
 }) => {
@@ -50,6 +52,7 @@ const EncryptionWidget: React.FC<EncryptionWidgetProps> = ({
       onRefresh={refresh}
       onSettingsClick={onSettingsClick}
       onVisibilityToggle={onVisibilityToggle}
+      onDelete={onDelete}
       onClick={onClick}
       dragHandleProps={dragHandleProps}
     >

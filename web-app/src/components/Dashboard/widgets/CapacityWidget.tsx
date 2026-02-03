@@ -12,6 +12,7 @@ interface CapacityWidgetProps {
   editMode?: boolean;
   onSettingsClick?: () => void;
   onVisibilityToggle?: () => void;
+  onDelete?: () => void;
   onClick?: () => void;
   dragHandleProps?: Record<string, unknown>;
 }
@@ -35,6 +36,7 @@ const CapacityWidget: React.FC<CapacityWidgetProps> = ({
   editMode = false,
   onSettingsClick,
   onVisibilityToggle,
+  onDelete,
   onClick,
   dragHandleProps,
 }) => {
@@ -69,6 +71,7 @@ const CapacityWidget: React.FC<CapacityWidgetProps> = ({
       onRefresh={refresh}
       onSettingsClick={onSettingsClick}
       onVisibilityToggle={onVisibilityToggle}
+      onDelete={onDelete}
       onClick={onClick}
       dragHandleProps={dragHandleProps}
     >

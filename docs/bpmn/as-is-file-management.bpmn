@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_AsIs" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.42.0">
+  <bpmn:collaboration id="Collaboration_AsIs">
+    <bpmn:participant id="Participant_User" name="Пользователь" processRef="Process_User" />
+    <bpmn:participant id="Participant_Admin" name="IT-Администратор" processRef="Process_Admin" />
+    <bpmn:participant id="Participant_Server" name="Файловый сервер" processRef="Process_Server" />
+    <bpmn:messageFlow id="Flow_RequestAccess" name="Запрос доступа" sourceRef="Task_RequestAccess" targetRef="Event_ReceiveRequest" />
+    <bpmn:messageFlow id="Flow_SendCredentials" name="Учетные данные" sourceRef="Task_SendCredentials" targetRef="Event_ReceiveCredentials" />
+    <bpmn:messageFlow id="Flow_UploadFile" name="Загрузка файла" sourceRef="Task_UploadFile" targetRef="Event_ReceiveFile" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_User" isExecutable="true">
+    <bpmn:startEvent id="Event_Start_User" name="Необходимо загрузить файл">
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Task_CheckLocalAccess" name="Проверить наличие доступа к серверу">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_HasAccess" name="Есть доступ?">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_3_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_Merge" name="">
+      <bpmn:incoming>Flow_3_Yes</bpmn:incoming>
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_FindFolder" name="Найти нужную папку на сервере">
+      <bpmn:incoming>Flow_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Event_Start_User" targetRef="Task_CheckLocalAccess" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_CheckLocalAccess" targetRef="Gateway_HasAccess" />
+    <bpmn:sequenceFlow id="Flow_3_Yes" name="Да" sourceRef="Gateway_HasAccess" targetRef="Gateway_Merge" />
+    <bpmn:sequenceFlow id="Flow_3_No" name="Нет" sourceRef="Gateway_HasAccess" targetRef="Task_RequestAccess" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="Task_RequestAccess" targetRef="Event_ReceiveCredentials" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Event_ReceiveCredentials" targetRef="Task_ConfigureClient" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_ConfigureClient" targetRef="Gateway_Merge" />
+    <bpmn:sequenceFlow id="Flow_7" sourceRef="Gateway_Merge" targetRef="Task_FindFolder" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Task_FindFolder" targetRef="Task_UploadFile" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Task_UploadFile" targetRef="Gateway_UploadSuccess" />
+    <bpmn:sequenceFlow id="Flow_10_Yes" name="Да" sourceRef="Gateway_UploadSuccess" targetRef="Task_NotifyTeam" />
+    <bpmn:sequenceFlow id="Flow_10_No" name="Нет" sourceRef="Gateway_UploadSuccess" targetRef="Task_RetryUpload" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_RetryUpload" targetRef="Task_UploadFile" />
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_NotifyTeam" targetRef="Event_End_User" />
+    <bpmn:task id="Task_RequestAccess" name="Отправить запрос на доступ администратору">
+      <bpmn:incoming>Flow_3_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_ConfigureClient" name="Настроить  клиент вручную">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateCatchEvent id="Event_ReceiveCredentials" name="Получить учетные данные">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_Credentials" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="Event_End_User" name="Файл загружен">
+      <bpmn:incoming>Flow_12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Task_NotifyTeam" name="Уведомить пользователя">
+      <bpmn:incoming>Flow_10_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_RetryUpload" name="Повторить попытку загрузки">
+      <bpmn:incoming>Flow_10_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_UploadFile" name="Скопировать файл на сервер вручную">
+      <bpmn:incoming>Flow_8</bpmn:incoming>
+      <bpmn:incoming>Flow_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_UploadSuccess" name="Загрузка успешна?">
+      <bpmn:incoming>Flow_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_10_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_10_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+  </bpmn:process>
+  <bpmn:process id="Process_Admin" isExecutable="false">
+    <bpmn:startEvent id="Event_ReceiveRequest" name="Получен запрос на доступ">
+      <bpmn:outgoing>Flow_A1</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_Request" />
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="Gateway_UserExists" name="Есть аккаунт?">
+      <bpmn:incoming>Flow_A2</bpmn:incoming>
+      <bpmn:outgoing>Flow_A3_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_A3_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_A1" sourceRef="Event_ReceiveRequest" targetRef="Task_CheckUser" />
+    <bpmn:sequenceFlow id="Flow_A2" sourceRef="Task_CheckUser" targetRef="Gateway_UserExists" />
+    <bpmn:sequenceFlow id="Flow_A3_Yes" name="Да" sourceRef="Gateway_UserExists" targetRef="Gateway_MergeAdmin" />
+    <bpmn:sequenceFlow id="Flow_A3_No" name="Нет" sourceRef="Gateway_UserExists" targetRef="Task_CreateAccount" />
+    <bpmn:sequenceFlow id="Flow_A4" sourceRef="Task_CreateAccount" targetRef="Gateway_MergeAdmin" />
+    <bpmn:sequenceFlow id="Flow_A5" sourceRef="Gateway_MergeAdmin" targetRef="Task_ConfigurePermissions" />
+    <bpmn:sequenceFlow id="Flow_A6" sourceRef="Task_ConfigurePermissions" targetRef="Task_SendCredentials" />
+    <bpmn:sequenceFlow id="Flow_A7" sourceRef="Task_SendCredentials" targetRef="Event_End_Admin" />
+    <bpmn:task id="Task_CreateAccount" name="Создать  аккаунт вручную">
+      <bpmn:incoming>Flow_A3_No</bpmn:incoming>
+      <bpmn:outgoing>Flow_A4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_MergeAdmin" name="">
+      <bpmn:incoming>Flow_A3_Yes</bpmn:incoming>
+      <bpmn:incoming>Flow_A4</bpmn:incoming>
+      <bpmn:outgoing>Flow_A5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Task_ConfigurePermissions" name="Настроить права доступа к папке вручную">
+      <bpmn:incoming>Flow_A5</bpmn:incoming>
+      <bpmn:outgoing>Flow_A6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_SendCredentials" name="Отправить учетные данные пользователю">
+      <bpmn:incoming>Flow_A6</bpmn:incoming>
+      <bpmn:outgoing>Flow_A7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_End_Admin" name="Доступ предоставлен">
+      <bpmn:incoming>Flow_A7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="Task_CheckUser" name="Проверить пользователя">
+      <bpmn:incoming>Flow_A1</bpmn:incoming>
+      <bpmn:outgoing>Flow_A2</bpmn:outgoing>
+    </bpmn:subProcess>
+  </bpmn:process>
+  <bpmn:process id="Process_Server" isExecutable="false">
+    <bpmn:sequenceFlow id="Flow_S1" sourceRef="Event_ReceiveFile" targetRef="Task_SaveFile" />
+    <bpmn:sequenceFlow id="Flow_S2" sourceRef="Task_SaveFile" targetRef="Task_ManualBackup" />
+    <bpmn:sequenceFlow id="Flow_S3" sourceRef="Task_ManualBackup" targetRef="Event_End_Server" />
+    <bpmn:task id="Task_SaveFile" name="Сохранить файл на диск">
+      <bpmn:incoming>Flow_S1</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Task_ManualBackup" name="Ручное резервирование (по расписанию)">
+      <bpmn:incoming>Flow_S2</bpmn:incoming>
+      <bpmn:outgoing>Flow_S3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_End_Server" name="Файл сохранен">
+      <bpmn:incoming>Flow_S3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="Event_ReceiveFile" name="Получен файл">
+      <bpmn:outgoing>Flow_S1</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageDef_File" />
+    </bpmn:startEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_AsIs">
+      <bpmndi:BPMNShape id="Participant_User_di" bpmnElement="Participant_User" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="1400" height="310" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Start_User_di" bpmnElement="Event_Start_User">
+        <dc:Bounds x="212" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="186" y="225" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckLocalAccess_di" bpmnElement="Task_CheckLocalAccess">
+        <dc:Bounds x="290" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_HasAccess_di" bpmnElement="Gateway_HasAccess" isMarkerVisible="true">
+        <dc:Bounds x="425" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="418" y="145" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Merge_di" bpmnElement="Gateway_Merge" isMarkerVisible="true">
+        <dc:Bounds x="735" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FindFolder_di" bpmnElement="Task_FindFolder">
+        <dc:Bounds x="820" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RequestAccess_di" bpmnElement="Task_RequestAccess">
+        <dc:Bounds x="400" y="240" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ConfigureClient_di" bpmnElement="Task_ConfigureClient">
+        <dc:Bounds x="600" y="240" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ReceiveCredentials_di" bpmnElement="Event_ReceiveCredentials">
+        <dc:Bounds x="532" y="262" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="508" y="224.5" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_User_di" bpmnElement="Event_End_User">
+        <dc:Bounds x="1472" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1452" y="225" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyTeam_di" bpmnElement="Task_NotifyTeam">
+        <dc:Bounds x="1340" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RetryUpload_di" bpmnElement="Task_RetryUpload">
+        <dc:Bounds x="1123" y="90" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UploadFile_di" bpmnElement="Task_UploadFile">
+        <dc:Bounds x="1020" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_UploadSuccess_di" bpmnElement="Gateway_UploadSuccess" isMarkerVisible="true">
+        <dc:Bounds x="1235" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1235" y="235" width="50" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
+        <di:waypoint x="248" y="200" />
+        <di:waypoint x="290" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
+        <di:waypoint x="390" y="200" />
+        <di:waypoint x="425" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_Yes_di" bpmnElement="Flow_3_Yes">
+        <di:waypoint x="475" y="200" />
+        <di:waypoint x="735" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="600" y="182" width="14" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_No_di" bpmnElement="Flow_3_No">
+        <di:waypoint x="450" y="225" />
+        <di:waypoint x="450" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="455" y="227" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
+        <di:waypoint x="500" y="280" />
+        <di:waypoint x="532" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
+        <di:waypoint x="568" y="280" />
+        <di:waypoint x="600" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
+        <di:waypoint x="700" y="280" />
+        <di:waypoint x="760" y="280" />
+        <di:waypoint x="760" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
+        <di:waypoint x="785" y="200" />
+        <di:waypoint x="820" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
+        <di:waypoint x="920" y="200" />
+        <di:waypoint x="1020" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
+        <di:waypoint x="1120" y="200" />
+        <di:waypoint x="1235" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_Yes_di" bpmnElement="Flow_10_Yes">
+        <di:waypoint x="1285" y="200" />
+        <di:waypoint x="1340" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1306" y="182" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_No_di" bpmnElement="Flow_10_No">
+        <di:waypoint x="1260" y="175" />
+        <di:waypoint x="1260" y="130" />
+        <di:waypoint x="1223" y="130" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1270" y="151" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1123" y="130" />
+        <di:waypoint x="1090" y="130" />
+        <di:waypoint x="1090" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="1440" y="200" />
+        <di:waypoint x="1472" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_Admin_di" bpmnElement="Participant_Admin" isHorizontal="true">
+        <dc:Bounds x="160" y="350" width="1400" height="360" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ReceiveRequest_di" bpmnElement="Event_ReceiveRequest">
+        <dc:Bounds x="432" y="432" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="406" y="475" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_UserExists_di" bpmnElement="Gateway_UserExists" isMarkerVisible="true">
+        <dc:Bounds x="645" y="425" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="636" y="395" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateAccount_di" bpmnElement="Task_CreateAccount">
+        <dc:Bounds x="620" y="570" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MergeAdmin_di" bpmnElement="Gateway_MergeAdmin" isMarkerVisible="true">
+        <dc:Bounds x="755" y="425" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ConfigurePermissions_di" bpmnElement="Task_ConfigurePermissions">
+        <dc:Bounds x="830" y="410" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendCredentials_di" bpmnElement="Task_SendCredentials">
+        <dc:Bounds x="830" y="530" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_Admin_di" bpmnElement="Event_End_Admin">
+        <dc:Bounds x="1002" y="552" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="984" y="595" width="72" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1au7zp8_di" bpmnElement="Task_CheckUser">
+        <dc:Bounds x="510" y="410" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_A1_di" bpmnElement="Flow_A1">
+        <di:waypoint x="468" y="450" />
+        <di:waypoint x="510" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A2_di" bpmnElement="Flow_A2">
+        <di:waypoint x="610" y="450" />
+        <di:waypoint x="645" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A3_Yes_di" bpmnElement="Flow_A3_Yes">
+        <di:waypoint x="695" y="450" />
+        <di:waypoint x="755" y="450" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="718" y="432" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A3_No_di" bpmnElement="Flow_A3_No">
+        <di:waypoint x="670" y="475" />
+        <di:waypoint x="670" y="570" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="671" y="492" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A4_di" bpmnElement="Flow_A4">
+        <di:waypoint x="720" y="610" />
+        <di:waypoint x="780" y="610" />
+        <di:waypoint x="780" y="475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A5_di" bpmnElement="Flow_A5">
+        <di:waypoint x="805" y="450" />
+        <di:waypoint x="830" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A6_di" bpmnElement="Flow_A6">
+        <di:waypoint x="880" y="490" />
+        <di:waypoint x="880" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_A7_di" bpmnElement="Flow_A7">
+        <di:waypoint x="930" y="570" />
+        <di:waypoint x="1002" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Participant_Server_di" bpmnElement="Participant_Server" isHorizontal="true">
+        <dc:Bounds x="160" y="710" width="1400" height="170" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SaveFile_di" bpmnElement="Task_SaveFile">
+        <dc:Bounds x="1140" y="760" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ManualBackup_di" bpmnElement="Task_ManualBackup">
+        <dc:Bounds x="1300" y="760" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_Server_di" bpmnElement="Event_End_Server">
+        <dc:Bounds x="1452" y="782" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1431" y="825" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ReceiveFile_di" bpmnElement="Event_ReceiveFile">
+        <dc:Bounds x="1052" y="782" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1033" y="825" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_S1_di" bpmnElement="Flow_S1">
+        <di:waypoint x="1088" y="800" />
+        <di:waypoint x="1140" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_di" bpmnElement="Flow_S2">
+        <di:waypoint x="1240" y="800" />
+        <di:waypoint x="1300" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S3_di" bpmnElement="Flow_S3">
+        <di:waypoint x="1400" y="800" />
+        <di:waypoint x="1452" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RequestAccess_di" bpmnElement="Flow_RequestAccess">
+        <di:waypoint x="450" y="320" />
+        <di:waypoint x="450" y="432" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="456" y="370" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SendCredentials_di" bpmnElement="Flow_SendCredentials">
+        <di:waypoint x="930" y="550" />
+        <di:waypoint x="970" y="550" />
+        <di:waypoint x="970" y="380" />
+        <di:waypoint x="550" y="380" />
+        <di:waypoint x="550" y="298" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="718" y="362" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UploadFile_di" bpmnElement="Flow_UploadFile">
+        <di:waypoint x="1070" y="240" />
+        <di:waypoint x="1070" y="782" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1079" y="499" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_04b4ft9">
+    <bpmndi:BPMNPlane id="BPMNPlane_0wdfael" bpmnElement="Task_CheckUser" />
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

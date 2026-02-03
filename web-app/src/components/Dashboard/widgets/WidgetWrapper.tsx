@@ -7,17 +7,17 @@ import {
   IconButton,
   CircularProgress,
   Tooltip,
-  alpha,
   useTheme,
+  alpha,
 } from "@mui/material";
 import {
   Refresh,
   Settings,
   DragIndicator,
   VisibilityOff,
+  Delete,
 } from "@mui/icons-material";
 import type { DashboardWidget } from "../../../api/types";
-import { dashboardTheme, getThemeValue } from "../theme";
 
 interface WidgetWrapperProps {
   widget: DashboardWidget;
@@ -31,6 +31,7 @@ interface WidgetWrapperProps {
   onRefresh?: () => void;
   onSettingsClick?: () => void;
   onVisibilityToggle?: () => void;
+  onDelete?: () => void;
   onClick?: () => void;
   children: React.ReactNode;
   dragHandleProps?: Record<string, unknown>;
@@ -48,22 +49,22 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
   onRefresh,
   onSettingsClick,
   onVisibilityToggle,
+  onDelete,
   onClick,
   children,
-  dragHandleProps,
+  dragHandleProps: _dragHandleProps,
 }) => {
   const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
-  const { primary, secondary, background, gradients, shadows } = dashboardTheme;
 
-  const formatLastRefresh = (timestamp: number | null) => {
-    if (!timestamp) return null;
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  // Memoize last refresh formatting to avoid re-renders
+  const lastRefreshFormatted = React.useMemo(() => {
+    if (!lastRefresh) return null;
+    const seconds = Math.floor((Date.now() - lastRefresh) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
     return `${Math.floor(minutes / 60)}h ago`;
-  };
+  }, [lastRefresh]);
 
   return (
     <Card
@@ -72,55 +73,22 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        background: getThemeValue(isDark, gradients.card.dark, gradients.card.light),
-        borderRadius: dashboardTheme.borderRadius.md,
-        border: `1px solid ${isDark ? alpha(primary.main, 0.1) : alpha("#e2e8f0", 0.8)}`,
         cursor: editMode ? "default" : onClick ? "pointer" : "default",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        position: "relative",
-        overflow: "hidden",
-        backdropFilter: "blur(12px)",
-        boxShadow: getThemeValue(isDark, shadows.card.dark, shadows.card.light),
+        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
         "&:hover": !editMode && onClick
-          ? {
-              transform: "translateY(-4px)",
-              boxShadow: getThemeValue(isDark, shadows.cardHover.dark, shadows.cardHover.light),
-              borderColor: alpha(primary.main, isDark ? 0.3 : 0.2),
-            }
+          ? { boxShadow: theme.shadows[6] }
           : {},
         ...(editMode && {
-          border: `2px dashed ${alpha(primary.main, 0.5)}`,
-          "&::after": {
-            content: '""',
-            position: "absolute",
-            inset: 0,
-            background: `repeating-linear-gradient(
-              -45deg,
-              transparent,
-              transparent 8px,
-              ${alpha(primary.main, 0.03)} 8px,
-              ${alpha(primary.main, 0.03)} 16px
-            )`,
-            pointerEvents: "none",
+          border: `2px dashed ${alpha(theme.palette.primary.main, 0.5)}`,
+          "&:hover": {
+            borderColor: theme.palette.primary.main,
           },
         }),
       }}
     >
-      {/* Accent line at top */}
+      {/* Header - Drag Handle Area */}
       <Box
-        sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 2,
-          background: gradients.accent,
-          opacity: 0.7,
-        }}
-      />
-
-      {/* Header */}
-      <Box
+        className={editMode ? "drag-handle" : undefined}
         sx={{
           display: "flex",
           alignItems: "center",
@@ -128,30 +96,15 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
           px: 2,
           pt: 2,
           pb: 0.5,
+          ...(editMode && {
+            cursor: "grab",
+            "&:active": { cursor: "grabbing" },
+          }),
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1, minWidth: 0 }}>
-          {editMode && dragHandleProps && (
-            <Box
-              {...dragHandleProps}
-              className="drag-handle"
-              sx={{
-                cursor: "grab",
-                display: "flex",
-                alignItems: "center",
-                p: 0.5,
-                borderRadius: 1,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
-                },
-                "&:active": {
-                  cursor: "grabbing",
-                },
-              }}
-            >
-              <DragIndicator sx={{ color: theme.palette.text.secondary, fontSize: 18 }} />
-            </Box>
+          {editMode && (
+            <DragIndicator color="action" fontSize="small" sx={{ opacity: 0.6 }} />
           )}
           {icon && (
             <Box
@@ -161,14 +114,10 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
                 justifyContent: "center",
                 width: 32,
                 height: 32,
-                borderRadius: dashboardTheme.borderRadius.sm,
-                background: isDark
-                  ? `linear-gradient(135deg, ${alpha(primary.main, 0.2)} 0%, ${alpha(secondary.main, 0.15)} 100%)`
-                  : `linear-gradient(135deg, ${alpha(primary.main, 0.12)} 0%, ${alpha(secondary.main, 0.08)} 100%)`,
-                color: getThemeValue(isDark, primary.light, primary.main),
-                "& svg": {
-                  fontSize: 18,
-                },
+                borderRadius: 1,
+                bgcolor: "primary.light",
+                color: "primary.contrastText",
+                "& svg": { fontSize: 18 },
               }}
             >
               {icon}
@@ -176,50 +125,26 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
           )}
           <Typography
             variant="subtitle1"
-            sx={{
-              fontWeight: 600,
-              fontSize: "0.875rem",
-              color: theme.palette.text.primary,
-              letterSpacing: "-0.01em",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
+            fontWeight={600}
+            noWrap
           >
             {title}
           </Typography>
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          {loading && (
-            <CircularProgress
-              size={14}
-              thickness={5}
-              sx={{
-                mr: 0.5,
-                color: getThemeValue(isDark, primary.light, primary.main),
-              }}
-            />
-          )}
+          {loading && <CircularProgress size={14} sx={{ mr: 0.5 }} />}
 
           {!editMode && nextRefreshIn != null && nextRefreshIn > 0 && (
-            <Tooltip title={`Next refresh in ${nextRefreshIn}s`} arrow>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: theme.palette.text.secondary,
-                  mr: 0.5,
-                  fontSize: "0.7rem",
-                  opacity: 0.7,
-                }}
-              >
+            <Tooltip title={`Next refresh in ${nextRefreshIn}s`}>
+              <Typography variant="caption" color="text.secondary" sx={{ mr: 0.5 }}>
                 {nextRefreshIn}s
               </Typography>
             </Tooltip>
           )}
 
           {!editMode && onRefresh && (
-            <Tooltip title={lastRefresh ? `Last: ${formatLastRefresh(lastRefresh)}` : "Refresh"} arrow>
+            <Tooltip title={lastRefreshFormatted ? `Last: ${lastRefreshFormatted}` : "Refresh"}>
               <IconButton
                 size="small"
                 onClick={(e) => {
@@ -227,60 +152,51 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
                   onRefresh();
                 }}
                 disabled={loading}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  transition: "all 0.2s ease",
-                  "&:hover": {
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                    transform: "rotate(90deg)",
-                  },
-                }}
               >
-                <Refresh sx={{ fontSize: 16 }} />
+                <Refresh fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
 
           {editMode && onSettingsClick && (
-            <Tooltip title="Widget Settings" arrow>
+            <Tooltip title="Widget Settings">
               <IconButton
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
                   onSettingsClick();
                 }}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  "&:hover": {
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
-                  },
-                }}
               >
-                <Settings sx={{ fontSize: 16 }} />
+                <Settings fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
 
           {editMode && onVisibilityToggle && (
-            <Tooltip title="Hide Widget" arrow>
+            <Tooltip title="Hide Widget">
               <IconButton
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
                   onVisibilityToggle();
                 }}
-                sx={{
-                  width: 28,
-                  height: 28,
-                  "&:hover": {
-                    bgcolor: alpha(theme.palette.error.main, 0.1),
-                    color: theme.palette.error.main,
-                  },
-                }}
               >
-                <VisibilityOff sx={{ fontSize: 16 }} />
+                <VisibilityOff fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+
+          {editMode && onDelete && (
+            <Tooltip title="Delete Widget">
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                color="error"
+              >
+                <Delete fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
@@ -288,25 +204,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
       </Box>
 
       {/* Content */}
-      <CardContent
-        sx={{
-          flex: 1,
-          pt: 1.5,
-          pb: 2,
-          px: 2,
-          overflow: "auto",
-          "&::-webkit-scrollbar": {
-            width: 4,
-          },
-          "&::-webkit-scrollbar-track": {
-            bgcolor: "transparent",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            bgcolor: alpha(theme.palette.text.primary, 0.1),
-            borderRadius: 2,
-          },
-        }}
-      >
+      <CardContent sx={{ flex: 1, pt: 1.5, pb: 2, px: 2, overflow: "auto" }}>
         {error ? (
           <Box
             sx={{
@@ -318,21 +216,7 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               gap: 1,
             }}
           >
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                bgcolor: alpha(theme.palette.error.main, 0.1),
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: theme.palette.error.main,
-              }}
-            >
-              !
-            </Box>
-            <Typography variant="body2" color="error" sx={{ textAlign: "center" }}>
+            <Typography variant="body2" color="error" textAlign="center">
               {error}
             </Typography>
           </Box>
