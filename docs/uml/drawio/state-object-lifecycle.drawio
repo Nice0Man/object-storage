@@ -4,52 +4,52 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        
+
         <!-- Title -->
         <mxCell id="title" value="Диаграмма состояний: Жизненный цикл объекта" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="300" y="20" width="400" height="30" as="geometry" />
         </mxCell>
-        
+
         <!-- Initial State -->
         <mxCell id="initial" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;" vertex="1" parent="1">
           <mxGeometry x="60" y="185" width="30" height="30" as="geometry" />
         </mxCell>
-        
+
         <!-- State: Uploading -->
         <mxCell id="state_uploading" value="Uploading&#xa;(Загрузка)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="140" y="170" width="120" height="60" as="geometry" />
         </mxCell>
-        
+
         <!-- State: Active -->
         <mxCell id="state_active" value="Active&#xa;(Активный)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="320" y="170" width="120" height="60" as="geometry" />
         </mxCell>
-        
+
         <!-- State: Versioned -->
         <mxCell id="state_versioned" value="Versioned&#xa;(Версионирован)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="320" y="80" width="120" height="50" as="geometry" />
         </mxCell>
-        
+
         <!-- State: Locked -->
         <mxCell id="state_locked" value="Locked&#xa;(Заблокирован)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="500" y="80" width="120" height="50" as="geometry" />
         </mxCell>
-        
+
         <!-- State: Encrypted -->
         <mxCell id="state_encrypted" value="Encrypted&#xa;(Зашифрован)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="500" y="170" width="120" height="60" as="geometry" />
         </mxCell>
-        
+
         <!-- State: Marked for Deletion -->
         <mxCell id="state_marked" value="Marked&#xa;(Помечен на удаление)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="320" y="280" width="120" height="60" as="geometry" />
         </mxCell>
-        
+
         <!-- State: Archived -->
         <mxCell id="state_archived" value="Archived&#xa;(В архиве)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="500" y="280" width="120" height="60" as="geometry" />
         </mxCell>
-        
+
         <!-- Final State -->
         <mxCell id="final" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;" vertex="1" parent="1">
           <mxGeometry x="365" y="400" width="30" height="30" as="geometry" />
@@ -57,24 +57,24 @@
         <mxCell id="finalOuter" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="360" y="395" width="40" height="40" as="geometry" />
         </mxCell>
-        
+
         <!-- ========== TRANSITIONS ========== -->
-        
+
         <!-- Initial -> Uploading -->
         <mxCell id="trans1" value="upload()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="initial" target="state_uploading">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        
+
         <!-- Uploading -> Active -->
         <mxCell id="trans2" value="complete()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;" edge="1" parent="1" source="state_uploading" target="state_active">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        
+
         <!-- Active -> Versioned -->
         <mxCell id="trans3" value="version()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="state_active" target="state_versioned">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        
+
         <!-- Versioned -> Active -->
         <mxCell id="trans4" value="restore()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="state_versioned" target="state_active">
           <mxGeometry relative="1" as="geometry">
@@ -84,12 +84,12 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        
+
         <!-- Active -> Encrypted -->
         <mxCell id="trans5" value="encrypt()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="state_active" target="state_encrypted">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        
+
         <!-- Encrypted -> Active -->
         <mxCell id="trans6" value="decrypt()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="state_encrypted" target="state_active">
           <mxGeometry relative="1" as="geometry">
@@ -99,7 +99,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        
+
         <!-- Active -> Locked -->
         <mxCell id="trans7" value="lock()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="state_active" target="state_locked">
           <mxGeometry relative="1" as="geometry">
@@ -109,7 +109,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        
+
         <!-- Locked -> Active -->
         <mxCell id="trans8" value="unlock()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="state_locked" target="state_encrypted">
           <mxGeometry relative="1" as="geometry">
@@ -119,12 +119,12 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        
+
         <!-- Active -> Marked -->
         <mxCell id="trans9" value="delete()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;" edge="1" parent="1" source="state_active" target="state_marked">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        
+
         <!-- Marked -> Active (restore) -->
         <mxCell id="trans10" value="restore()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="state_marked" target="state_active">
           <mxGeometry relative="1" as="geometry">
@@ -134,12 +134,12 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        
+
         <!-- Marked -> Final (permanent delete) -->
         <mxCell id="trans11" value="purge()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;" edge="1" parent="1" source="state_marked" target="final">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        
+
         <!-- Active -> Archived -->
         <mxCell id="trans12" value="archive()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="state_active" target="state_archived">
           <mxGeometry relative="1" as="geometry">
@@ -150,7 +150,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        
+
         <!-- Archived -> Active -->
         <mxCell id="trans13" value="unarchive()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="state_archived" target="state_encrypted">
           <mxGeometry relative="1" as="geometry">
@@ -160,13 +160,13 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        
+
         <!-- ========== LEGEND ========== -->
-        
+
         <mxCell id="legend_box" value="&lt;b&gt;Состояния:&lt;/b&gt;&#xa;🟡 Uploading - объект загружается&#xa;🟢 Active - объект доступен&#xa;🔵 Versioned - создана версия&#xa;🟣 Locked - защита от удаления&#xa;🟠 Encrypted - данные зашифрованы&#xa;🔴 Marked - помечен на удаление&#xa;⚪ Archived - перенесён в архив" style="text;html=1;strokeColor=#666666;fillColor=#f5f5f5;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;spacing=5;" vertex="1" parent="1">
           <mxGeometry x="680" y="80" width="250" height="150" as="geometry" />
         </mxCell>
-        
+
       </root>
     </mxGraphModel>
   </diagram>

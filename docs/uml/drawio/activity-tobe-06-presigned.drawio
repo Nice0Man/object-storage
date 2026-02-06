@@ -1,0 +1,137 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.3.7">
+  <diagram name="Activity TO BE - Генерация Presigned URL" id="activity-tobe-presigned">
+    <mxGraphModel dx="1505" dy="564" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="750" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="lane_data" parent="1" style="swimlane;startSize=40;horizontal=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;swimlaneFillColor=#fffef0;" value="Входные/выходные&#xa;объекты" vertex="1">
+          <mxGeometry height="700" width="150" x="20" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="data_error" parent="lane_data" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=5;fontSize=10;" value="Error:&#xa;- code&#xa;- message" vertex="1">
+          <mxGeometry height="55" width="120" x="15" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_process" parent="1" style="swimlane;startSize=40;horizontal=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;swimlaneFillColor=#fafafa;" value="Шаги процесса" vertex="1">
+          <mxGeometry height="700" width="500" x="170" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="step_error" parent="lane_process" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Вернуть ошибку" vertex="1">
+          <mxGeometry height="40" width="100" x="30" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="end_err" parent="lane_process" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#b85450;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="65" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_8" edge="1" parent="lane_process" source="step_error" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;" target="end_err">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lane_actors" parent="1" style="swimlane;startSize=40;horizontal=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;swimlaneFillColor=#f0fff0;" value="Участники" vertex="1">
+          <mxGeometry height="700" width="130" x="670" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_user" parent="lane_actors" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value=":Пользователь" vertex="1">
+          <mxGeometry height="50" width="30" x="40" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_system" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;" value=":Система" vertex="1">
+          <mxGeometry height="50" width="30" x="720" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="data_request" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=5;fontSize=10;" value="PresignedRequest:&#xa;- bucket&#xa;- key&#xa;- expires_in" vertex="1">
+          <mxGeometry height="70" width="120" x="35" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="data_jwt" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="JWT Token" vertex="1">
+          <mxGeometry height="35" width="120" x="35" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="data_secret" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=5;fontSize=10;" value="SecretKey:&#xa;(для HMAC)" vertex="1">
+          <mxGeometry height="45" width="120" x="35" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="data_response" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=5;fontSize=10;" value="PresignedURL:&#xa;- url&#xa;- expires_at" vertex="1">
+          <mxGeometry height="55" width="120" x="35" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="start" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d79b00;strokeColor=#b85450;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="395" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="WRacu17eP8IZgmI-XEQF-2" edge="1" parent="1" source="step_6_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeColor=#82b366;fontColor=#143642;fillColor=#d5e8d4;dashed=1;" target="actor_system">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="step_6_1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="6.1. Валидировать&#xa;JWT токен" vertex="1">
+          <mxGeometry height="50" width="180" x="320" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="decision1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="390" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="decision1_label" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" value="Валиден?" vertex="1">
+          <mxGeometry height="30" width="60" x="430" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="step_6_2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="6.2. Проверить права&#xa;на объект" vertex="1">
+          <mxGeometry height="50" width="180" x="320" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="decision2" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="390" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="decision2_label" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;" value="Есть права?" vertex="1">
+          <mxGeometry height="30" width="70" x="430" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="step_6_3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="6.3. Сформировать URL&#xa;с параметрами" vertex="1">
+          <mxGeometry height="50" width="180" x="320" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="step_6_4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="6.4. Подписать URL&#xa;(HMAC-SHA256)" vertex="1">
+          <mxGeometry height="50" width="180" x="320" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="WRacu17eP8IZgmI-XEQF-1" edge="1" parent="1" source="step_6_5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeColor=#82b366;fontColor=#143642;fillColor=#d5e8d4;dashed=1;" target="actor_user">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="step_6_5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="6.5. Вернуть&#xa;presigned URL" vertex="1">
+          <mxGeometry height="50" width="180" x="320" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="end_ok" parent="1" style="ellipse;html=1;shape=endState;fillColor=#000000;strokeColor=#82b366;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="395" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_start" edge="1" parent="1" source="start" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" target="step_6_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_1" edge="1" parent="1" source="step_6_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" target="decision1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_2_yes" edge="1" parent="1" source="decision1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#82b366;" target="step_6_2" value="[да]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_2_no" edge="1" parent="1" source="decision1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;" target="step_error" value="[нет]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_3" edge="1" parent="1" source="step_6_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" target="decision2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_4_yes" edge="1" parent="1" source="decision2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#82b366;" target="step_6_3" value="[да]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_4_no" edge="1" parent="1" source="decision2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;" target="step_error" value="[нет]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_5" edge="1" parent="1" source="step_6_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" target="step_6_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_6" edge="1" parent="1" source="step_6_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" target="step_6_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_7" edge="1" parent="1" source="step_6_5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" target="end_ok">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="data_conn1" edge="1" parent="1" source="data_request" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#d6b656;" target="step_6_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="data_conn2" edge="1" parent="1" source="data_jwt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#d6b656;" target="step_6_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="data_conn3" edge="1" parent="1" source="data_secret" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#d6b656;" target="step_6_4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="95" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="data_conn4" edge="1" parent="1" source="step_6_5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#82b366;" target="data_response">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="data_conn5" edge="1" parent="1" source="step_error" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b85450;" target="data_error">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
