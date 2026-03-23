@@ -177,7 +177,7 @@ find src -name "*.cpp" | \
 
 # Cppcheck
 cppcheck --enable=all \
-    --suppress-xml=.cppcheck-suppressions.txt \
+    --suppress-xml=.config/cppcheck-suppressions.txt \
     --project=build/compile_commands.json \
     src/
 ```

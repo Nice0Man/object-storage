@@ -4,7 +4,7 @@
     <bpmn:startEvent id="Event_Start" name="Необходимо загрузить файл">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:task id="Task_CheckAccess" name="Проверить наличие доступа к серверу">
+    <bpmn:task id="Task_CheckAccess" name="1. Проверить наличие доступа к серверу">
       <bpmn:incoming>Flow_1</bpmn:incoming>
       <bpmn:outgoing>Flow_2</bpmn:outgoing>
     </bpmn:task>
@@ -13,11 +13,11 @@
       <bpmn:outgoing>Flow_3_Yes</bpmn:outgoing>
       <bpmn:outgoing>Flow_3_No</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Task_RequestAccess" name="Отправить запрос на доступ">
+    <bpmn:task id="Task_RequestAccess" name="2. Отправить запрос на доступ">
       <bpmn:incoming>Flow_3_No</bpmn:incoming>
       <bpmn:outgoing>Flow_4</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Task_CheckUser" name="Проверить пользователя">
+    <bpmn:task id="Task_CheckUser" name="3. Проверить пользователя">
       <bpmn:incoming>Flow_4</bpmn:incoming>
       <bpmn:outgoing>Flow_5</bpmn:outgoing>
     </bpmn:task>
@@ -26,7 +26,7 @@
       <bpmn:outgoing>Flow_6_Yes</bpmn:outgoing>
       <bpmn:outgoing>Flow_6_No</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Task_CreateAccount" name="Создать аккаунт вручную">
+    <bpmn:task id="Task_CreateAccount" name="4. Создать аккаунт вручную">
       <bpmn:incoming>Flow_6_No</bpmn:incoming>
       <bpmn:outgoing>Flow_7</bpmn:outgoing>
     </bpmn:task>
@@ -35,15 +35,15 @@
       <bpmn:incoming>Flow_7</bpmn:incoming>
       <bpmn:outgoing>Flow_8</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Task_ConfigurePermissions" name="Настроить права доступа вручную">
+    <bpmn:task id="Task_ConfigurePermissions" name="5. Настроить права доступа вручную">
       <bpmn:incoming>Flow_8</bpmn:incoming>
       <bpmn:outgoing>Flow_9</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Task_SendCredentials" name="Отправить учетные данные">
+    <bpmn:task id="Task_SendCredentials" name="6. Отправить учетные данные">
       <bpmn:incoming>Flow_9</bpmn:incoming>
       <bpmn:outgoing>Flow_10</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Task_ConfigureClient" name="Настроить клиент вручную">
+    <bpmn:task id="Task_ConfigureClient" name="7. Настроить клиент вручную">
       <bpmn:incoming>Flow_10</bpmn:incoming>
       <bpmn:outgoing>Flow_11</bpmn:outgoing>
     </bpmn:task>
@@ -52,16 +52,16 @@
       <bpmn:incoming>Flow_11</bpmn:incoming>
       <bpmn:outgoing>Flow_12</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Task_FindFolder" name="Найти нужную папку на сервере">
+    <bpmn:task id="Task_FindFolder" name="8. Найти нужную папку на сервере">
       <bpmn:incoming>Flow_12</bpmn:incoming>
       <bpmn:outgoing>Flow_13</bpmn:outgoing>
     </bpmn:task>
     <bpmn:exclusiveGateway id="Gateway_BeforeUpload" name="">
-      <bpmn:incoming>Flow_13</bpmn:incoming>
       <bpmn:incoming>Flow_Retry</bpmn:incoming>
+      <bpmn:incoming>Flow_13</bpmn:incoming>
       <bpmn:outgoing>Flow_14</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Task_UploadFile" name="Скопировать файл на сервер вручную">
+    <bpmn:task id="Task_UploadFile" name="9. Скопировать файл на сервер вручную">
       <bpmn:incoming>Flow_14</bpmn:incoming>
       <bpmn:outgoing>Flow_15</bpmn:outgoing>
     </bpmn:task>
@@ -70,19 +70,19 @@
       <bpmn:outgoing>Flow_16_Yes</bpmn:outgoing>
       <bpmn:outgoing>Flow_16_No</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:task id="Task_RetryUpload" name="Повторить попытку загрузки">
+    <bpmn:task id="Task_RetryUpload" name="10. Повторить попытку загрузки">
       <bpmn:incoming>Flow_16_No</bpmn:incoming>
       <bpmn:outgoing>Flow_Retry</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Task_SaveFile" name="Сохранить файл на диск">
+    <bpmn:task id="Task_SaveFile" name="11. Сохранить файл на диск">
       <bpmn:incoming>Flow_16_Yes</bpmn:incoming>
       <bpmn:outgoing>Flow_17</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Task_ManualBackup" name="Ручное резервирование">
+    <bpmn:task id="Task_ManualBackup" name="12. Ручное резервирование">
       <bpmn:incoming>Flow_17</bpmn:incoming>
       <bpmn:outgoing>Flow_18</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Task_NotifyUser" name="Уведомить пользователя">
+    <bpmn:task id="Task_NotifyUser" name="13. Уведомить пользователя">
       <bpmn:incoming>Flow_18</bpmn:incoming>
       <bpmn:outgoing>Flow_19</bpmn:outgoing>
     </bpmn:task>
@@ -116,196 +116,197 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_AsIs_FileManagement">
       <bpmndi:BPMNShape id="Event_Start_di" bpmnElement="Event_Start">
-        <dc:Bounds x="152" y="212" width="36" height="36" />
+        <dc:Bounds x="152" y="242" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="130" y="255" width="80" height="27" />
+          <dc:Bounds x="130" y="285" width="80" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_CheckAccess_di" bpmnElement="Task_CheckAccess">
-        <dc:Bounds x="240" y="190" width="100" height="80" />
+        <dc:Bounds x="240" y="220" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_HasAccess_di" bpmnElement="Gateway_HasAccess" isMarkerVisible="true">
-        <dc:Bounds x="395" y="205" width="50" height="50" />
+        <dc:Bounds x="395" y="235" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="386" y="181" width="68" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_RequestAccess_di" bpmnElement="Task_RequestAccess">
-        <dc:Bounds x="370" y="310" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_CheckUser_di" bpmnElement="Task_CheckUser">
-        <dc:Bounds x="520" y="310" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_UserExists_di" bpmnElement="Gateway_UserExists" isMarkerVisible="true">
-        <dc:Bounds x="675" y="325" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="664" y="301" width="72" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_CreateAccount_di" bpmnElement="Task_CreateAccount">
-        <dc:Bounds x="650" y="430" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_MergeAccount_di" bpmnElement="Gateway_MergeAccount" isMarkerVisible="true">
-        <dc:Bounds x="805" y="325" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_ConfigurePermissions_di" bpmnElement="Task_ConfigurePermissions">
-        <dc:Bounds x="910" y="310" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_SendCredentials_di" bpmnElement="Task_SendCredentials">
-        <dc:Bounds x="1060" y="310" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_ConfigureClient_di" bpmnElement="Task_ConfigureClient">
-        <dc:Bounds x="1210" y="310" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_BeforeUpload_di" bpmnElement="Gateway_BeforeUpload" isMarkerVisible="true">
-        <dc:Bounds x="765" y="205" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_UploadFile_di" bpmnElement="Task_UploadFile">
-        <dc:Bounds x="870" y="190" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_UploadSuccess_di" bpmnElement="Gateway_UploadSuccess" isMarkerVisible="true">
-        <dc:Bounds x="1025" y="205" width="50" height="50" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="995" y="181" width="50" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_RetryUpload_di" bpmnElement="Task_RetryUpload">
-        <dc:Bounds x="1000" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_SaveFile_di" bpmnElement="Task_SaveFile">
-        <dc:Bounds x="1130" y="190" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_ManualBackup_di" bpmnElement="Task_ManualBackup">
-        <dc:Bounds x="1280" y="190" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Task_NotifyUser_di" bpmnElement="Task_NotifyUser">
-        <dc:Bounds x="1430" y="190" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_End_di" bpmnElement="Event_End">
-        <dc:Bounds x="1582" y="212" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="1562" y="255" width="77" height="14" />
+          <dc:Bounds x="455" y="253" width="68" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Gateway_MergeAccess_di" bpmnElement="Gateway_MergeAccess" isMarkerVisible="true">
-        <dc:Bounds x="495" y="205" width="50" height="50" />
+        <dc:Bounds x="395" y="345" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Task_FindFolder_di" bpmnElement="Task_FindFolder">
-        <dc:Bounds x="620" y="190" width="100" height="80" />
+        <dc:Bounds x="370" y="460" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RequestAccess_di" bpmnElement="Task_RequestAccess">
+        <dc:Bounds x="370" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckUser_di" bpmnElement="Task_CheckUser">
+        <dc:Bounds x="520" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_UserExists_di" bpmnElement="Gateway_UserExists" isMarkerVisible="true">
+        <dc:Bounds x="675" y="105" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="664" y="81" width="72" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateAccount_di" bpmnElement="Task_CreateAccount">
+        <dc:Bounds x="720" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MergeAccount_di" bpmnElement="Gateway_MergeAccount" isMarkerVisible="true">
+        <dc:Bounds x="805" y="105" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ConfigurePermissions_di" bpmnElement="Task_ConfigurePermissions">
+        <dc:Bounds x="910" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SendCredentials_di" bpmnElement="Task_SendCredentials">
+        <dc:Bounds x="1060" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ConfigureClient_di" bpmnElement="Task_ConfigureClient">
+        <dc:Bounds x="1210" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_BeforeUpload_di" bpmnElement="Gateway_BeforeUpload" isMarkerVisible="true">
+        <dc:Bounds x="495" y="475" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SaveFile_di" bpmnElement="Task_SaveFile">
+        <dc:Bounds x="910" y="460" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ManualBackup_di" bpmnElement="Task_ManualBackup">
+        <dc:Bounds x="1060" y="460" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_NotifyUser_di" bpmnElement="Task_NotifyUser">
+        <dc:Bounds x="1210" y="460" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_di" bpmnElement="Event_End">
+        <dc:Bounds x="1352" y="482" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1332" y="525" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UploadFile_di" bpmnElement="Task_UploadFile">
+        <dc:Bounds x="610" y="460" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RetryUpload_di" bpmnElement="Task_RetryUpload">
+        <dc:Bounds x="610" y="570" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_UploadSuccess_di" bpmnElement="Gateway_UploadSuccess" isMarkerVisible="true">
+        <dc:Bounds x="755" y="475" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="755" y="437.5" width="50" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
-        <di:waypoint x="188" y="230" />
-        <di:waypoint x="240" y="230" />
+        <di:waypoint x="188" y="260" />
+        <di:waypoint x="240" y="260" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2">
-        <di:waypoint x="340" y="230" />
-        <di:waypoint x="395" y="230" />
+        <di:waypoint x="340" y="260" />
+        <di:waypoint x="395" y="260" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_3_Yes_di" bpmnElement="Flow_3_Yes">
-        <di:waypoint x="445" y="230" />
-        <di:waypoint x="495" y="230" />
+        <di:waypoint x="420" y="285" />
+        <di:waypoint x="420" y="345" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="465" y="212" width="13" height="14" />
+          <dc:Bounds x="433" y="279" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_3_No_di" bpmnElement="Flow_3_No">
-        <di:waypoint x="420" y="255" />
-        <di:waypoint x="420" y="310" />
+        <di:waypoint x="420" y="235" />
+        <di:waypoint x="420" y="170" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="425" y="273" width="20" height="14" />
+          <dc:Bounds x="395" y="282" width="20" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
+        <di:waypoint x="1260" y="170" />
+        <di:waypoint x="1260" y="370" />
+        <di:waypoint x="445" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
+        <di:waypoint x="420" y="395" />
+        <di:waypoint x="420" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
+        <di:waypoint x="470" y="500" />
+        <di:waypoint x="495" y="500" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
-        <di:waypoint x="470" y="350" />
-        <di:waypoint x="520" y="350" />
+        <di:waypoint x="470" y="130" />
+        <di:waypoint x="520" y="130" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
-        <di:waypoint x="620" y="350" />
-        <di:waypoint x="675" y="350" />
+        <di:waypoint x="620" y="130" />
+        <di:waypoint x="675" y="130" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_6_Yes_di" bpmnElement="Flow_6_Yes">
-        <di:waypoint x="725" y="350" />
-        <di:waypoint x="805" y="350" />
+        <di:waypoint x="725" y="130" />
+        <di:waypoint x="805" y="130" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="760" y="332" width="13" height="14" />
+          <dc:Bounds x="760" y="112" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_6_No_di" bpmnElement="Flow_6_No">
-        <di:waypoint x="700" y="375" />
-        <di:waypoint x="700" y="430" />
+        <di:waypoint x="700" y="155" />
+        <di:waypoint x="700" y="250" />
+        <di:waypoint x="720" y="250" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="705" y="393" width="20" height="14" />
+          <dc:Bounds x="670" y="163" width="20" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
-        <di:waypoint x="750" y="470" />
-        <di:waypoint x="830" y="470" />
-        <di:waypoint x="830" y="375" />
+        <di:waypoint x="820" y="250" />
+        <di:waypoint x="830" y="250" />
+        <di:waypoint x="830" y="155" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
-        <di:waypoint x="855" y="350" />
-        <di:waypoint x="910" y="350" />
+        <di:waypoint x="855" y="130" />
+        <di:waypoint x="910" y="130" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
-        <di:waypoint x="1010" y="350" />
-        <di:waypoint x="1060" y="350" />
+        <di:waypoint x="1010" y="130" />
+        <di:waypoint x="1060" y="130" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
-        <di:waypoint x="1160" y="350" />
-        <di:waypoint x="1210" y="350" />
+        <di:waypoint x="1160" y="130" />
+        <di:waypoint x="1210" y="130" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
-        <di:waypoint x="1260" y="310" />
-        <di:waypoint x="1260" y="290" />
-        <di:waypoint x="520" y="290" />
-        <di:waypoint x="520" y="255" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
-        <di:waypoint x="545" y="230" />
-        <di:waypoint x="620" y="230" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13">
-        <di:waypoint x="720" y="230" />
-        <di:waypoint x="765" y="230" />
+      <bpmndi:BPMNEdge id="Flow_Retry_di" bpmnElement="Flow_Retry">
+        <di:waypoint x="610" y="610" />
+        <di:waypoint x="520" y="610" />
+        <di:waypoint x="520" y="525" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_14_di" bpmnElement="Flow_14">
-        <di:waypoint x="815" y="230" />
-        <di:waypoint x="870" y="230" />
+        <di:waypoint x="545" y="500" />
+        <di:waypoint x="610" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19">
+        <di:waypoint x="1310" y="500" />
+        <di:waypoint x="1352" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_15_di" bpmnElement="Flow_15">
-        <di:waypoint x="970" y="230" />
-        <di:waypoint x="1025" y="230" />
+        <di:waypoint x="710" y="500" />
+        <di:waypoint x="755" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_16_Yes_di" bpmnElement="Flow_16_Yes">
-        <di:waypoint x="1075" y="230" />
-        <di:waypoint x="1130" y="230" />
+        <di:waypoint x="805" y="500" />
+        <di:waypoint x="910" y="500" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1098" y="212" width="13" height="14" />
+          <dc:Bounds x="827" y="482" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_16_No_di" bpmnElement="Flow_16_No">
-        <di:waypoint x="1050" y="205" />
-        <di:waypoint x="1050" y="160" />
+        <di:waypoint x="780" y="525" />
+        <di:waypoint x="780" y="610" />
+        <di:waypoint x="710" y="610" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1095" y="163" width="20" height="14" />
+          <dc:Bounds x="740" y="524" width="20" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_Retry_di" bpmnElement="Flow_Retry">
-        <di:waypoint x="1000" y="120" />
-        <di:waypoint x="790" y="120" />
-        <di:waypoint x="790" y="205" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_17_di" bpmnElement="Flow_17">
-        <di:waypoint x="1230" y="230" />
-        <di:waypoint x="1280" y="230" />
+        <di:waypoint x="1010" y="500" />
+        <di:waypoint x="1060" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_18_di" bpmnElement="Flow_18">
-        <di:waypoint x="1380" y="230" />
-        <di:waypoint x="1430" y="230" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_19_di" bpmnElement="Flow_19">
-        <di:waypoint x="1530" y="230" />
-        <di:waypoint x="1582" y="230" />
+        <di:waypoint x="1160" y="500" />
+        <di:waypoint x="1210" y="500" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

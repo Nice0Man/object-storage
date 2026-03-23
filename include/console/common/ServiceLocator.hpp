@@ -21,6 +21,7 @@ class AuthService;
 class StatsCollector;
 class InfrastructureService;
 class EncryptionService;
+class LifecycleService;
 } // namespace services
 } // namespace console
 
@@ -47,6 +48,7 @@ class ServiceLocator {
     static std::shared_ptr<services::StatsCollector> stats_collector();
     static std::shared_ptr<services::InfrastructureService> infrastructure_service();
     static std::shared_ptr<services::EncryptionService> encryption_service();
+    static std::shared_ptr<services::LifecycleService> lifecycle_service();
 
     // Setters (called from main.cpp during initialization)
     static void set_storage_client(std::shared_ptr<clients::LocalStorageClient> client);
@@ -59,6 +61,7 @@ class ServiceLocator {
     static void set_stats_collector(std::shared_ptr<services::StatsCollector> collector);
     static void set_infrastructure_service(std::shared_ptr<services::InfrastructureService> service);
     static void set_encryption_service(std::shared_ptr<services::EncryptionService> service);
+    static void set_lifecycle_service(std::shared_ptr<services::LifecycleService> service);
 
     // Cleanup (called before program termination to ensure proper destruction order)
     static void clear();
@@ -74,6 +77,7 @@ class ServiceLocator {
     static std::shared_ptr<services::StatsCollector> stats_collector_;
     static std::shared_ptr<services::InfrastructureService> infrastructure_service_;
     static std::shared_ptr<services::EncryptionService> encryption_service_;
+    static std::shared_ptr<services::LifecycleService> lifecycle_service_;
 };
 
 } // namespace console

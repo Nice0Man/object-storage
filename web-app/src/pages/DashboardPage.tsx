@@ -124,7 +124,7 @@ const widgetComponents: Record<WidgetType, React.FC<any>> = {
   quick_actions: QuickActionsWidget,
 };
 
-const DashboardPageNew: React.FC = () => {
+const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
 
@@ -623,4 +623,4 @@ const DashboardPageNew: React.FC = () => {
   );
 };
 
-export default DashboardPageNew;
+export default DashboardPage;

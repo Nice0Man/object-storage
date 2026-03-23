@@ -1,306 +1,157 @@
-<mxfile host="app.diagrams.net" modified="2026-02-05T12:00:00.000Z" agent="5.0" version="21.0.0" type="device">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.3.7">
   <diagram name="Use Case - Object Storage" id="usecase-object-storage">
-    <mxGraphModel dx="1400" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="3091" dy="1021" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-
-        <!-- Системная граница -->
-        <mxCell id="system_boundary" value="Object Storage System" style="shape=umlFrame;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;verticalAlign=top;horizontalAlign=left;spacingLeft=10;spacingTop=5;" vertex="1" parent="1">
-          <mxGeometry x="170" y="30" width="1050" height="1020" as="geometry" />
+        <mxCell id="system_boundary" parent="1" style="shape=umlFrame;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;verticalAlign=top;horizontalAlign=left;spacingLeft=10;spacingTop=5;fontSize=12;" value="Object Storage" vertex="1">
+          <mxGeometry height="760" width="730" x="170" y="20" as="geometry" />
         </mxCell>
-
-        <!-- АКТОРЫ -->
-        <mxCell id="actor_user" value="Пользователь" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="50" y="200" width="40" height="60" as="geometry" />
+        <mxCell id="actor_user" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Пользователь" vertex="1">
+          <mxGeometry height="60" width="40" x="60" y="200" as="geometry" />
         </mxCell>
-
-        <mxCell id="actor_admin" value="Администратор" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="50" y="550" width="40" height="60" as="geometry" />
+        <mxCell id="actor_admin" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Администратор" vertex="1">
+          <mxGeometry height="60" width="40" x="60" y="560" as="geometry" />
         </mxCell>
-
-        <mxCell id="inherit_user_admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=0;strokeColor=#000000;" edge="1" parent="1" source="actor_admin" target="actor_user">
+        <mxCell id="inherit_admin" edge="1" parent="1" source="actor_admin" style="endArrow=block;endFill=0;html=1;strokeColor=#000000;" target="actor_user">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="actor_api" value="Внешняя&#10;система (API)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
-          <mxGeometry x="1300" y="250" width="40" height="60" as="geometry" />
+        <mxCell id="uc_login" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Войти в систему" vertex="1">
+          <mxGeometry height="50" width="140" x="250" y="48" as="geometry" />
         </mxCell>
-
-        <!-- USE CASES - Аутентификация -->
-        <mxCell id="uc_login" value="Войти в систему" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="220" y="70" width="120" height="50" as="geometry" />
+        <mxCell id="uc_logout" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Выйти из системы" vertex="1">
+          <mxGeometry height="50" width="140" x="600" y="33" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_logout" value="Выйти из системы" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="370" y="70" width="120" height="50" as="geometry" />
+        <mxCell id="uc_refresh" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Обновить токен" vertex="1">
+          <mxGeometry height="50" width="140" x="740" y="60" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_refresh_token" value="Обновить токен" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
-          <mxGeometry x="520" y="70" width="120" height="50" as="geometry" />
+        <mxCell id="uc_upload" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Загрузить объект" vertex="1">
+          <mxGeometry height="50" width="140" x="420" y="40" as="geometry" />
         </mxCell>
-
-        <!-- USE CASES - Операции с объектами -->
-        <mxCell id="uc_upload" value="Загрузить объект" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="550" y="200" width="130" height="50" as="geometry" />
+        <mxCell id="uc_download" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Скачать объект" vertex="1">
+          <mxGeometry height="50" width="140" x="530" y="130" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_download" value="Скачать объект" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="700" y="280" width="130" height="50" as="geometry" />
+        <mxCell id="uc_delete_object" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Удалить объект" vertex="1">
+          <mxGeometry height="50" width="140" x="700" y="150" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_delete_object" value="Удалить объект" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="850" y="200" width="130" height="50" as="geometry" />
+        <mxCell id="uc_copy" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Копировать объект" vertex="1">
+          <mxGeometry height="50" width="140" x="430" y="330" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_copy" value="Копировать объект" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="350" y="200" width="130" height="50" as="geometry" />
+        <mxCell id="uc_list_objects" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Просмотреть&#xa;список объектов" vertex="1">
+          <mxGeometry height="50" width="140" x="680" y="340" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_list_objects" value="Просмотреть&#10;список объектов" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="850" y="360" width="130" height="50" as="geometry" />
+        <mxCell id="uc_get_info" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Получить информацию&#xa;об объекте" vertex="1">
+          <mxGeometry height="50" width="150" x="630" y="248" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_get_info" value="Получить информацию&#10;об объекте" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="550" y="280" width="130" height="50" as="geometry" />
+        <mxCell id="uc_presigned" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Сгенерировать&#xa;presigned URL" vertex="1">
+          <mxGeometry height="50" width="140" x="750" y="205" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_presigned_url" value="Сгенерировать&#10;presigned URL" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="70" width="130" height="50" as="geometry" />
+        <mxCell id="uc_create_bucket" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Создать бакет" vertex="1">
+          <mxGeometry height="50" width="140" x="185" y="360" as="geometry" />
         </mxCell>
-
-        <!-- USE CASES - Extending (системные) -->
-        <mxCell id="uc_validate_data" value="Валидировать&#10;данные" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="700" y="130" width="110" height="45" as="geometry" />
+        <mxCell id="uc_list_buckets" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Просмотреть&#xa;список бакетов" vertex="1">
+          <mxGeometry height="50" width="140" x="335" y="390" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_encrypt_data" value="Зашифровать&#10;данные" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="550" y="130" width="110" height="45" as="geometry" />
+        <mxCell id="uc_bucket_info" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Получить информацию&#xa;о бакете" vertex="1">
+          <mxGeometry height="50" width="150" x="490" y="400" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_decrypt_data" value="Расшифровать&#10;данные" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="850" y="280" width="110" height="45" as="geometry" />
+        <mxCell id="uc_manage_users" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Управлять&#xa;пользователями" vertex="1">
+          <mxGeometry height="50" width="140" x="230" y="458" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_check_auth" value="Проверить&#10;авторизацию" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="200" width="110" height="45" as="geometry" />
+        <mxCell id="uc_manage_policies" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Управлять&#xa;политиками" vertex="1">
+          <mxGeometry height="50" width="140" x="430" y="458" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_check_retention" value="Проверить&#10;retention" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="130" width="110" height="45" as="geometry" />
+        <mxCell id="uc_bucket_policy" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Настроить политику&#xa;бакета" vertex="1">
+          <mxGeometry height="50" width="150" x="630" y="458" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_write_audit" value="Записать&#10;в аудит лог" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
-          <mxGeometry x="1000" y="270" width="110" height="45" as="geometry" />
+        <mxCell id="uc_delete_bucket" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Удалить бакет" vertex="1">
+          <mxGeometry height="50" width="140" x="630" y="720" as="geometry" />
         </mxCell>
-
-        <!-- USE CASES - Бакеты -->
-        <mxCell id="uc_create_bucket" value="Создать бакет" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
-          <mxGeometry x="600" y="400" width="120" height="50" as="geometry" />
+        <mxCell id="uc_audit" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Просматривать&#xa;аудит логи" vertex="1">
+          <mxGeometry height="50" width="140" x="480" y="720" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_list_buckets" value="Просмотреть&#10;список бакетов" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="220" y="400" width="130" height="50" as="geometry" />
+        <mxCell id="uc_encryption" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Настроить&#xa;шифрование" vertex="1">
+          <mxGeometry height="50" width="140" x="640" y="640" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_bucket_info" value="Получить информацию&#10;о бакете" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="380" y="400" width="140" height="50" as="geometry" />
+        <mxCell id="uc_retention" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Настроить&#xa;retention" vertex="1">
+          <mxGeometry height="50" width="140" x="630" y="548" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_delete_bucket" value="Удалить бакет" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="380" y="480" width="120" height="50" as="geometry" />
+        <mxCell id="uc_versioning" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Настроить&#xa;версионирование" vertex="1">
+          <mxGeometry height="50" width="140" x="175" y="710" as="geometry" />
         </mxCell>
-
-        <mxCell id="uc_bucket_policy" value="Настроить&#10;политику бакета" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="220" y="480" width="130" height="50" as="geometry" />
+        <mxCell id="uc_lifecycle" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Настроить&#xa;lifecycle rules" vertex="1">
+          <mxGeometry height="50" width="140" x="335" y="720" as="geometry" />
         </mxCell>
-
-        <!-- USE CASES - Администрирование -->
-        <mxCell id="uc_manage_users" value="Управлять&#10;пользователями" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="380" y="560" width="130" height="50" as="geometry" />
-        </mxCell>
-
-        <mxCell id="uc_manage_policies" value="Управлять&#10;политиками" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="380" y="640" width="130" height="50" as="geometry" />
-        </mxCell>
-
-        <mxCell id="uc_audit_logs" value="Просматривать&#10;аудит логи" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="380" y="720" width="130" height="50" as="geometry" />
-        </mxCell>
-
-        <mxCell id="uc_versioning" value="Настроить&#10;версионирование" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="220" y="640" width="130" height="50" as="geometry" />
-        </mxCell>
-
-        <mxCell id="uc_lifecycle" value="Настроить&#10;lifecycle rules" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="220" y="720" width="130" height="50" as="geometry" />
-        </mxCell>
-
-        <mxCell id="uc_retention" value="Настроить&#10;retention" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="220" y="800" width="130" height="50" as="geometry" />
-        </mxCell>
-
-        <mxCell id="uc_encryption" value="Настроить&#10;шифрование" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
-          <mxGeometry x="380" y="800" width="130" height="50" as="geometry" />
-        </mxCell>
-
-        <!-- СВЯЗИ extend -->
-        <mxCell id="extend_upload_encrypt" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b85450;endArrow=open;endFill=0;" edge="1" parent="1" source="uc_encrypt_data" target="uc_upload">
+        <mxCell id="cu1" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#82b366;" target="uc_login">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="extend_upload_validate" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b85450;endArrow=open;endFill=0;" edge="1" parent="1" source="uc_validate_data" target="uc_upload">
+        <mxCell id="cu2" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#82b366;" target="uc_logout">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="extend_download_decrypt" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b85450;endArrow=open;endFill=0;" edge="1" parent="1" source="uc_decrypt_data" target="uc_download">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="extend_delete_retention" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b85450;endArrow=open;endFill=0;" edge="1" parent="1" source="uc_check_retention" target="uc_delete_object">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="extend_upload_auth" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b85450;endArrow=open;endFill=0;" edge="1" parent="1" source="uc_check_auth" target="uc_upload">
+        <mxCell id="cu3" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#82b366;" target="uc_refresh">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1055" y="225" />
+              <mxPoint x="360" y="160" />
             </Array>
           </mxGeometry>
         </mxCell>
-
-        <mxCell id="extend_download_auth" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b85450;endArrow=open;endFill=0;" edge="1" parent="1" source="uc_check_auth" target="uc_download">
+        <mxCell id="cu4" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#d79b00;" target="uc_upload">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="extend_delete_auth" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b85450;endArrow=open;endFill=0;" edge="1" parent="1" source="uc_check_auth" target="uc_delete_object">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="1055" y="225" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <mxCell id="extend_upload_audit" value="&lt;&lt;extend&gt;&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#b85450;endArrow=open;endFill=0;" edge="1" parent="1" source="uc_write_audit" target="uc_upload">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="850" y="293" />
-              <mxPoint x="850" y="225" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <!-- СВЯЗИ Пользователь -->
-        <mxCell id="conn_user_login" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="actor_user" target="uc_login">
+        <mxCell id="cu5" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#d79b00;" target="uc_download">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_logout" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="actor_user" target="uc_logout">
+        <mxCell id="cu6" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#d79b00;" target="uc_delete_object">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_refresh" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="actor_user" target="uc_refresh_token">
+        <mxCell id="cu7" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#d79b00;" target="uc_copy">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_upload" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="actor_user" target="uc_upload">
+        <mxCell id="cu8" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#d79b00;" target="uc_list_objects">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_download" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="actor_user" target="uc_download">
+        <mxCell id="cu9" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#d79b00;" target="uc_get_info">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_delete" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="actor_user" target="uc_delete_object">
+        <mxCell id="cu10" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#d79b00;" target="uc_presigned">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_copy" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="actor_user" target="uc_copy">
+        <mxCell id="cu11" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#6c8ebf;" target="uc_create_bucket">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_list" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="actor_user" target="uc_list_objects">
+        <mxCell id="cu12" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#6c8ebf;" target="uc_list_buckets">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_info" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="actor_user" target="uc_get_info">
+        <mxCell id="cu13" edge="1" parent="1" source="actor_user" style="edgeStyle=none;html=1;strokeColor=#6c8ebf;" target="uc_bucket_info">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_presigned" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="actor_user" target="uc_presigned_url">
+        <mxCell id="ca1" edge="1" parent="1" source="actor_admin" style="edgeStyle=none;html=1;strokeColor=#9673a6;" target="uc_manage_users">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_user_bucket" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="actor_user" target="uc_create_bucket">
+        <mxCell id="ca2" edge="1" parent="1" source="actor_admin" style="edgeStyle=none;html=1;strokeColor=#9673a6;" target="uc_manage_policies">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- СВЯЗИ Администратор -->
-        <mxCell id="conn_admin_list_buckets" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_list_buckets">
+        <mxCell id="ca3" edge="1" parent="1" source="actor_admin" style="edgeStyle=none;html=1;strokeColor=#9673a6;" target="uc_bucket_policy">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_admin_bucket_info" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_bucket_info">
+        <mxCell id="ca4" edge="1" parent="1" source="actor_admin" style="edgeStyle=none;html=1;strokeColor=#9673a6;" target="uc_delete_bucket">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_admin_delete_bucket" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_delete_bucket">
+        <mxCell id="ca5" edge="1" parent="1" source="actor_admin" style="edgeStyle=none;html=1;strokeColor=#9673a6;" target="uc_audit">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_admin_bucket_policy" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_bucket_policy">
+        <mxCell id="ca6" edge="1" parent="1" source="actor_admin" style="edgeStyle=none;html=1;strokeColor=#9673a6;" target="uc_encryption">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_admin_users" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_manage_users">
+        <mxCell id="ca7" edge="1" parent="1" source="actor_admin" style="edgeStyle=none;html=1;strokeColor=#9673a6;" target="uc_retention">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_admin_policies" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_manage_policies">
+        <mxCell id="ca8" edge="1" parent="1" source="actor_admin" style="edgeStyle=none;html=1;strokeColor=#9673a6;" target="uc_versioning">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_admin_audit" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_audit_logs">
+        <mxCell id="ca9" edge="1" parent="1" source="actor_admin" style="edgeStyle=none;html=1;strokeColor=#9673a6;" target="uc_lifecycle">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="conn_admin_versioning" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_versioning">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="conn_admin_lifecycle" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_lifecycle">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="conn_admin_retention" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_retention">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="conn_admin_encryption" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="actor_admin" target="uc_encryption">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- СВЯЗИ Внешняя система -->
-        <mxCell id="conn_api_upload" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="actor_api" target="uc_upload">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="conn_api_download" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="actor_api" target="uc_download">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="conn_api_delete" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="actor_api" target="uc_delete_object">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="conn_api_list" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="actor_api" target="uc_list_objects">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="conn_api_presigned" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;" edge="1" parent="1" source="actor_api" target="uc_presigned_url">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
       </root>
     </mxGraphModel>
   </diagram>

@@ -1,6 +1,8 @@
 # HTTP filters
 
-file(GLOB FILTERS_SOURCES *.cpp)
+set(FILTERS_SOURCES
+    CorsFilter.cpp
+)
 
 add_library(console_filters STATIC ${FILTERS_SOURCES})
 

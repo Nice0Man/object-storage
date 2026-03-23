@@ -4,31 +4,31 @@
     <bpmn:startEvent id="Event_Start" name="Необходимо загрузить файл">
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:task id="Task_OpenBrowser" name="Открыть веб-интерфейс Object Storage">
+    <bpmn:task id="Task_OpenBrowser" name="1. Открыть веб-интерфейс Object Storage">
       <bpmn:incoming>Flow_1</bpmn:incoming>
       <bpmn:outgoing>Flow_2</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Task_Login" name="Ввести логин и пароль">
+    <bpmn:task id="Task_Login" name="2. Ввести логин и пароль">
       <bpmn:incoming>Flow_2</bpmn:incoming>
       <bpmn:outgoing>Flow_3</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:serviceTask id="Task_ValidateCredentials" name="Валидация учетных данных">
+    <bpmn:serviceTask id="Task_ValidateCredentials" name="3. Валидация учетных данных">
       <bpmn:incoming>Flow_3</bpmn:incoming>
       <bpmn:outgoing>Flow_4</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="Task_GenerateToken" name="Генерация JWT токена">
+    <bpmn:serviceTask id="Task_GenerateToken" name="4. Генерация JWT токена">
       <bpmn:incoming>Flow_4</bpmn:incoming>
       <bpmn:outgoing>Flow_5</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:task id="Task_SelectBucket" name="Выбрать бакет">
+    <bpmn:task id="Task_SelectBucket" name="5. Выбрать бакет">
       <bpmn:incoming>Flow_5</bpmn:incoming>
       <bpmn:outgoing>Flow_6</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="Task_DragDrop" name="Drag and Drop файла">
+    <bpmn:task id="Task_DragDrop" name="6. Drag and Drop файла">
       <bpmn:incoming>Flow_6</bpmn:incoming>
       <bpmn:outgoing>Flow_7</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:serviceTask id="Task_ValidateRequest" name="Валидация JWT и прав доступа">
+    <bpmn:serviceTask id="Task_ValidateRequest" name="7. Валидация JWT и прав доступа">
       <bpmn:incoming>Flow_7</bpmn:incoming>
       <bpmn:outgoing>Flow_8</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -37,11 +37,11 @@
       <bpmn:outgoing>Flow_9_Yes</bpmn:outgoing>
       <bpmn:outgoing>Flow_9_No</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:serviceTask id="Task_ReturnError" name="Возврат ошибки 403">
+    <bpmn:serviceTask id="Task_ReturnError" name="8. Возврат ошибки 403">
       <bpmn:incoming>Flow_9_No</bpmn:incoming>
       <bpmn:outgoing>Flow_Error</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="Task_CalcEtag" name="Вычисление ETag (MD5)">
+    <bpmn:serviceTask id="Task_CalcEtag" name="9. Вычисление ETag (MD5)">
       <bpmn:incoming>Flow_9_Yes</bpmn:incoming>
       <bpmn:outgoing>Flow_10</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -50,7 +50,7 @@
       <bpmn:outgoing>Flow_11_Yes</bpmn:outgoing>
       <bpmn:outgoing>Flow_11_No</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:serviceTask id="Task_Encrypt" name="Шифрование данных (AES-256)">
+    <bpmn:serviceTask id="Task_Encrypt" name="10. Шифрование данных (AES-256)">
       <bpmn:incoming>Flow_11_Yes</bpmn:incoming>
       <bpmn:outgoing>Flow_12</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -59,11 +59,11 @@
       <bpmn:incoming>Flow_12</bpmn:incoming>
       <bpmn:outgoing>Flow_13</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:serviceTask id="Task_SaveToStorage" name="Атомарная запись на диск">
+    <bpmn:serviceTask id="Task_SaveToStorage" name="11. Атомарная запись на диск">
       <bpmn:incoming>Flow_13</bpmn:incoming>
       <bpmn:outgoing>Flow_14</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="Task_WriteMetaFile" name="Запись .meta файла">
+    <bpmn:serviceTask id="Task_WriteMetaFile" name="12. Запись .meta файла">
       <bpmn:incoming>Flow_14</bpmn:incoming>
       <bpmn:outgoing>Flow_15</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -72,7 +72,7 @@
       <bpmn:outgoing>Flow_16_Yes</bpmn:outgoing>
       <bpmn:outgoing>Flow_16_No</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:serviceTask id="Task_CreateVersion" name="Создать новую версию">
+    <bpmn:serviceTask id="Task_CreateVersion" name="13. Создать новую версию">
       <bpmn:incoming>Flow_16_Yes</bpmn:incoming>
       <bpmn:outgoing>Flow_17</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -81,15 +81,15 @@
       <bpmn:incoming>Flow_17</bpmn:incoming>
       <bpmn:outgoing>Flow_18</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:serviceTask id="Task_SaveMetadata" name="Сохранение метаданных в БД">
+    <bpmn:serviceTask id="Task_SaveMetadata" name="14. Сохранение метаданных в БД">
       <bpmn:incoming>Flow_18</bpmn:incoming>
       <bpmn:outgoing>Flow_19</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="Task_LogActivity" name="Логирование операции">
+    <bpmn:serviceTask id="Task_LogActivity" name="15. Логирование операции">
       <bpmn:incoming>Flow_19</bpmn:incoming>
       <bpmn:outgoing>Flow_20</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="Task_ReturnResult" name="Возврат успешного результата">
+    <bpmn:serviceTask id="Task_ReturnResult" name="16. Возврат успешного результата">
       <bpmn:incoming>Flow_20</bpmn:incoming>
       <bpmn:outgoing>Flow_21</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -98,11 +98,11 @@
       <bpmn:outgoing>Flow_22_Yes</bpmn:outgoing>
       <bpmn:outgoing>Flow_22_No</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:serviceTask id="Task_GeneratePresigned" name="Сгенерировать Presigned URL">
+    <bpmn:serviceTask id="Task_GeneratePresigned" name="17. Сгенерировать Presigned URL">
       <bpmn:incoming>Flow_22_Yes</bpmn:incoming>
       <bpmn:outgoing>Flow_23</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:task id="Task_ShareLink" name="Отправить ссылку коллегам">
+    <bpmn:task id="Task_ShareLink" name="18. Отправить ссылку коллегам">
       <bpmn:incoming>Flow_23</bpmn:incoming>
       <bpmn:outgoing>Flow_24</bpmn:outgoing>
     </bpmn:task>

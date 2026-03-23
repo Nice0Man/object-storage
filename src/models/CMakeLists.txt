@@ -1,6 +1,14 @@
 # Data models and structures
 
-file(GLOB MODELS_SOURCES *.cpp)
+set(MODELS_SOURCES
+    Bucket.cpp
+    Error.cpp
+    Group.cpp
+    Object.cpp
+    Policy.cpp
+    ServerInfo.cpp
+    User.cpp
+)
 
 add_library(console_models STATIC ${MODELS_SOURCES})
 

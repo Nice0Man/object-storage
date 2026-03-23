@@ -1,172 +1,196 @@
-<mxfile host="app.diagrams.net" modified="2026-02-03T12:00:00.000Z" agent="5.0" version="21.0.0" type="device">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.3.7">
   <diagram name="State - Object Lifecycle" id="state-object-lifecycle">
-    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+    <mxGraphModel dx="1816" dy="681" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-
-        <!-- Title -->
-        <mxCell id="title" value="Диаграмма состояний: Жизненный цикл объекта" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="300" y="20" width="400" height="30" as="geometry" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;" value="Диаграмма состояний: Жизненный цикл объекта" vertex="1">
+          <mxGeometry height="30" width="400" x="300" y="10" as="geometry" />
         </mxCell>
-
-        <!-- Initial State -->
-        <mxCell id="initial" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;" vertex="1" parent="1">
-          <mxGeometry x="60" y="185" width="30" height="30" as="geometry" />
+        <mxCell id="initial" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d79b00;strokeColor=#b85450;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="80" y="75" as="geometry" />
         </mxCell>
-
-        <!-- State: Uploading -->
-        <mxCell id="state_uploading" value="Uploading&#xa;(Загрузка)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="140" y="170" width="120" height="60" as="geometry" />
+        <mxCell id="s_uploading" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;arcSize=20;" value="Загрузка" vertex="1">
+          <mxGeometry height="60" width="140" x="160" y="60" as="geometry" />
         </mxCell>
-
-        <!-- State: Active -->
-        <mxCell id="state_active" value="Active&#xa;(Активный)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="320" y="170" width="120" height="60" as="geometry" />
+        <mxCell id="s_active" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;arcSize=20;" value="Активный" vertex="1">
+          <mxGeometry height="60" width="140" x="460" y="250" as="geometry" />
         </mxCell>
-
-        <!-- State: Versioned -->
-        <mxCell id="state_versioned" value="Versioned&#xa;(Версионирован)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="320" y="80" width="120" height="50" as="geometry" />
+        <mxCell id="s_versioned" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;arcSize=20;" value="Версионирован" vertex="1">
+          <mxGeometry height="60" width="140" x="830" y="60" as="geometry" />
         </mxCell>
-
-        <!-- State: Locked -->
-        <mxCell id="state_locked" value="Locked&#xa;(Заблокирован)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="500" y="80" width="120" height="50" as="geometry" />
+        <mxCell id="s_locked" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=11;arcSize=20;" value="Заблокирован" vertex="1">
+          <mxGeometry height="60" width="140" x="830" y="200" as="geometry" />
         </mxCell>
-
-        <!-- State: Encrypted -->
-        <mxCell id="state_encrypted" value="Encrypted&#xa;(Зашифрован)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="500" y="170" width="120" height="60" as="geometry" />
+        <mxCell id="s_encrypted" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=11;arcSize=20;" value="Зашифрован" vertex="1">
+          <mxGeometry height="60" width="140" x="830" y="340" as="geometry" />
         </mxCell>
-
-        <!-- State: Marked for Deletion -->
-        <mxCell id="state_marked" value="Marked&#xa;(Помечен на удаление)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="320" y="280" width="120" height="60" as="geometry" />
+        <mxCell id="s_archived" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12;arcSize=20;" value="В архиве" vertex="1">
+          <mxGeometry height="60" width="140" x="830" y="480" as="geometry" />
         </mxCell>
-
-        <!-- State: Archived -->
-        <mxCell id="state_archived" value="Archived&#xa;(В архиве)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="500" y="280" width="120" height="60" as="geometry" />
+        <mxCell id="s_marked" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=11;arcSize=20;" value="Помечен&#xa;на удаление" vertex="1">
+          <mxGeometry height="60" width="140" x="470" y="480" as="geometry" />
         </mxCell>
-
-        <!-- Final State -->
-        <mxCell id="final" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;" vertex="1" parent="1">
-          <mxGeometry x="365" y="400" width="30" height="30" as="geometry" />
+        <mxCell id="d_upload" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="365" y="70" as="geometry" />
         </mxCell>
-        <mxCell id="finalOuter" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#000000;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="360" y="395" width="40" height="40" as="geometry" />
+        <mxCell id="d_action" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="690" y="290" as="geometry" />
         </mxCell>
-
-        <!-- ========== TRANSITIONS ========== -->
-
-        <!-- Initial -> Uploading -->
-        <mxCell id="trans1" value="upload()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="initial" target="state_uploading">
+        <mxCell id="d_marked" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="410" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="d_end" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="340" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="final_inner" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d79b00;strokeColor=#d6b656;" value="" vertex="1">
+          <mxGeometry height="20" width="20" x="350" y="715" as="geometry" />
+        </mxCell>
+        <mxCell id="final_outer" parent="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#d6b656;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="30" width="30" x="345" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="t01" edge="1" parent="1" source="initial" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;fontSize=9;" target="s_uploading" value="upload()">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Uploading -> Active -->
-        <mxCell id="trans2" value="complete()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;" edge="1" parent="1" source="state_uploading" target="state_active">
+        <mxCell id="t02" edge="1" parent="1" source="s_uploading" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" target="d_upload" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Active -> Versioned -->
-        <mxCell id="trans3" value="version()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;" edge="1" parent="1" source="state_active" target="state_versioned">
+        <mxCell id="t03" edge="1" parent="1" source="d_upload" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#82b366;fontSize=9;" target="iyjow5AQA5D-hON4pBli-1" value="[загрузка завершена]">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Versioned -> Active -->
-        <mxCell id="trans4" value="restore()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="state_versioned" target="state_active">
+        <mxCell id="t04" edge="1" parent="1" source="d_upload" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="d_end" value="[ошибка загрузки]">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="460" y="105" />
-              <mxPoint x="460" y="170" />
+              <mxPoint x="385" y="180" />
+              <mxPoint x="300" y="180" />
+              <mxPoint x="300" y="640" />
             </Array>
           </mxGeometry>
         </mxCell>
-
-        <!-- Active -> Encrypted -->
-        <mxCell id="trans5" value="encrypt()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;" edge="1" parent="1" source="state_active" target="state_encrypted">
+        <mxCell id="t05" edge="1" parent="1" source="s_active" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="d_action" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="610" y="310" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t06" edge="1" parent="1" source="d_action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6c8ebf;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="s_versioned" value="[версионирование]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780" y="310" />
+              <mxPoint x="780" y="90" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t07" edge="1" parent="1" source="d_action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="s_locked" value="[блокировка]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="310" />
+              <mxPoint x="800" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t08" edge="1" parent="1" source="d_action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#d79b00;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="s_encrypted" value="[шифрование]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780" y="310" />
+              <mxPoint x="780" y="370" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t09" edge="1" parent="1" source="d_action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;fontSize=9;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="s_archived" value="[архивирование]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="310" />
+              <mxPoint x="760" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t10" edge="1" parent="1" source="d_action" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="s_marked" value="[удаление]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="710" y="440" />
+              <mxPoint x="540" y="440" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t11" edge="1" parent="1" source="s_versioned" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6c8ebf;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" target="iyjow5AQA5D-hON4pBli-1" value="[восстановить версию]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="830" y="70" />
+              <mxPoint x="670" y="70" />
+              <mxPoint x="670" y="50" />
+              <mxPoint x="610" y="50" />
+              <mxPoint x="610" y="160" />
+            </Array>
+            <mxPoint x="610" y="210" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t12" edge="1" parent="1" source="s_locked" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9673a6;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" target="iyjow5AQA5D-hON4pBli-1" value="[разблокировать]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="830" y="220" />
+              <mxPoint x="670" y="220" />
+              <mxPoint x="670" y="130" />
+              <mxPoint x="610" y="130" />
+              <mxPoint x="610" y="170" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t13" edge="1" parent="1" source="s_encrypted" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#d79b00;fontSize=9;exitX=0;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="iyjow5AQA5D-hON4pBli-1" value="[расшифровать]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="340" />
+              <mxPoint x="880" y="270" />
+              <mxPoint x="630" y="270" />
+              <mxPoint x="630" y="180" />
+              <mxPoint x="575" y="180" />
+              <mxPoint x="575" y="120" />
+              <mxPoint x="530" y="120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t14" edge="1" parent="1" source="s_archived" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;fontSize=9;exitX=0;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" target="iyjow5AQA5D-hON4pBli-1" value="[разархивировать]">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="480" />
+              <mxPoint x="880" y="450" />
+              <mxPoint x="420" y="450" />
+              <mxPoint x="420" y="160" />
+            </Array>
+            <mxPoint x="480" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="t15" edge="1" parent="1" source="s_marked" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="d_marked" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Encrypted -> Active -->
-        <mxCell id="trans6" value="decrypt()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d79b00;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="state_encrypted" target="state_active">
+        <mxCell id="t16" edge="1" parent="1" source="d_marked" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#82b366;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="iyjow5AQA5D-hON4pBli-1" value="[восстановить]">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="560" y="250" />
-              <mxPoint x="440" y="250" />
+              <mxPoint x="410" y="510" />
+              <mxPoint x="400" y="510" />
+              <mxPoint x="400" y="200" />
+              <mxPoint x="470" y="200" />
+              <mxPoint x="470" y="170" />
             </Array>
           </mxGeometry>
         </mxCell>
-
-        <!-- Active -> Locked -->
-        <mxCell id="trans7" value="lock()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;" edge="1" parent="1" source="state_active" target="state_locked">
+        <mxCell id="t17" edge="1" parent="1" source="d_marked" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="d_end" value="[окончательно удалить]">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="380" y="140" />
-              <mxPoint x="560" y="140" />
+              <mxPoint x="360" y="540" />
             </Array>
           </mxGeometry>
         </mxCell>
-
-        <!-- Locked -> Active -->
-        <mxCell id="trans8" value="unlock()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="state_locked" target="state_encrypted">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="640" y="105" />
-              <mxPoint x="640" y="200" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <!-- Active -> Marked -->
-        <mxCell id="trans9" value="delete()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;" edge="1" parent="1" source="state_active" target="state_marked">
+        <mxCell id="t18" edge="1" parent="1" source="d_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" target="final_outer" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Marked -> Active (restore) -->
-        <mxCell id="trans10" value="restore()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="state_marked" target="state_active">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="300" y="310" />
-              <mxPoint x="300" y="230" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <!-- Marked -> Final (permanent delete) -->
-        <mxCell id="trans11" value="purge()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;" edge="1" parent="1" source="state_marked" target="final">
+        <mxCell id="iyjow5AQA5D-hON4pBli-3" edge="1" parent="1" source="iyjow5AQA5D-hON4pBli-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fillColor=#d5e8d4;strokeColor=#82b366;" target="s_active">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Active -> Archived -->
-        <mxCell id="trans12" value="archive()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;" edge="1" parent="1" source="state_active" target="state_archived">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="440" y="260" />
-              <mxPoint x="480" y="260" />
-              <mxPoint x="480" y="310" />
-            </Array>
-          </mxGeometry>
+        <mxCell id="iyjow5AQA5D-hON4pBli-1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1">
+          <mxGeometry height="40" width="40" x="490" y="150" as="geometry" />
         </mxCell>
-
-        <!-- Archived -> Active -->
-        <mxCell id="trans13" value="unarchive()" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#666666;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="state_archived" target="state_encrypted">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="660" y="310" />
-              <mxPoint x="660" y="200" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <!-- ========== LEGEND ========== -->
-
-        <mxCell id="legend_box" value="&lt;b&gt;Состояния:&lt;/b&gt;&#xa;🟡 Uploading - объект загружается&#xa;🟢 Active - объект доступен&#xa;🔵 Versioned - создана версия&#xa;🟣 Locked - защита от удаления&#xa;🟠 Encrypted - данные зашифрованы&#xa;🔴 Marked - помечен на удаление&#xa;⚪ Archived - перенесён в архив" style="text;html=1;strokeColor=#666666;fillColor=#f5f5f5;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;spacing=5;" vertex="1" parent="1">
-          <mxGeometry x="680" y="80" width="250" height="150" as="geometry" />
-        </mxCell>
-
       </root>
     </mxGraphModel>
   </diagram>

@@ -1,6 +1,8 @@
 # Common utilities and base classes
 
-file(GLOB COMMON_SOURCES *.cpp)
+set(COMMON_SOURCES
+    ServiceLocator.cpp
+)
 
 add_library(console_common STATIC ${COMMON_SOURCES})
 
@@ -13,6 +15,7 @@ target_link_libraries(console_common
     PUBLIC
         Drogon::Drogon
         spdlog::spdlog
+        nlohmann_json::nlohmann_json
 )
 
 # RocksDB headers are needed for DatabaseManager.hpp

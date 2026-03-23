@@ -8,8 +8,6 @@
 
 #include <memory>
 
-using namespace console;
-
 /**
  * @brief Authentication filter (global namespace wrapper)
  *
@@ -23,13 +21,11 @@ class AuthFilter : public drogon::HttpFilter<AuthFilter> {
     void doFilter(const drogon::HttpRequestPtr& req,
                   drogon::FilterCallback&& fcb,
                   drogon::FilterChainCallback&& fccb) override {
-        // Skip authentication for OPTIONS requests (CORS preflight)
         if (req->method() == drogon::HttpMethod::Options) {
             fccb();
             return;
         }
 
-        // Helper to add CORS headers to error response
         auto add_cors_headers = [&req](const drogon::HttpResponsePtr& resp) {
             auto origin = req->getHeader("Origin");
             if (origin.empty()) {
@@ -42,7 +38,6 @@ class AuthFilter : public drogon::HttpFilter<AuthFilter> {
             resp->addHeader("Access-Control-Allow-Credentials", "true");
         };
 
-        // Extract token from Authorization header
         auto auth_header = req->getHeader("Authorization");
         if (auth_header.empty() || auth_header.find("Bearer ") != 0) {
             CONSOLE_LOG_WARN("No authentication token provided for {}", req->getPath());
@@ -57,10 +52,9 @@ class AuthFilter : public drogon::HttpFilter<AuthFilter> {
             return;
         }
 
-        String token = auth_header.substr(7); // Remove "Bearer " prefix
+        console::String token = auth_header.substr(7);
 
-        // Validate token
-        auto claims_result = utils::JWT::validate_token(token);
+        auto claims_result = console::utils::JWT::validate_token(token);
         if (claims_result.is_err()) {
             CONSOLE_LOG_WARN("Invalid or expired token for {}: {}", req->getPath(), claims_result.error());
             Json::Value error;
@@ -74,11 +68,9 @@ class AuthFilter : public drogon::HttpFilter<AuthFilter> {
             return;
         }
 
-        // Convert JWT claims to UserInfo
         auto& claims = claims_result.value();
-        UserInfo user_info = utils::JWT::claims_to_userinfo(claims);
+        console::UserInfo user_info = console::utils::JWT::claims_to_userinfo(claims);
 
-        // Inject user info into request attributes
         req->attributes()->insert("user_info", user_info);
 
         CONSOLE_LOG_DEBUG("AuthFilter: Stored user_info for '{}', is_admin={} at path {}",
@@ -86,7 +78,6 @@ class AuthFilter : public drogon::HttpFilter<AuthFilter> {
                           user_info.is_admin,
                           req->getPath());
 
-        // Continue to next filter/handler
         fccb();
     }
 };

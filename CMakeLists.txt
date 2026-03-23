@@ -197,15 +197,8 @@ endif()
 # Project Structure
 # ============================================================================
 
-set(CONSOLE_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 set(CONSOLE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src)
 set(CONSOLE_TEST_DIR ${CMAKE_SOURCE_DIR}/tests)
-
-# Include directories
-include_directories(
-    ${CONSOLE_INCLUDE_DIR}
-    ${CMAKE_BINARY_DIR}/include
-)
 
 # ============================================================================
 # Modular Library Structure
@@ -254,7 +247,10 @@ endforeach()
 # Executable Target
 # ============================================================================
 
-add_executable(console ${CONSOLE_SOURCE_DIR}/main.cpp)
+add_executable(console
+    ${CONSOLE_SOURCE_DIR}/main.cpp
+    ${CONSOLE_SOURCE_DIR}/ServerBootstrap.cpp
+)
 
 target_link_libraries(console
     PRIVATE

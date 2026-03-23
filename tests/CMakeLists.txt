@@ -96,9 +96,28 @@ set_tests_properties(
 )
 
 # ============================================================================
+# Manual Tests (not run by CTest, build with --target manual_tests)
+# ============================================================================
+
+add_executable(manual_tests EXCLUDE_FROM_ALL
+    manual/test_local_storage.cpp
+)
+
+target_link_libraries(manual_tests
+    PRIVATE
+        console_lib
+)
+
+target_include_directories(manual_tests
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+)
+
+# ============================================================================
 # Summary
 # ============================================================================
 
 message(STATUS "Tests configured:")
 message(STATUS "  Unit tests:        ${UNIT_TEST_SOURCES}")
 message(STATUS "  Integration tests: ${INTEGRATION_TEST_SOURCES}")
+message(STATUS "  Manual tests:      manual/test_local_storage.cpp (EXCLUDE_FROM_ALL)")

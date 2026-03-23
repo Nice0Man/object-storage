@@ -1,6 +1,9 @@
 # WebSocket controllers
 
-file(GLOB WEBSOCKET_SOURCES *.cpp)
+set(WEBSOCKET_SOURCES
+    EventBroadcaster.cpp
+    EventsController.cpp
+)
 
 add_library(console_websocket STATIC ${WEBSOCKET_SOURCES})
 

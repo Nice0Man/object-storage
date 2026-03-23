@@ -4,7 +4,7 @@ cmake-build-*/
 out/
 bin/
 lib/
-
+docs/
 # CMake
 CMakeCache.txt
 CMakeFiles/
@@ -24,7 +24,6 @@ vcpkg_installed/
 *.swp
 *.swo
 *~
-.DS_Store
 
 # Compiled Object files
 *.o
@@ -71,11 +70,11 @@ htmlcov/
 # Test outputs
 Testing/
 test_results/
-*.log
 
 # Package managers
 node_modules/
-web-app/node_modules/
+
+# Web app build artifacts
 web-app/build/
 web-app/dist/
 web-app/.cache/
@@ -95,7 +94,7 @@ logs/
 *.bak
 *.backup
 
-# Documentation
+# Generated documentation
 docs/html/
 docs/latex/
 docs/doxygen/
@@ -118,5 +117,16 @@ $RECYCLE.BIN/
 # sqlite
 *.db*
 
-# data
+# Runtime data
 data/
+storage/
+uploads/
+
+# Runtime config (use config/config.example.json as template)
+config.json
+drogon_config.json
+
+# Playwright / E2E test artifacts
+.playwright-mcp/
+tests/e2e/test-results/
+tests/e2e/screenshots/

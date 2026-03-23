@@ -1,6 +1,16 @@
 # Business logic services
 
-file(GLOB SERVICES_SOURCES *.cpp)
+set(SERVICES_SOURCES
+    AuthService.cpp
+    BucketService.cpp
+    EncryptionService.cpp
+    InfrastructureService.cpp
+    LifecycleService.cpp
+    ObjectService.cpp
+    PolicyEvaluator.cpp
+    StatsCollector.cpp
+    UserService.cpp
+)
 
 add_library(console_services STATIC ${SERVICES_SOURCES})
 

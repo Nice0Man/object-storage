@@ -6,6 +6,7 @@
 #include "console/services/BucketService.hpp"
 #include "console/services/EncryptionService.hpp"
 #include "console/services/InfrastructureService.hpp"
+#include "console/services/LifecycleService.hpp"
 #include "console/services/ObjectService.hpp"
 #include "console/services/StatsCollector.hpp"
 #include "console/services/UserService.hpp"
@@ -24,6 +25,7 @@ std::shared_ptr<services::AuthService> ServiceLocator::auth_service_;
 std::shared_ptr<services::StatsCollector> ServiceLocator::stats_collector_;
 std::shared_ptr<services::InfrastructureService> ServiceLocator::infrastructure_service_;
 std::shared_ptr<services::EncryptionService> ServiceLocator::encryption_service_;
+std::shared_ptr<services::LifecycleService> ServiceLocator::lifecycle_service_;
 
 // Getters
 std::shared_ptr<clients::LocalStorageClient>
@@ -74,6 +76,11 @@ ServiceLocator::infrastructure_service() {
 std::shared_ptr<services::EncryptionService>
 ServiceLocator::encryption_service() {
     return encryption_service_;
+}
+
+std::shared_ptr<services::LifecycleService>
+ServiceLocator::lifecycle_service() {
+    return lifecycle_service_;
 }
 
 // Setters
@@ -127,6 +134,11 @@ ServiceLocator::set_encryption_service(std::shared_ptr<services::EncryptionServi
     encryption_service_ = service;
 }
 
+void
+ServiceLocator::set_lifecycle_service(std::shared_ptr<services::LifecycleService> service) {
+    lifecycle_service_ = service;
+}
+
 // Cleanup - clear all services in reverse order of initialization
 void
 ServiceLocator::clear() {
@@ -137,6 +149,7 @@ ServiceLocator::clear() {
     }
 
     // Clear services
+    lifecycle_service_.reset();
     infrastructure_service_.reset();
     encryption_service_.reset();
     auth_service_.reset();

@@ -1,6 +1,17 @@
 # REST API controllers
 
-file(GLOB API_SOURCES *.cpp)
+set(API_SOURCES
+    AuthController.cpp
+    BucketsController.cpp
+    DashboardController.cpp
+    DocsController.cpp
+    HealthController.cpp
+    InfrastructureController.cpp
+    ObjectsController.cpp
+    PresignedController.cpp
+    StatsController.cpp
+    UsersController.cpp
+)
 
 add_library(console_api STATIC ${API_SOURCES})
 

@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Types.hpp"
+#include "console/common/Types.hpp"
+#include "console/utils/StringUtils.hpp"
 
 #include <nlohmann/json.hpp>
 
-#include <algorithm>
 #include <filesystem>
-#include <sstream>
 
 namespace console {
 
@@ -98,7 +97,7 @@ class Config {
     Config(const Config&) = delete;
     Config& operator=(const Config&) = delete;
 
-  public:
+  private:
     Config() = default;
 
     void apply_defaults();
@@ -112,21 +111,6 @@ class Config {
     nlohmann::json raw_json_;
     Vector<String> validation_errors_;
 
-    // Helper to split string by delimiter
-    static Vector<String> split_string(const String& str, char delimiter) {
-        Vector<String> result;
-        std::stringstream ss(str);
-        String item;
-        while (std::getline(ss, item, delimiter)) {
-            // Trim whitespace
-            item.erase(0, item.find_first_not_of(" \t\n\r"));
-            item.erase(item.find_last_not_of(" \t\n\r") + 1);
-            if (!item.empty()) {
-                result.push_back(item);
-            }
-        }
-        return result;
-    }
     bool is_valid_{false};
 };
 

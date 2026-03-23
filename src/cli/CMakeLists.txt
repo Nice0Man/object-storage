@@ -1,6 +1,8 @@
 # CLI module
 
-file(GLOB CLI_SOURCES *.cpp)
+set(CLI_SOURCES
+    CommandLine.cpp
+)
 
 add_library(console_cli STATIC ${CLI_SOURCES})
 

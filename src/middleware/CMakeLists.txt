@@ -1,6 +1,10 @@
 # HTTP middleware components
 
-file(GLOB MIDDLEWARE_SOURCES *.cpp)
+set(MIDDLEWARE_SOURCES
+    ErrorHandler.cpp
+    RateLimiter.cpp
+    RequestLogger.cpp
+)
 
 add_library(console_middleware STATIC ${MIDDLEWARE_SOURCES})
 

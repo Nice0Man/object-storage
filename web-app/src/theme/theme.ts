@@ -1,7 +1,6 @@
 import { createTheme, ThemeOptions, alpha } from "@mui/material/styles";
 
-// Modern, professional color palette
-const lightPalette = {
+export const lightPalette = {
   primary: {
     main: "#2563eb", // Modern blue
     light: "#60a5fa",
@@ -39,7 +38,7 @@ const lightPalette = {
   },
 };
 
-const darkPalette = {
+export const darkPalette = {
   primary: {
     main: "#3b82f6",
     light: "#60a5fa",

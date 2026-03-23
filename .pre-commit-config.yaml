@@ -45,7 +45,7 @@ repos:
     rev: v0.39.0
     hooks:
       - id: markdownlint
-        args: ['--fix', '--config', '.markdownlint.json']
+        args: ['--fix', '--config', '.config/markdownlint.json']
         exclude: '^docs/.*\.md$'
 
   # Spell checking (optional, can be slow)
@@ -116,7 +116,7 @@ repos:
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
+        args: ['--baseline', '.config/secrets.baseline']
         exclude: '\.lock$|\.md$'
 
 # Global settings

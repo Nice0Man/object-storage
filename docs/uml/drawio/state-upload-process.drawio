@@ -1,249 +1,184 @@
-<mxfile host="app.diagrams.net" modified="2026-01-30T12:00:00.000Z" agent="5.0" version="21.0.0" type="device">
-  <diagram name="State Diagram - Upload Process" id="state-upload-process">
-    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+<mxfile host="app.diagrams.net" modified="2026-02-05T12:00:00.000Z" agent="5.0" version="21.0.0" type="device">
+  <diagram name="State - Upload Process" id="state-upload-process">
+    <mxGraphModel dx="1400" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="950" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-
-        <!-- Title -->
-        <mxCell id="title" value="&lt;b&gt;Диаграмма состояний: Процесс загрузки объекта (Upload Process)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="300" y="20" width="600" height="30" as="geometry" />
+        <mxCell id="title" value="Диаграмма состояний: Процесс загрузки объекта" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="400" height="30" as="geometry" />
         </mxCell>
 
-        <!-- Initial State -->
-        <mxCell id="initial" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#000000;" vertex="1" parent="1">
-          <mxGeometry x="60" y="235" width="30" height="30" as="geometry" />
+        <!-- ====== Start ====== -->
+        <mxCell id="initial" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d79b00;strokeColor=#b85450;" value="" vertex="1" parent="1">
+          <mxGeometry x="505" y="50" width="30" height="30" as="geometry" />
         </mxCell>
 
-        <!-- State: Ожидание -->
-        <mxCell id="state_idle" value="Ожидание&#xa;(Idle)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="120" y="220" width="100" height="60" as="geometry" />
+        <!-- ====== States ====== -->
+        <mxCell id="s_idle" value="Ожидание" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=12;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="450" y="110" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_validating" value="Валидация" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=12;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="450" y="230" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_initiating" value="Инициализация" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=12;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="450" y="370" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_uploading" value="Передача данных" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=11;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="450" y="500" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_processing" value="Обработка" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=12;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="450" y="630" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_completed" value="Завершено" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=12;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="450" y="760" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_error" value="Ошибка" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=12;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="170" y="440" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s_aborted" value="Отменено" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=12;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="30" y="570" width="140" height="60" as="geometry" />
         </mxCell>
 
-        <!-- State: Инициализация -->
-        <mxCell id="state_init" value="Инициализация&#xa;(Initializing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="270" y="220" width="120" height="60" as="geometry" />
+        <!-- ====== Decision Diamonds (all same style) ====== -->
+        <mxCell id="d_valid" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1" parent="1">
+          <mxGeometry x="500" y="315" width="40" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="state_init_actions" value="entry / создать UploadRequest&#xa;do / валидировать параметры&#xa;exit / инициализировать буфер" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
-          <mxGeometry x="270" y="280" width="160" height="50" as="geometry" />
+        <mxCell id="d_upload" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1" parent="1">
+          <mxGeometry x="500" y="580" width="40" height="40" as="geometry" />
         </mxCell>
-
-        <!-- Composite State: Передача данных -->
-        <mxCell id="state_transfer" value="Передача данных (Transferring)" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=20;fillColor=#fff2cc;strokeColor=#d6b656;rounded=1;" vertex="1" parent="1">
-          <mxGeometry x="440" y="80" width="350" height="200" as="geometry" />
+        <mxCell id="d_proc" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1" parent="1">
+          <mxGeometry x="500" y="710" width="40" height="40" as="geometry" />
         </mxCell>
-
-        <!-- Sub-state: Чтение chunk -->
-        <mxCell id="state_reading" value="Чтение chunk&#xa;(Reading)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="state_transfer">
-          <mxGeometry x="30" y="40" width="90" height="50" as="geometry" />
+        <mxCell id="d_retry" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1" parent="1">
+          <mxGeometry x="80" y="440" width="40" height="40" as="geometry" />
         </mxCell>
-
-        <!-- Sub-state: Буферизация -->
-        <mxCell id="state_buffering" value="Буферизация&#xa;(Buffering)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="state_transfer">
-          <mxGeometry x="140" y="40" width="90" height="50" as="geometry" />
+        <mxCell id="d_end" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFD966;strokeColor=#d6b656;" value="" vertex="1" parent="1">
+          <mxGeometry x="500" y="850" width="40" height="40" as="geometry" />
         </mxCell>
 
-        <!-- Sub-state: Запись -->
-        <mxCell id="state_writing" value="Запись&#xa;(Writing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="state_transfer">
-          <mxGeometry x="250" y="40" width="80" height="50" as="geometry" />
+        <!-- ====== Final States ====== -->
+        <mxCell id="final_inner" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d79b00;strokeColor=#d6b656;" value="" vertex="1" parent="1">
+          <mxGeometry x="515" y="910" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="final_outer" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#d6b656;strokeWidth=2;" value="" vertex="1" parent="1">
+          <mxGeometry x="510" y="905" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="final_ab_inner" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d79b00;strokeColor=#d6b656;" value="" vertex="1" parent="1">
+          <mxGeometry x="95" y="700" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="final_ab_outer" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#d6b656;strokeWidth=2;" value="" vertex="1" parent="1">
+          <mxGeometry x="90" y="695" width="30" height="30" as="geometry" />
         </mxCell>
 
-        <!-- Sub-state: Обновление прогресса -->
-        <mxCell id="state_progress" value="Обновление&#xa;прогресса" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="state_transfer">
-          <mxGeometry x="140" y="110" width="90" height="50" as="geometry" />
-        </mxCell>
-
-        <!-- Internal transitions in composite -->
-        <mxCell id="t_reading_buffering" style="endArrow=block;html=1;rounded=0;fontSize=8;entryX=0;entryY=0.5;exitX=1;exitY=0.5;" edge="1" parent="state_transfer" source="state_reading" target="state_buffering">
+        <!-- ====== Transitions ====== -->
+        <!-- Initial → Ожидание -->
+        <mxCell id="t01" edge="1" parent="1" source="initial" target="s_idle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;fontSize=9;" value="create()">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="t_buffering_writing" style="endArrow=block;html=1;rounded=0;fontSize=8;entryX=0;entryY=0.5;exitX=1;exitY=0.5;" edge="1" parent="state_transfer" source="state_buffering" target="state_writing">
+
+        <!-- Ожидание → Валидация -->
+        <mxCell id="t02" edge="1" parent="1" source="s_idle" target="s_validating" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#d6b656;fontSize=9;" value="upload()">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="t_writing_progress" style="endArrow=block;html=1;rounded=0;fontSize=8;exitX=0.5;exitY=1;entryX=1;entryY=0.5;" edge="1" parent="state_transfer" source="state_writing" target="state_progress">
+
+        <!-- Валидация → Diamond valid -->
+        <mxCell id="t03" edge="1" parent="1" source="s_validating" target="d_valid" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Diamond valid → Инициализация [данные валидны] -->
+        <mxCell id="t04" edge="1" parent="1" source="d_valid" target="s_initiating" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#82b366;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="[данные валидны]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Diamond valid → Ошибка [невалидные данные] -->
+        <mxCell id="t05" edge="1" parent="1" source="d_valid" target="s_error" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" value="[невалидные данные]">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="290" y="135" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="t_progress_reading" value="[hasMoreData]" style="endArrow=block;html=1;rounded=0;fontSize=8;exitX=0;exitY=0.5;entryX=0.5;entryY=1;" edge="1" parent="state_transfer" source="state_progress" target="state_reading">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="75" y="135" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <!-- State: Финализация -->
-        <mxCell id="state_finalizing" value="Финализация&#xa;(Finalizing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="840" y="220" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="state_finalizing_actions" value="entry / вычислить ETag&#xa;do / закрыть temp файл&#xa;exit / выполнить rename" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
-          <mxGeometry x="840" y="280" width="130" height="50" as="geometry" />
-        </mxCell>
-
-        <!-- State: Завершён -->
-        <mxCell id="state_completed" value="Завершён&#xa;(Completed)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="1010" y="220" width="100" height="60" as="geometry" />
-        </mxCell>
-
-        <!-- State: Ошибка -->
-        <mxCell id="state_error" value="Ошибка&#xa;(Error)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="560" y="400" width="100" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="state_error_actions" value="entry / логировать ошибку&#xa;do / очистить temp файлы" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
-          <mxGeometry x="560" y="460" width="140" height="40" as="geometry" />
-        </mxCell>
-
-        <!-- State: Отменён -->
-        <mxCell id="state_cancelled" value="Отменён&#xa;(Cancelled)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="360" y="400" width="100" height="60" as="geometry" />
-        </mxCell>
-
-        <!-- State: Повтор -->
-        <mxCell id="state_retrying" value="Повтор&#xa;(Retrying)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;" vertex="1" parent="1">
-          <mxGeometry x="760" y="400" width="100" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="state_retrying_actions" value="entry / сбросить позицию&#xa;do / wait(backoff)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
-          <mxGeometry x="760" y="460" width="110" height="40" as="geometry" />
-        </mxCell>
-
-        <!-- Final State: Success -->
-        <mxCell id="final_success" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#82b366;strokeColor=#82b366;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="1045" y="330" width="30" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="final_success_outer" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#82b366;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="1040" y="325" width="40" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="final_success_label" value="Успех" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
-          <mxGeometry x="1035" y="365" width="50" height="20" as="geometry" />
-        </mxCell>
-
-        <!-- Final State: Failure -->
-        <mxCell id="final_failure" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#b85450;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="595" y="530" width="30" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="final_failure_outer" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#b85450;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="590" y="525" width="40" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="final_failure_label" value="Неудача" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=9;" vertex="1" parent="1">
-          <mxGeometry x="585" y="565" width="50" height="20" as="geometry" />
-        </mxCell>
-
-        <!-- Final State: Cancelled -->
-        <mxCell id="final_cancelled" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#9673a6;strokeColor=#9673a6;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="395" y="530" width="30" height="30" as="geometry" />
-        </mxCell>
-        <mxCell id="final_cancelled_outer" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=none;strokeColor=#9673a6;strokeWidth=2;" vertex="1" parent="1">
-          <mxGeometry x="390" y="525" width="40" height="40" as="geometry" />
-        </mxCell>
-
-        <!-- Transitions -->
-        <!-- Initial -> Idle -->
-        <mxCell id="t1" style="endArrow=block;html=1;rounded=0;fontSize=9;" edge="1" parent="1" source="initial" target="state_idle">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- Idle -> Initializing -->
-        <mxCell id="t2" value="startUpload(file)" style="endArrow=block;html=1;rounded=0;fontSize=9;" edge="1" parent="1" source="state_idle" target="state_init">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <!-- Initializing -> Transferring -->
-        <mxCell id="t3" value="initialized" style="endArrow=block;html=1;rounded=0;fontSize=9;" edge="1" parent="1" source="state_init" target="state_transfer">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="410" y="250" />
-              <mxPoint x="410" y="180" />
+              <mxPoint x="240" y="335" />
+              <mxPoint x="240" y="440" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- Transferring -> Finalizing -->
-        <mxCell id="t4" value="allDataTransferred" style="endArrow=block;html=1;rounded=0;fontSize=9;" edge="1" parent="1" source="state_transfer" target="state_finalizing">
+        <!-- Инициализация → Передача данных -->
+        <mxCell id="t06" edge="1" parent="1" source="s_initiating" target="s_uploading" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6c8ebf;fontSize=9;" value="[multipart создан]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Передача данных → Diamond upload -->
+        <mxCell id="t07" edge="1" parent="1" source="s_uploading" target="d_upload" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Diamond upload → Обработка [все части загружены] -->
+        <mxCell id="t08" edge="1" parent="1" source="d_upload" target="s_processing" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#82b366;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="[все части загружены]">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Diamond upload → Ошибка [ошибка передачи] -->
+        <mxCell id="t09" edge="1" parent="1" source="d_upload" target="s_error" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" value="[ошибка передачи]">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="820" y="180" />
-              <mxPoint x="820" y="250" />
+              <mxPoint x="350" y="600" />
+              <mxPoint x="350" y="470" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- Finalizing -> Completed -->
-        <mxCell id="t5" value="finalized" style="endArrow=block;html=1;rounded=0;fontSize=9;" edge="1" parent="1" source="state_finalizing" target="state_completed">
+        <!-- Обработка → Diamond proc -->
+        <mxCell id="t10" edge="1" parent="1" source="s_processing" target="d_proc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Completed -> Final Success -->
-        <mxCell id="t6" style="endArrow=block;html=1;rounded=0;fontSize=9;" edge="1" parent="1" source="state_completed" target="final_success">
+        <!-- Diamond proc → Завершено [объект сохранён] -->
+        <mxCell id="t11" edge="1" parent="1" source="d_proc" target="s_completed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#82b366;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="[объект сохранён]">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Error transitions (from any state) -->
-        <!-- Initializing -> Error -->
-        <mxCell id="t7" value="error" style="endArrow=block;html=1;rounded=0;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="state_init" target="state_error">
+        <!-- Diamond proc → Ошибка [ошибка обработки] -->
+        <mxCell id="t12" edge="1" parent="1" source="d_proc" target="s_error" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;fontSize=9;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" value="[ошибка обработки]">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="330" y="400" />
+              <mxPoint x="240" y="730" />
+              <mxPoint x="240" y="500" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- Transferring -> Error -->
-        <mxCell id="t8" value="networkError /&#xa;timeout" style="endArrow=block;html=1;rounded=0;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="state_transfer" target="state_error">
+        <!-- Ошибка → Diamond retry -->
+        <mxCell id="t13" edge="1" parent="1" source="s_error" target="d_retry" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Diamond retry → Ожидание [повтор] -->
+        <mxCell id="t14" edge="1" parent="1" source="d_retry" target="s_idle" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6c8ebf;fontSize=9;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" value="[повтор]">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="610" y="320" />
+              <mxPoint x="100" y="140" />
             </Array>
           </mxGeometry>
         </mxCell>
 
-        <!-- Error -> Retrying [retryable] -->
-        <mxCell id="t9" value="[retryCount &lt; maxRetries]" style="endArrow=block;html=1;rounded=0;fontSize=9;" edge="1" parent="1" source="state_error" target="state_retrying">
+        <!-- Diamond retry → Отменено [отмена] -->
+        <mxCell id="t15" edge="1" parent="1" source="d_retry" target="s_aborted" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#b85450;fontSize=9;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="[отмена]">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Retrying -> Transferring -->
-        <mxCell id="t10" value="retry()" style="endArrow=block;html=1;rounded=0;fontSize=9;" edge="1" parent="1" source="state_retrying" target="state_transfer">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="810" y="320" />
-              <mxPoint x="810" y="180" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <!-- Error -> Final Failure -->
-        <mxCell id="t11" value="[retryCount &gt;= maxRetries]" style="endArrow=block;html=1;rounded=0;fontSize=9;strokeColor=#b85450;" edge="1" parent="1" source="state_error" target="final_failure">
+        <!-- Завершено → Diamond end -->
+        <mxCell id="t16" edge="1" parent="1" source="s_completed" target="d_end" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Cancel transitions -->
-        <!-- Transferring -> Cancelled -->
-        <mxCell id="t12" value="cancel()" style="endArrow=block;html=1;rounded=0;fontSize=9;strokeColor=#9673a6;" edge="1" parent="1" source="state_transfer" target="state_cancelled">
-          <mxGeometry relative="1" as="geometry">
-            <Array as="points">
-              <mxPoint x="440" y="320" />
-            </Array>
-          </mxGeometry>
-        </mxCell>
-
-        <!-- Cancelled -> Final Cancelled -->
-        <mxCell id="t13" style="endArrow=block;html=1;rounded=0;fontSize=9;strokeColor=#9673a6;" edge="1" parent="1" source="state_cancelled" target="final_cancelled">
+        <!-- Diamond end → Final -->
+        <mxCell id="t17" edge="1" parent="1" source="d_end" target="final_outer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <!-- Progress bar representation -->
-        <mxCell id="progress_note" value="События прогресса:&#xa;progressUpdate(bytesTransferred, totalBytes)&#xa;→ WebSocket: upload-progress" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;fillColor=#ffe6cc;strokeColor=#d79b00;size=14;fontSize=9;" vertex="1" parent="1">
-          <mxGeometry x="60" y="400" width="180" height="60" as="geometry" />
+        <!-- Отменено → Final aborted -->
+        <mxCell id="t18" edge="1" parent="1" source="s_aborted" target="final_ab_outer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#666666;" value="">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <!-- Legend -->
-        <mxCell id="legend" value="&lt;b&gt;Легенда:&lt;/b&gt;&#xa;⬛ Начальное/Конечное состояние&#xa;▭ Простое состояние&#xa;⬜ Составное состояние&#xa;[guard] Условие перехода&#xa;🔴 Путь ошибки&#xa;🟣 Путь отмены" style="text;html=1;strokeColor=#666666;fillColor=#f5f5f5;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontColor=#333333;fontSize=10;" vertex="1" parent="1">
-          <mxGeometry x="60" y="500" width="180" height="110" as="geometry" />
-        </mxCell>
-
       </root>
     </mxGraphModel>
   </diagram>

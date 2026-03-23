@@ -78,7 +78,7 @@ jobs:
       run: npm install -g markdownlint-cli
 
     - name: Lint Markdown files
-      run: markdownlint -c .markdownlint.json docs/
+      run: markdownlint -c .config/markdownlint.json docs/
       continue-on-error: true
 
   build-linux:

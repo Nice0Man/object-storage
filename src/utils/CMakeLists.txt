@@ -1,6 +1,13 @@
 # Utility functions and helpers
 
-file(GLOB UTILS_SOURCES *.cpp)
+set(UTILS_SOURCES
+    Config.cpp
+    JWT.cpp
+    Logger.cpp
+    PasswordHash.cpp
+    StringUtils.cpp
+    TokenBlacklist.cpp
+)
 
 add_library(console_utils STATIC ${UTILS_SOURCES})
 

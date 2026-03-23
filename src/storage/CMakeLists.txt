@@ -1,6 +1,10 @@
 # Storage backend implementations (RocksDB-based)
 
-file(GLOB STORAGE_SOURCES *.cpp)
+set(STORAGE_SOURCES
+    DatabaseManager.cpp
+    MetadataManager.cpp
+    PathManager.cpp
+)
 
 add_library(console_storage STATIC ${STORAGE_SOURCES})
 

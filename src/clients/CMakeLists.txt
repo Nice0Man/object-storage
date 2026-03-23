@@ -1,6 +1,9 @@
 # S3/Object Storage client implementations
 
-file(GLOB CLIENTS_SOURCES *.cpp)
+set(CLIENTS_SOURCES
+    LocalAdminClient.cpp
+    LocalStorageClient.cpp
+)
 
 add_library(console_clients STATIC ${CLIENTS_SOURCES})
 
