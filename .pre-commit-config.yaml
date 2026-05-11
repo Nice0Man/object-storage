@@ -54,7 +54,7 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=crate,nd,sav,ser,falsy,te,anull
+          - --ignore-words-list=crate,nd,sav,ser,falsy,te,anull,FitH,vEw,fith,vew,BU,bu
           - --skip="*.json,*.csv,*.xml,*.svg"
         exclude: '^(docs/|.*\.min\..*)$'
 
