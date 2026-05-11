@@ -40,12 +40,14 @@ import Loader from '../components/Common/Loader';
 import ErrorAlert from '../components/Common/ErrorAlert';
 import UserPoliciesDialog from '../components/Users/UserPoliciesDialog';
 import UserGroupsDialog from '../components/Users/UserGroupsDialog';
+import { selectCan } from '../store/authSlice';
 
 const UsersPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const users = useAppSelector(selectUsers);
   const loading = useAppSelector(selectUsersLoading);
   const error = useAppSelector(selectUsersError);
+  const canManageUsers = useAppSelector(selectCan("users.manage"));
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -159,6 +161,7 @@ const UsersPage: React.FC = () => {
             variant="contained"
             startIcon={<Add />}
             onClick={() => setCreateDialogOpen(true)}
+            disabled={!canManageUsers}
           >
             Create User
           </Button>
@@ -180,6 +183,7 @@ const UsersPage: React.FC = () => {
             variant="contained"
             startIcon={<Add />}
             onClick={() => setCreateDialogOpen(true)}
+            disabled={!canManageUsers}
           >
             Create User
           </Button>
@@ -247,6 +251,7 @@ const UsersPage: React.FC = () => {
                       color="primary"
                       onClick={() => openPoliciesDialog(user.access_key, user.access_key)}
                       title="Manage Policies"
+                      disabled={!canManageUsers}
                     >
                       <PolicyIcon />
                     </IconButton>
@@ -255,6 +260,7 @@ const UsersPage: React.FC = () => {
                       color="info"
                       onClick={() => openGroupsDialog(user.access_key, user.access_key, user.groups)}
                       title="Manage Groups"
+                      disabled={!canManageUsers}
                     >
                       <GroupIcon />
                     </IconButton>
@@ -263,6 +269,7 @@ const UsersPage: React.FC = () => {
                       color="error"
                       onClick={() => openDeleteDialog(user.access_key)}
                       title="Delete User"
+                      disabled={!canManageUsers}
                     >
                       <Delete />
                     </IconButton>
@@ -349,7 +356,7 @@ const UsersPage: React.FC = () => {
           <Button
             onClick={handleCreateUser}
             variant="contained"
-            disabled={!accessKey || !secretKey || loading}
+            disabled={!accessKey || !secretKey || loading || !canManageUsers}
           >
             Create
           </Button>

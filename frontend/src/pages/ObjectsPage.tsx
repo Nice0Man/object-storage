@@ -67,6 +67,7 @@ import {
   clearError,
 } from "../store/objectsSlice";
 import { fetchBuckets, selectBuckets } from "../store/bucketsSlice";
+import { selectCan } from "../store/authSlice";
 import Loader from "../components/Common/Loader";
 import ErrorAlert from "../components/Common/ErrorAlert";
 import FileUploader from "../components/Common/FileUploader";
@@ -80,6 +81,7 @@ const ObjectsPage: React.FC = () => {
   const error = useAppSelector(selectObjectsError);
   const uploadProgress = useAppSelector(selectUploadProgress);
   const buckets = useAppSelector(selectBuckets);
+  const canManageObjects = useAppSelector(selectCan("objects.manage"));
 
   const bucketFromUrl = searchParams.get("bucket") || "";
   const [selectedBucket, setSelectedBucket] = useState("");
@@ -365,7 +367,7 @@ const ObjectsPage: React.FC = () => {
             variant="outlined"
             startIcon={<CloudUpload />}
             onClick={() => setUploadDialogOpen(true)}
-            disabled={!selectedBucket}
+            disabled={!selectedBucket || !canManageObjects}
             sx={{ mr: 1 }}
           >
             Quick Upload
@@ -374,7 +376,7 @@ const ObjectsPage: React.FC = () => {
             variant="outlined"
             startIcon={<Lock />}
             onClick={() => setEncryptedUploadOpen(true)}
-            disabled={!selectedBucket}
+            disabled={!selectedBucket || !canManageObjects}
             sx={{ mr: 1 }}
             color="warning"
           >
@@ -384,7 +386,7 @@ const ObjectsPage: React.FC = () => {
             variant="contained"
             startIcon={<CloudUpload />}
             onClick={() => setMultipartUploadOpen(true)}
-            disabled={!selectedBucket}
+            disabled={!selectedBucket || !canManageObjects}
           >
             Upload Large Files
           </Button>
@@ -557,6 +559,7 @@ const ObjectsPage: React.FC = () => {
                       onVersions={() => handleObjectAction(object.key, "versions")}
                       onRetention={() => handleObjectAction(object.key, "retention")}
                       onDelete={() => handleObjectAction(object.key, "delete")}
+                      readOnly={!canManageObjects}
                     />
                   </TableCell>
                 </TableRow>

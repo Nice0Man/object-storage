@@ -45,6 +45,7 @@ import Loader from '../components/Common/Loader';
 import ErrorAlert from '../components/Common/ErrorAlert';
 import BucketPolicyDialog from '../components/Buckets/BucketPolicyDialog';
 import BucketSettingsDialog from '../components/Buckets/BucketSettingsDialog';
+import { selectCan } from '../store/authSlice';
 
 const BucketsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ const BucketsPage: React.FC = () => {
   const buckets = useAppSelector(selectBuckets);
   const loading = useAppSelector(selectBucketsLoading);
   const error = useAppSelector(selectBucketsError);
+  const canManageBuckets = useAppSelector(selectCan("buckets.manage"));
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -150,6 +152,18 @@ const BucketsPage: React.FC = () => {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const formatObjectsCount = (count?: number) => {
+    return `${(count ?? 0).toLocaleString()} objects`;
+  };
+
+  const getRegionLabel = (region?: string | null) => {
+    if (!region) return '';
+    const predefined = regions.find((item) => item.value === region);
+    if (predefined) return predefined.label;
+    if (region.toLowerCase() === 'local') return 'Local Storage';
+    return region;
+  };
+
   if (loading && buckets.length === 0) {
     return <Loader message="Loading buckets..." />;
   }
@@ -166,6 +180,7 @@ const BucketsPage: React.FC = () => {
             variant="contained"
             startIcon={<Add />}
             onClick={() => setCreateDialogOpen(true)}
+            disabled={!canManageBuckets}
           >
             Create Bucket
           </Button>
@@ -187,6 +202,7 @@ const BucketsPage: React.FC = () => {
             variant="contained"
             startIcon={<Add />}
             onClick={() => setCreateDialogOpen(true)}
+            disabled={!canManageBuckets}
           >
             Create Bucket
           </Button>
@@ -203,22 +219,25 @@ const BucketsPage: React.FC = () => {
                       {bucket.name}
                     </Typography>
                   </Box>
-                  <Box sx={{ mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  <Box sx={{ mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
                     <Chip
-                      label={`${bucket.objects_count || 0} objects`}
+                      label={formatObjectsCount(bucket.objects_count)}
                       size="small"
+                      sx={{ maxWidth: '100%' }}
                     />
                     <Chip
                       label={formatSize(bucket.size || 0)}
                       size="small"
                       color="primary"
+                      sx={{ maxWidth: '100%' }}
                     />
                     {bucket.region && (
                       <Chip
-                        label={bucket.region}
+                        label={getRegionLabel(bucket.region)}
                         size="small"
                         variant="outlined"
                         color="secondary"
+                        sx={{ maxWidth: '100%' }}
                       />
                     )}
                   </Box>
@@ -239,6 +258,7 @@ const BucketsPage: React.FC = () => {
                     color="primary"
                     onClick={() => openPolicyDialog(bucket.name)}
                     title="Manage Policy"
+                    disabled={!canManageBuckets}
                   >
                     <PolicyIcon />
                   </IconButton>
@@ -247,6 +267,7 @@ const BucketsPage: React.FC = () => {
                     color="default"
                     onClick={() => openSettingsDialog(bucket.name)}
                     title="Bucket Settings"
+                    disabled={!canManageBuckets}
                   >
                     <Settings />
                   </IconButton>
@@ -255,6 +276,7 @@ const BucketsPage: React.FC = () => {
                     color="error"
                     onClick={() => openDeleteDialog(bucket.name)}
                     sx={{ ml: 'auto' }}
+                    disabled={!canManageBuckets}
                   >
                     <Delete />
                   </IconButton>
@@ -318,7 +340,7 @@ const BucketsPage: React.FC = () => {
           <Button
             onClick={handleCreateBucket}
             variant="contained"
-            disabled={!newBucketName || loading}
+            disabled={!newBucketName || loading || !canManageBuckets}
           >
             Create
           </Button>

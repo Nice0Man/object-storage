@@ -31,6 +31,7 @@ interface ObjectActionsMenuProps {
   onDelete: () => void;
   onVersions?: () => void;
   onRetention?: () => void;
+  readOnly?: boolean;
 }
 
 const ObjectActionsMenu: React.FC<ObjectActionsMenuProps> = ({
@@ -43,6 +44,7 @@ const ObjectActionsMenu: React.FC<ObjectActionsMenuProps> = ({
   onDelete,
   onVersions,
   onRetention,
+  readOnly = false,
 }) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -64,7 +66,7 @@ const ObjectActionsMenu: React.FC<ObjectActionsMenuProps> = ({
 
   return (
     <>
-      <IconButton size="small" onClick={handleClick} aria-label="more actions">
+      <IconButton size="small" onClick={handleClick} aria-label="more actions" disabled={readOnly}>
         <MoreVert />
       </IconButton>
       <Menu
@@ -95,19 +97,19 @@ const ObjectActionsMenu: React.FC<ObjectActionsMenuProps> = ({
           </ListItemIcon>
           <ListItemText>{t("objects.actions.download")}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAction(onCopy)}>
+        <MenuItem onClick={() => handleAction(onCopy)} disabled={readOnly}>
           <ListItemIcon>
             <FileCopy fontSize="small" />
           </ListItemIcon>
           <ListItemText>{t("objects.actions.copy")}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAction(onTags)}>
+        <MenuItem onClick={() => handleAction(onTags)} disabled={readOnly}>
           <ListItemIcon>
             <Label fontSize="small" />
           </ListItemIcon>
           <ListItemText>{t("objects.actions.tags")}</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAction(onPresignedUrl)}>
+        <MenuItem onClick={() => handleAction(onPresignedUrl)} disabled={readOnly}>
           <ListItemIcon>
             <Link fontSize="small" />
           </ListItemIcon>
@@ -122,7 +124,7 @@ const ObjectActionsMenu: React.FC<ObjectActionsMenuProps> = ({
           </MenuItem>
         )}
         {onRetention && (
-          <MenuItem onClick={() => handleAction(onRetention)}>
+          <MenuItem onClick={() => handleAction(onRetention)} disabled={readOnly}>
             <ListItemIcon>
               <Lock fontSize="small" />
             </ListItemIcon>
@@ -132,6 +134,7 @@ const ObjectActionsMenu: React.FC<ObjectActionsMenuProps> = ({
         <Divider />
         <MenuItem
           onClick={() => handleAction(onDelete)}
+          disabled={readOnly}
           sx={{ color: "error.main" }}
         >
           <ListItemIcon>
