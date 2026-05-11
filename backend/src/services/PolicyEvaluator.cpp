@@ -1,6 +1,7 @@
 #include "console/services/PolicyEvaluator.hpp"
 
 #include "console/common/Logger.hpp"
+#include "console/common/ServiceLocator.hpp"
 
 #include <regex>
 
@@ -63,31 +64,70 @@ PolicyEvaluator::evaluate_user_access(const UserInfo& user_info,
         return result;
     }
 
-    // Parse user policies
+    // Parse user policies (JSON inline or policy names from DB)
     Vector<models::Policy> policies;
+    auto db = ServiceLocator::database();
     for (const auto& policy_str : user_info.policies) {
         try {
             auto policy = models::Policy::from_json_string(policy_str);
             policies.push_back(policy);
         } catch (const std::exception& e) {
-            CONSOLE_LOG_WARN("Failed to parse policy: {}", e.what());
-            // Try to treat as policy name instead of JSON
-            // Could look up policy by name from database here
+            if (db) {
+                auto db_policy = db->get_policy(policy_str);
+                if (db_policy) {
+                    try {
+                        policies.push_back(models::Policy::from_json_string(db_policy.value().document));
+                    } catch (const std::exception& parse_error) {
+                        CONSOLE_LOG_WARN("Failed to parse DB policy {}: {}", policy_str, parse_error.what());
+                    }
+                }
+            }
+            CONSOLE_LOG_DEBUG("Failed to parse inline policy {}: {}", policy_str, e.what());
         }
     }
 
-    // If no policies, default to deny
+    // Role baseline (hybrid role + overrides by policies).
+    if (user_info.role == "admin") {
+        result.decision = PolicyDecision::Allow;
+        result.reason = "Role admin - full access";
+        return result;
+    }
+    if (user_info.role == "editor") {
+        if (action.rfind("s3:", 0) == 0) {
+            result.decision = PolicyDecision::Allow;
+            result.reason = "Role editor baseline allow";
+        }
+    }
+    if (user_info.role == "viewer") {
+        if (action == S3Actions::ListBucket || action == S3Actions::GetObject ||
+            action == S3Actions::GetObjectTagging || action == S3Actions::GetObjectVersion ||
+            action == S3Actions::GetObjectRetention || action == S3Actions::GetObjectLegalHold ||
+            action == S3Actions::GetBucketTagging || action == S3Actions::GetBucketVersioning ||
+            action == S3Actions::GetBucketPolicy || action == S3Actions::GetBucketLocation) {
+            result.decision = PolicyDecision::Allow;
+            result.reason = "Role viewer baseline allow";
+        }
+    }
+
+    // If no policies, role baseline decides.
     if (policies.empty()) {
+        if (result.decision == PolicyDecision::Allow) {
+            return result;
+        }
         result.decision = PolicyDecision::Deny;
-        result.reason = "No policies assigned to user";
+        result.reason = "No matching role/policy allow";
         return result;
     }
 
     // Build resource ARN
     String resource = build_resource_arn(bucket_name, object_key);
 
-    // Evaluate policies
-    return evaluate(policies, action, resource);
+    // Evaluate policies first, then fallback to role baseline.
+    auto evaluated = evaluate(policies, action, resource);
+    if (evaluated.decision == PolicyDecision::NoMatch && result.decision == PolicyDecision::Allow) {
+        return result;
+    }
+    return evaluated;
 }
 
 String
