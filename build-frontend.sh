@@ -4,13 +4,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "${ROOT}/frontend"
 
-SKIP_IF_READY="${SKIP_IF_READY:-1}"
-FRONTEND_READY_MARKER="${FRONTEND_READY_MARKER:-${ROOT}/frontend/build/index.html}"
-if [[ "${SKIP_IF_READY}" == "1" ]] && [[ -f "${FRONTEND_READY_MARKER}" ]]; then
-  echo "Frontend build already present, skipping npm (${FRONTEND_READY_MARKER})"
-  exit 0
-fi
-
 case "${ROOT}" in
   /mnt/*)
     export TMPDIR="${TMPDIR:-${HOME}/.cache/object-storage-console-npm-tmp}"
