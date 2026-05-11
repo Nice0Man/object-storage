@@ -169,6 +169,21 @@ TEST_F(LocalStorageClientTest, DeleteBucket_NotEmpty) {
     ASSERT_TRUE(result.is_err());
 }
 
+TEST_F(LocalStorageClientTest, DeleteBucket_EmptyAfterObjectDeleted) {
+    client_->create_bucket("cleanup-bucket", "");
+    ByteArray data = {'x'};
+    ASSERT_TRUE(
+        client_->put_object("cleanup-bucket", "nested/path/file.bin", data, "application/octet-stream", {}).is_ok());
+    ASSERT_TRUE(client_->delete_object("cleanup-bucket", "nested/path/file.bin").is_ok());
+
+    // Objects are gone but empty parent dirs may remain; delete_bucket must still succeed.
+    auto result = client_->delete_bucket("cleanup-bucket");
+    ASSERT_TRUE(result.is_ok());
+    auto exists = client_->bucket_exists("cleanup-bucket");
+    ASSERT_TRUE(exists.is_ok());
+    EXPECT_FALSE(exists.value());
+}
+
 // ============================================================================
 // Object Operations Tests
 // ============================================================================
@@ -393,6 +408,18 @@ TEST_F(LocalStorageClientTest, GeneratePresignedUrl_Success) {
 
     ASSERT_TRUE(result.is_ok());
     EXPECT_FALSE(result.value().empty());
+}
+
+TEST_F(LocalStorageClientTest, GeneratePresignedUrl_EncodesSpecialObjectKey) {
+    client_->create_bucket("test-bucket", "");
+    ByteArray data = {'D', 'a', 't', 'a'};
+    const String object_key = "folder/Пример (1).txt";
+    client_->put_object("test-bucket", object_key, data, "text/plain", {});
+
+    auto result = client_->generate_presigned_url("test-bucket", object_key, 3600, "GET");
+    ASSERT_TRUE(result.is_ok());
+    EXPECT_NE(result.value().find("/api/v1/objects/test-bucket/folder/%D0%9F%D1%80"), String::npos);
+    EXPECT_NE(result.value().find("expires_in=3600"), String::npos);
 }
 
 // ============================================================================

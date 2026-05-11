@@ -6,6 +6,7 @@
 #include "console/services/EncryptionService.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
@@ -17,6 +18,26 @@
 #include <sstream>
 
 namespace console::clients {
+
+namespace {
+String
+encode_presigned_key_path(const String& raw_key) {
+    static constexpr char hex[] = "0123456789ABCDEF";
+    String out;
+    out.reserve(raw_key.size() * 3);
+    for (unsigned char c : raw_key) {
+        const bool unreserved = std::isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' || c == '/';
+        if (unreserved) {
+            out.push_back(static_cast<char>(c));
+            continue;
+        }
+        out.push_back('%');
+        out.push_back(hex[(c >> 4) & 0x0F]);
+        out.push_back(hex[c & 0x0F]);
+    }
+    return out;
+}
+} // namespace
 
 LocalStorageClient::LocalStorageClient(const String& storage_root)
     : path_manager_(std::make_unique<storage::PathManager>(storage_root)),
@@ -48,9 +69,10 @@ LocalStorageClient::is_connected() {
 bool
 is_metadata_file(const String& filename) {
     // Skip all metadata files: *.meta, *.meta.json, .metadata.json, encryption.json, etc.
+    // *.tags — sidecar files (aligned with list_objects skipping .tags extension)
     if (filename.ends_with(".meta") || filename.ends_with(".meta.json") || filename == ".metadata.json" ||
-        filename == "encryption.json" || filename == "lifecycle.json" || filename == "versioning.json" ||
-        filename == "policy.json" || filename == "tags.json") {
+        filename.ends_with(".tags") || filename == "encryption.json" || filename == "lifecycle.json" ||
+        filename == "versioning.json" || filename == "policy.json" || filename == "tags.json") {
         return true;
     }
     return false;
@@ -269,9 +291,12 @@ LocalStorageClient::delete_bucket(const String& name) {
             return Err<bool, String>("Bucket not found: " + name);
         }
 
-        // Check if bucket is empty
+        // Allow delete only when there are no real object files (same semantics as bucket stats / UI).
+        // Do not use std::filesystem::is_empty(objects_root): after deleting objects, empty nested
+        // directories may remain, which makes the tree non-empty while object_count is 0.
         auto objects_root = path_manager_->objects_root(name);
-        if (std::filesystem::exists(objects_root) && !std::filesystem::is_empty(objects_root)) {
+        const auto stats = calculate_bucket_stats(objects_root);
+        if (stats.object_count > 0) {
             return Err<bool, String>("Bucket is not empty: " + name);
         }
 
@@ -881,7 +906,7 @@ LocalStorageClient::generate_presigned_url(const String& bucket_name,
         auto expires_at = std::chrono::system_clock::now() + std::chrono::seconds(expires_in_seconds);
         auto timestamp = std::chrono::system_clock::to_time_t(expires_at);
 
-        // Build string to sign: bucket/key\nexpires\nmethod
+        // Build string to sign from canonical raw key (not URL-encoded)
         std::ostringstream string_to_sign;
         string_to_sign << bucket_name << "/" << object_key << "\n" << timestamp << "\n" << method;
 
@@ -914,10 +939,11 @@ LocalStorageClient::generate_presigned_url(const String& bucket_name,
             signature << std::setw(2) << static_cast<unsigned>(hmac_result[i]);
         }
 
-        // Build final URL
+        // Build final URL with encoded path key.
+        const String encoded_key = encode_presigned_key_path(object_key);
         std::ostringstream url;
-        url << "/api/v1/objects/" << bucket_name << "/" << object_key << "?expires=" << timestamp
-            << "&method=" << method << "&signature=" << signature.str();
+        url << "/api/v1/objects/" << bucket_name << "/" << encoded_key << "?expires=" << timestamp
+            << "&expires_in=" << expires_in_seconds << "&method=" << method << "&signature=" << signature.str();
 
         CONSOLE_LOG_DEBUG("Generated presigned URL for {}/{} expires at {}", bucket_name, object_key, timestamp);
         return Ok<String, String>(url.str());

@@ -5,6 +5,7 @@
 #include "console/common/ServiceLocator.hpp"
 #include "console/storage/DatabaseManager.hpp"
 
+#include <cctype>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -14,6 +15,41 @@
 
 namespace console::api {
 
+namespace {
+int
+hex_char_to_int(char c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    if (c >= 'a' && c <= 'f') {
+        return 10 + (c - 'a');
+    }
+    if (c >= 'A' && c <= 'F') {
+        return 10 + (c - 'A');
+    }
+    return -1;
+}
+
+String
+decode_presigned_key_path(const String& encoded) {
+    String out;
+    out.reserve(encoded.size());
+    for (size_t i = 0; i < encoded.size(); ++i) {
+        if (encoded[i] == '%' && i + 2 < encoded.size()) {
+            const int hi = hex_char_to_int(encoded[i + 1]);
+            const int lo = hex_char_to_int(encoded[i + 2]);
+            if (hi >= 0 && lo >= 0) {
+                out.push_back(static_cast<char>((hi << 4) | lo));
+                i += 2;
+                continue;
+            }
+        }
+        out.push_back(encoded[i]);
+    }
+    return out;
+}
+} // namespace
+
 void
 PresignedController::access_object(const drogon::HttpRequestPtr& req,
                                    std::function<void(const drogon::HttpResponsePtr&)>&& callback,
@@ -21,8 +57,19 @@ PresignedController::access_object(const drogon::HttpRequestPtr& req,
                                    const String& key) {
     // Get presigned parameters
     String expires_str = req->getParameter("expires");
+    if (expires_str.empty()) {
+        const String expires_in_str = req->getParameter("expires_in");
+        if (!expires_in_str.empty()) {
+            try {
+                const int64_t expires_in = std::stoll(expires_in_str);
+                const auto now = std::time(nullptr);
+                expires_str = std::to_string(now + expires_in);
+            } catch (...) {}
+        }
+    }
     String method = req->getParameter("method");
     String signature = req->getParameter("signature");
+    const String canonical_key = decode_presigned_key_path(key);
 
     // If no presigned parameters, this might be a regular authenticated request
     // Return 401 to let the auth middleware handle it
@@ -66,8 +113,8 @@ PresignedController::access_object(const drogon::HttpRequestPtr& req,
     }
 
     // Validate signature
-    if (!validate_signature(bucket, key, expires, method, signature)) {
-        CONSOLE_LOG_WARN("Invalid signature for presigned URL: {}/{}", bucket, key);
+    if (!validate_signature(bucket, canonical_key, expires, method, signature)) {
+        CONSOLE_LOG_WARN("Invalid signature for presigned URL: {}/{}", bucket, canonical_key);
         Json::Value error;
         error["error"] = "Invalid signature";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
@@ -76,7 +123,7 @@ PresignedController::access_object(const drogon::HttpRequestPtr& req,
         return;
     }
 
-    CONSOLE_LOG_DEBUG("Valid presigned URL access: {}/{}", bucket, key);
+    CONSOLE_LOG_DEBUG("Valid presigned URL access: {}/{}", bucket, canonical_key);
 
     // Get storage client and download object
     auto storage_client = ServiceLocator::storage_client();
@@ -89,7 +136,7 @@ PresignedController::access_object(const drogon::HttpRequestPtr& req,
         return;
     }
 
-    auto result = storage_client->get_object(bucket, key);
+    auto result = storage_client->get_object(bucket, canonical_key);
     if (!result) {
         Json::Value error;
         error["error"] = result.error();
@@ -100,7 +147,7 @@ PresignedController::access_object(const drogon::HttpRequestPtr& req,
     }
 
     // Get object metadata for content type
-    auto stat_result = storage_client->stat_object(bucket, key);
+    auto stat_result = storage_client->stat_object(bucket, canonical_key);
     String content_type = "application/octet-stream";
     if (stat_result) {
         content_type = stat_result.value().content_type();
@@ -124,10 +171,10 @@ PresignedController::access_object(const drogon::HttpRequestPtr& req,
     resp->setContentTypeString(content_type);
 
     // Add content disposition header for downloads
-    String filename = key;
-    auto last_slash = key.rfind('/');
+    String filename = canonical_key;
+    auto last_slash = canonical_key.rfind('/');
     if (last_slash != String::npos) {
-        filename = key.substr(last_slash + 1);
+        filename = canonical_key.substr(last_slash + 1);
     }
     resp->addHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
     resp->addHeader("Content-Length", std::to_string(data_size));
@@ -142,8 +189,19 @@ PresignedController::upload_object(const drogon::HttpRequestPtr& req,
                                    const String& key) {
     // Get presigned parameters
     String expires_str = req->getParameter("expires");
+    if (expires_str.empty()) {
+        const String expires_in_str = req->getParameter("expires_in");
+        if (!expires_in_str.empty()) {
+            try {
+                const int64_t expires_in = std::stoll(expires_in_str);
+                const auto now = std::time(nullptr);
+                expires_str = std::to_string(now + expires_in);
+            } catch (...) {}
+        }
+    }
     String method = req->getParameter("method");
     String signature = req->getParameter("signature");
+    const String canonical_key = decode_presigned_key_path(key);
 
     // If no presigned parameters, return 401
     if (expires_str.empty() || signature.empty()) {
@@ -186,8 +244,8 @@ PresignedController::upload_object(const drogon::HttpRequestPtr& req,
     }
 
     // Validate signature
-    if (!validate_signature(bucket, key, expires, method, signature)) {
-        CONSOLE_LOG_WARN("Invalid signature for presigned upload URL: {}/{}", bucket, key);
+    if (!validate_signature(bucket, canonical_key, expires, method, signature)) {
+        CONSOLE_LOG_WARN("Invalid signature for presigned upload URL: {}/{}", bucket, canonical_key);
         Json::Value error;
         error["error"] = "Invalid signature";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
@@ -196,7 +254,7 @@ PresignedController::upload_object(const drogon::HttpRequestPtr& req,
         return;
     }
 
-    CONSOLE_LOG_DEBUG("Valid presigned URL upload: {}/{}", bucket, key);
+    CONSOLE_LOG_DEBUG("Valid presigned URL upload: {}/{}", bucket, canonical_key);
 
     // Get storage client
     auto storage_client = ServiceLocator::storage_client();
@@ -229,7 +287,7 @@ PresignedController::upload_object(const drogon::HttpRequestPtr& req,
     }
 
     // Upload object
-    auto result = storage_client->put_object(bucket, key, data, content_type, {});
+    auto result = storage_client->put_object(bucket, canonical_key, data, content_type, {});
     if (!result) {
         Json::Value error;
         error["error"] = result.error();
