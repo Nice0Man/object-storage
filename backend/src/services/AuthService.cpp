@@ -235,7 +235,16 @@ AuthService::authenticate_with_minio(const String& username, const String& passw
     user_info.session_token = "";
     user_info.account_name = db_user.account_name;
     user_info.is_admin = db_user.is_admin;
+    user_info.role = db_user.is_admin ? "admin" : "viewer";
     user_info.created_at = std::chrono::system_clock::from_time_t(db_user.created_at);
+    auto groups_result = db_manager_->get_user_groups(db_user.access_key);
+    if (groups_result) {
+        user_info.groups = groups_result.value();
+    }
+    auto policies_result = db_manager_->get_user_policies(db_user.access_key, true);
+    if (policies_result) {
+        user_info.policies = policies_result.value();
+    }
 
     CONSOLE_LOG_INFO("User authenticated successfully: {}", username);
     return Ok<UserInfo, models::ApiError>(user_info);
@@ -265,6 +274,17 @@ AuthService::generate_tokens(const UserInfo& user_info) {
     user_json["access_key"] = user_info.access_key;
     user_json["account_name"] = user_info.account_name;
     user_json["is_admin"] = user_info.is_admin;
+    user_json["role"] = user_info.role;
+    Json::Value groups(Json::arrayValue);
+    for (const auto& group : user_info.groups) {
+        groups.append(group);
+    }
+    user_json["groups"] = groups;
+    Json::Value policies(Json::arrayValue);
+    for (const auto& policy : user_info.policies) {
+        policies.append(policy);
+    }
+    user_json["policies"] = policies;
     response["user"] = user_json;
 
     return response;
@@ -322,6 +342,17 @@ AuthService::userinfo_to_claims(const UserInfo& user_info, Duration expiry) {
 
     // Additional metadata
     claims.custom_fields["is_admin"] = user_info.is_admin ? "true" : "false";
+    claims.custom_fields["role"] = user_info.role;
+    claims.custom_fields["groups"] = [&user_info]() {
+        String out;
+        for (size_t i = 0; i < user_info.groups.size(); ++i) {
+            if (i > 0) {
+                out += ",";
+            }
+            out += user_info.groups[i];
+        }
+        return out;
+    }();
 
     return claims;
 }

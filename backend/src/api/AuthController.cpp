@@ -179,6 +179,17 @@ AuthController::me(const drogon::HttpRequestPtr& req, std::function<void(const d
     response["username"] = user.account_name;
     response["access_key"] = user.access_key;
     response["is_admin"] = user.is_admin;
+    response["role"] = user.role;
+    Json::Value groups(Json::arrayValue);
+    for (const auto& group : user.groups) {
+        groups.append(group);
+    }
+    response["groups"] = groups;
+    Json::Value policies(Json::arrayValue);
+    for (const auto& policy : user.policies) {
+        policies.append(policy);
+    }
+    response["policies"] = policies;
 
     auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
     callback(resp);
@@ -230,6 +241,17 @@ AuthController::session(const drogon::HttpRequestPtr& req,
     response["username"] = user.account_name;
     response["access_key"] = user.access_key;
     response["is_admin"] = user.is_admin;
+    response["role"] = user.role;
+    Json::Value groups(Json::arrayValue);
+    for (const auto& group : user.groups) {
+        groups.append(group);
+    }
+    response["groups"] = groups;
+    Json::Value policies(Json::arrayValue);
+    for (const auto& policy : user.policies) {
+        policies.append(policy);
+    }
+    response["policies"] = policies;
     response["expires_at"] = format_iso8601_date(expires_at);
 
     auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
