@@ -405,6 +405,56 @@ TEST_F(DatabaseManagerTest, GetUserPolicies_DirectOnly) {
     EXPECT_EQ(direct_only.value().size(), 1);
 }
 
+TEST_F(DatabaseManagerTest, GetUserPolicies_IncludingGroupPolicies) {
+    DbUser user;
+    user.access_key = "with-groups-user";
+    user.secret_key = "secret";
+    user.account_name = "User";
+    user.status = "active";
+    user.is_admin = false;
+    user.created_at = std::time(nullptr);
+    user.updated_at = user.created_at;
+    user.metadata = "{}";
+    ASSERT_TRUE(db_manager_->create_user(user));
+
+    DbGroup group;
+    group.name = "with-groups";
+    group.description = "Group";
+    group.status = "active";
+    group.created_at = std::time(nullptr);
+    group.updated_at = group.created_at;
+    group.metadata = "{}";
+    ASSERT_TRUE(db_manager_->create_group(group));
+
+    DbPolicy p1;
+    p1.name = "direct-policy";
+    p1.version = "2012-10-17";
+    p1.document = "{}";
+    p1.description = "Direct";
+    p1.created_at = std::time(nullptr);
+    p1.updated_at = p1.created_at;
+    p1.metadata = "{}";
+    ASSERT_TRUE(db_manager_->create_policy(p1));
+
+    DbPolicy p2;
+    p2.name = "group-policy";
+    p2.version = "2012-10-17";
+    p2.document = "{}";
+    p2.description = "Group";
+    p2.created_at = std::time(nullptr);
+    p2.updated_at = p2.created_at;
+    p2.metadata = "{}";
+    ASSERT_TRUE(db_manager_->create_policy(p2));
+
+    ASSERT_TRUE(db_manager_->attach_policy_to_user("with-groups-user", "direct-policy"));
+    ASSERT_TRUE(db_manager_->add_user_to_group("with-groups-user", "with-groups"));
+    ASSERT_TRUE(db_manager_->attach_policy_to_group("with-groups", "group-policy"));
+
+    auto with_groups = db_manager_->get_user_policies("with-groups-user", true);
+    ASSERT_TRUE(with_groups);
+    EXPECT_EQ(with_groups.value().size(), 2);
+}
+
 // ============================================================================
 // Transaction Tests
 // ============================================================================
