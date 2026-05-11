@@ -2,10 +2,17 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import apiClient from "../api/client";
 import type { LoginRequest, SessionResponse } from "../api/types";
 import type { RootState } from "./index";
+import { buildCapabilities, can as canCapability, type Capability, type CapabilityMap } from "../auth/capabilities";
 
 interface AuthState {
   isAuthenticated: boolean;
   username: string | null;
+  accessKey: string | null;
+  isAdmin: boolean;
+  role: string;
+  groups: string[];
+  policies: string[];
+  capabilities: CapabilityMap;
   expiresAt: string | null;
   loading: boolean;
   error: string | null;
@@ -14,6 +21,12 @@ interface AuthState {
 const initialState: AuthState = {
   isAuthenticated: false,
   username: null,
+  accessKey: null,
+  isAdmin: false,
+  role: "viewer",
+  groups: [],
+  policies: [],
+  capabilities: buildCapabilities({ role: "viewer", isAdmin: false, policies: [] }),
   expiresAt: null,
   loading: false,
   error: null,
@@ -98,6 +111,16 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = action.payload.authenticated;
         state.username = action.payload.username;
+        state.accessKey = action.payload.access_key || null;
+        state.isAdmin = Boolean(action.payload.is_admin);
+        state.role = action.payload.role || (state.isAdmin ? "admin" : "viewer");
+        state.groups = action.payload.groups || [];
+        state.policies = action.payload.policies || [];
+        state.capabilities = buildCapabilities({
+          role: state.role,
+          isAdmin: state.isAdmin,
+          policies: state.policies,
+        });
         state.expiresAt = action.payload.expires_at;
       },
     );
@@ -130,6 +153,16 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = action.payload.authenticated;
         state.username = action.payload.username;
+        state.accessKey = action.payload.access_key || null;
+        state.isAdmin = Boolean(action.payload.is_admin);
+        state.role = action.payload.role || (state.isAdmin ? "admin" : "viewer");
+        state.groups = action.payload.groups || [];
+        state.policies = action.payload.policies || [];
+        state.capabilities = buildCapabilities({
+          role: state.role,
+          isAdmin: state.isAdmin,
+          policies: state.policies,
+        });
         state.expiresAt = action.payload.expires_at;
       },
     );
@@ -145,6 +178,16 @@ const authSlice = createSlice({
       (state, action: PayloadAction<SessionResponse>) => {
         state.isAuthenticated = action.payload.authenticated;
         state.username = action.payload.username;
+        state.accessKey = action.payload.access_key || null;
+        state.isAdmin = Boolean(action.payload.is_admin);
+        state.role = action.payload.role || (state.isAdmin ? "admin" : "viewer");
+        state.groups = action.payload.groups || [];
+        state.policies = action.payload.policies || [];
+        state.capabilities = buildCapabilities({
+          role: state.role,
+          isAdmin: state.isAdmin,
+          policies: state.policies,
+        });
         state.expiresAt = action.payload.expires_at;
       },
     );
@@ -158,5 +201,11 @@ export const selectAuth = (state: RootState) => state.auth;
 export const selectIsAuthenticated = (state: RootState) =>
   state.auth.isAuthenticated;
 export const selectUsername = (state: RootState) => state.auth.username;
+export const selectCapabilities = (state: RootState) => state.auth.capabilities;
+export const selectRole = (state: RootState) => state.auth.role;
+export const selectCan =
+  (capability: Capability) =>
+  (state: RootState): boolean =>
+    canCapability(state.auth.capabilities, capability);
 
 export default authSlice.reducer;
