@@ -308,6 +308,8 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                             value={chartMode}
                             exclusive
                             onChange={handleChartModeChange}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
                             size="small"
                             aria-label="chart mode"
                             sx={{
@@ -347,6 +349,8 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                             value={timeRange}
                             exclusive
                             onChange={handleTimeRangeChange}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
                             size="small"
                             aria-label="time range"
                             sx={{
@@ -388,12 +392,25 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
             <Box
                 sx={
                     fillParent
-                        ? { flex: 1, minHeight: 0, width: "100%" }
+                        ? {
+                              flex: 1,
+                              minHeight: 0,
+                              width: "100%",
+                              maxWidth: "100%",
+                              overflow: "hidden",
+                              position: "relative",
+                              isolation: "isolate",
+                          }
                         : {
                               width: "100%",
+                              maxWidth: "100%",
+                              overflow: "hidden",
+                              position: "relative",
                               minHeight: showModeSelector || showChartModeSelector ? 210 : 240,
                           }
                 }
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
             >
             <ResponsiveContainer
                 width="100%"

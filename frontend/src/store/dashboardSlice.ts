@@ -4,6 +4,7 @@ import type { RootState } from "./index";
 import type {
   DashboardBoard,
   DashboardWidget,
+  WidgetType,
   CreateBoardRequest,
   UpdateBoardRequest,
   UpdateWidgetRequest,
@@ -11,6 +12,41 @@ import type {
 
 // Empty array constant to avoid creating new references
 const EMPTY_WIDGETS: DashboardWidget[] = [];
+
+function createDefaultWidgets(boardId: string): DashboardWidget[] {
+  const now = Date.now();
+  const make = (
+    suffix: string,
+    widgetType: WidgetType,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    orderIndex: number
+  ): DashboardWidget => ({
+    id: `widget-${suffix}-${now}-${orderIndex}`,
+    board_id: boardId,
+    widget_type: widgetType,
+    position: { x, y },
+    size: { w, h },
+    visible: true,
+    refresh_interval: 30,
+    settings: {},
+    order_index: orderIndex,
+  });
+
+  return [
+    make("capacity", "capacity", 0, 0, 2, 1, 0),
+    make("servers", "servers", 2, 0, 1, 1, 1),
+    make("drives", "drives", 3, 0, 1, 1, 2),
+    make("buckets", "buckets", 0, 1, 1, 1, 3),
+    make("api-errors", "api_errors", 1, 1, 1, 1, 4),
+    make("throughput", "throughput", 2, 1, 2, 1, 5),
+    make("encryption", "encryption", 0, 2, 1, 1, 6),
+    make("pools", "pools", 1, 2, 1, 1, 7),
+    make("quick-actions", "quick_actions", 2, 2, 2, 1, 8),
+  ];
+}
 
 // State interface
 interface DashboardState {
@@ -105,13 +141,26 @@ export const initializeDashboard = createAsyncThunk(
     if (boards.length === 0) {
       const result = await dispatch(createBoard({ name: "Main Dashboard", order_index: 0 }));
       if (createBoard.fulfilled.match(result)) {
-        await dispatch(fetchWidgets(result.payload.id));
+        const createdBoardId = result.payload.id;
+        await dispatch(fetchWidgets(createdBoardId));
+        const createdState = getState() as RootState;
+        const createdWidgets = createdState.dashboard.widgets[createdBoardId] ?? [];
+        if (createdWidgets.length === 0) {
+          const defaults = createDefaultWidgets(createdBoardId);
+          await dispatch(saveWidgets({ boardId: createdBoardId, widgets: defaults }));
+        }
         return result.payload.id;
       }
     } else {
       // Fetch widgets for first board
       const firstBoard = boards[0];
       await dispatch(fetchWidgets(firstBoard.id));
+      const updatedState = getState() as RootState;
+      const firstBoardWidgets = updatedState.dashboard.widgets[firstBoard.id] ?? [];
+      if (firstBoardWidgets.length === 0) {
+        const defaults = createDefaultWidgets(firstBoard.id);
+        await dispatch(saveWidgets({ boardId: firstBoard.id, widgets: defaults }));
+      }
       return firstBoard.id;
     }
 

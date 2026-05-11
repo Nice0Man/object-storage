@@ -220,6 +220,8 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
                             value={timeRange}
                             exclusive
                             onChange={handleTimeRangeChange}
+                            onMouseDown={(event) => event.stopPropagation()}
+                            onClick={(event) => event.stopPropagation()}
                             size="small"
                             aria-label="time range"
                             sx={{
@@ -298,6 +300,8 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
                         value={timeRange}
                         exclusive
                         onChange={handleTimeRangeChange}
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={(event) => event.stopPropagation()}
                         size="small"
                         aria-label="time range"
                         sx={{
@@ -338,9 +342,25 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
             <Box
                 sx={
                     fillParent
-                        ? { flex: 1, minHeight: 0, width: "100%" }
-                        : { width: "100%", minHeight: showModeSelector ? 210 : 240 }
+                        ? {
+                              flex: 1,
+                              minHeight: 0,
+                              width: "100%",
+                              maxWidth: "100%",
+                              overflow: "hidden",
+                              position: "relative",
+                              isolation: "isolate",
+                          }
+                        : {
+                              width: "100%",
+                              maxWidth: "100%",
+                              overflow: "hidden",
+                              position: "relative",
+                              minHeight: showModeSelector ? 210 : 240,
+                          }
                 }
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
             >
             <ResponsiveContainer
                 width="100%"

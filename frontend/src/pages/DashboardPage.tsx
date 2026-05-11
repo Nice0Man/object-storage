@@ -17,6 +17,7 @@ import {
   Chip,
   Typography,
   alpha,
+  Skeleton,
 } from "@mui/material";
 import {
   Add,
@@ -348,7 +349,11 @@ const DashboardPage: React.FC = () => {
     }
   }, [dispatch, activeBoard]);
 
-  if (loading && boards.length === 0) {
+  const shouldShowInitialLoader = loading && boards.length === 0;
+  const shouldShowGridSkeleton = loading && boards.length > 0 && visibleWidgets.length === 0;
+  const shouldShowEmptyState = !loading && visibleWidgets.length === 0;
+
+  if (shouldShowInitialLoader) {
     return <Loader message={t("dashboard.loading") || "Loading dashboard..."} />;
   }
 
@@ -507,52 +512,105 @@ const DashboardPage: React.FC = () => {
         </Box>
       )}
 
-      {/* Widget Grid — grid items stretch so card content can fill resizable height */}
-      <Box
-        ref={containerRef}
-        sx={{
-          "& .react-grid-item": {
-            display: "flex",
-            flexDirection: "column",
-          },
-          "& .react-grid-item > div": {
-            flex: 1,
-            minHeight: 0,
-            width: "100%",
-            display: "flex",
-            flexDirection: "column",
-          },
-        }}
-      >
-        <Responsive
-          className="layout"
-          layouts={{ lg: gridLayout, md: gridLayout, sm: gridLayout, xs: gridLayout }}
-          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
-          cols={{ lg: 4, md: 3, sm: 2, xs: 1 }}
-          rowHeight={GRID_ROW_HEIGHT}
-          width={gridWidth}
-          margin={GRID_MARGIN}
-          containerPadding={[0, 0]}
-          dragConfig={{ enabled: editMode, handle: ".drag-handle" }}
-          resizeConfig={{ enabled: editMode }}
-          onDragStop={(_layout, _oldItem, _newItem, _placeholder, _e, _element) => {
-            // Cast layout properly for our handler
-            handleDragResizeStop(_layout as unknown as LayoutItem[]);
-          }}
-          onResizeStop={(_layout, _oldItem, _newItem, _placeholder, _e, _element) => {
-            handleDragResizeStop(_layout as unknown as LayoutItem[]);
+      {/* Widget Grid — avoid empty large canvas while data is loading */}
+      {shouldShowGridSkeleton ? (
+        <Box
+          sx={{
+            display: "grid",
+            gap: 2,
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, minmax(0, 1fr))",
+              md: "repeat(3, minmax(0, 1fr))",
+              lg: "repeat(4, minmax(0, 1fr))",
+            },
           }}
         >
-          {visibleWidgets.map((widget) => (
-            <div
-              key={widget.id}
-              style={{ height: "100%" }}
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Box
+              key={`dashboard-skeleton-${index}`}
+              sx={{
+                borderRadius: 2,
+                border: 1,
+                borderColor: "divider",
+                p: 2,
+                minHeight: 220,
+                bgcolor: "background.paper",
+              }}
             >
-              {renderWidget(widget)}
-            </div>
+              <Skeleton variant="text" width="42%" height={28} />
+              <Skeleton variant="text" width="68%" />
+              <Skeleton variant="rounded" height={120} sx={{ mt: 1 }} />
+            </Box>
           ))}
-        </Responsive>
-      </Box>
+        </Box>
+      ) : shouldShowEmptyState ? (
+        <Box
+          sx={{
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 2,
+            p: 4,
+            textAlign: "center",
+            bgcolor: "background.paper",
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            {t("dashboard.emptyTitle") || "Dashboard is empty"}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t("dashboard.emptyDescription") || "Add widgets to see metrics and quick actions."}
+          </Typography>
+          <Button variant="contained" startIcon={<Add />} onClick={() => setAddWidgetPanelOpen(true)}>
+            {t("dashboard.addWidget") || "Add Widget"}
+          </Button>
+        </Box>
+      ) : (
+        <Box
+          ref={containerRef}
+          sx={{
+            "& .react-grid-item": {
+              display: "flex",
+              flexDirection: "column",
+            },
+            "& .react-grid-item > div": {
+              flex: 1,
+              minHeight: 0,
+              width: "100%",
+              maxWidth: "100%",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            },
+          }}
+        >
+          <Responsive
+            className="layout"
+            layouts={{ lg: gridLayout, md: gridLayout, sm: gridLayout, xs: gridLayout }}
+            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480 }}
+            cols={{ lg: 4, md: 3, sm: 2, xs: 1 }}
+            rowHeight={GRID_ROW_HEIGHT}
+            width={gridWidth}
+            margin={GRID_MARGIN}
+            containerPadding={[0, 0]}
+            dragConfig={{ enabled: editMode, handle: ".drag-handle" }}
+            resizeConfig={{ enabled: editMode }}
+            onDragStop={(_layout, _oldItem, _newItem, _placeholder, _e, _element) => {
+              // Cast layout properly for our handler
+              handleDragResizeStop(_layout as unknown as LayoutItem[]);
+            }}
+            onResizeStop={(_layout, _oldItem, _newItem, _placeholder, _e, _element) => {
+              handleDragResizeStop(_layout as unknown as LayoutItem[]);
+            }}
+          >
+            {visibleWidgets.map((widget) => (
+              <div key={widget.id} style={{ height: "100%" }}>
+                {renderWidget(widget)}
+              </div>
+            ))}
+          </Responsive>
+        </Box>
+      )}
 
       {/* Create Board Dialog */}
       <Dialog open={createBoardDialogOpen} onClose={() => setCreateBoardDialogOpen(false)}>

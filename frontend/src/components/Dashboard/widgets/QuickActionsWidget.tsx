@@ -79,12 +79,13 @@ const QuickActionsWidget: React.FC<QuickActionsWidgetProps> = ({
               minWidth: 0,
               maxWidth: "100%",
               cursor: editMode ? "default" : "pointer",
-              transition: "all 0.3s",
+              transition: "box-shadow 0.2s ease, background-color 0.2s ease",
               borderRadius: 2,
-              background: `linear-gradient(135deg, ${alpha(action.color, 0.1)} 0%, ${alpha(action.color, 0.05)} 100%)`,
+              backgroundColor: alpha(action.color, 0.08),
+              border: `1px solid ${alpha(action.color, 0.22)}`,
               "&:hover": !editMode ? {
-                transform: "translateY(-2px)",
-                boxShadow: theme.shadows[4],
+                boxShadow: theme.shadows[2],
+                backgroundColor: alpha(action.color, 0.12),
               } : {},
             }}
           >

@@ -61,7 +61,16 @@ const ApiErrorsWidget: React.FC<ApiErrorsWidgetProps> = ({
       onClick={onClick}
       dragHandleProps={dragHandleProps}
     >
-      <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          maxWidth: "100%",
+        }}
+      >
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", mb: 1, flexShrink: 0 }}>
         <ArrowForward sx={{ color: theme.palette.text.secondary, fontSize: 18 }} />
       </Box>

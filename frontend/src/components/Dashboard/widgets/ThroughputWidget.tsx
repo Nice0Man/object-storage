@@ -80,6 +80,8 @@ const ThroughputWidget: React.FC<ThroughputWidgetProps> = ({
           minHeight: 0,
           display: "flex",
           flexDirection: "column",
+          overflow: "hidden",
+          maxWidth: "100%",
         }}
       >
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", mb: 1, flexShrink: 0 }}>

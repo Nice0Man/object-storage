@@ -121,7 +121,17 @@ const CapacityPieChart: React.FC<CapacityPieChartProps> = ({
   };
 
   return (
-    <Box sx={{ width: "100%", height: "100%", minHeight: 100, flex: "1 1 0%" }}>
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: "100%",
+        height: "100%",
+        minHeight: 100,
+        flex: "1 1 0%",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie

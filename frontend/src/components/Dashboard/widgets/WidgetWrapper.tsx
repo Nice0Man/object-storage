@@ -74,10 +74,11 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
         minHeight: 0,
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
         cursor: editMode ? "default" : onClick ? "pointer" : "default",
-        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+        transition: "border-color 0.2s ease, background-color 0.2s ease",
         "&:hover": !editMode && onClick
-          ? { boxShadow: theme.shadows[6] }
+          ? { boxShadow: theme.shadows[1] }
           : {},
         ...(editMode && {
           border: `2px dashed ${alpha(theme.palette.primary.main, 0.5)}`,
@@ -245,7 +246,15 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               overflow: "hidden",
             }}
           >
-            <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", display: "flex", flexDirection: "column" }}>
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               {children}
             </Box>
           </Box>
