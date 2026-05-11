@@ -24,6 +24,9 @@ ObjectService::list_objects(const UserInfo& user_info,
                             bool recursive,
                             int max_keys) {
     CONSOLE_LOG_DEBUG("Listing objects in bucket: {} with prefix: {}", bucket_name, prefix);
+    if (auto access_error = validate_access(user_info, bucket_name, "", "ListObjects")) {
+        return Err<Vector<Object>>(*access_error);
+    }
 
     clients::ListObjectsOptions options;
     options.prefix = prefix;
@@ -52,6 +55,9 @@ ObjectService::get_object_info(const UserInfo& user_info, const String& bucket_n
     if (auto error = validate_object_key(object_key)) {
         return Err<Object>(*error);
     }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "GetObjectMetadata")) {
+        return Err<Object>(*access_error);
+    }
 
     auto result = storage_client_->stat_object(bucket_name, object_key);
     if (!result) {
@@ -68,6 +74,9 @@ ObjectService::download_object(const UserInfo& user_info, const String& bucket_n
 
     if (auto error = validate_object_key(object_key)) {
         return Err<ByteArray>(*error);
+    }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "GetObject")) {
+        return Err<ByteArray>(*access_error);
     }
 
     auto result = storage_client_->get_object(bucket_name, object_key);
@@ -96,6 +105,9 @@ ObjectService::upload_object(const UserInfo& user_info,
 
     if (data.size() > max_single_upload_size_) {
         return Err<Object>(ApiError(HttpStatus::BadRequest, "Object size exceeds maximum single upload size"));
+    }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "PutObject")) {
+        return Err<Object>(*access_error);
     }
 
     auto result = storage_client_->put_object(bucket_name, object_key, data, content_type, metadata);
@@ -137,6 +149,9 @@ ObjectService::upload_object_sse(const UserInfo& user_info,
     if (data.size() > max_single_upload_size_) {
         return Err<Object>(ApiError(HttpStatus::BadRequest, "Object size exceeds maximum single upload size"));
     }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "PutObject")) {
+        return Err<Object>(*access_error);
+    }
 
     // Get LocalStorageClient for SSE support
     auto local_storage = ServiceLocator::storage_client();
@@ -172,6 +187,9 @@ ObjectService::download_object_sse(const UserInfo& user_info,
     if (auto error = validate_object_key(object_key)) {
         return Err<ByteArray>(*error);
     }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "GetObject")) {
+        return Err<ByteArray>(*access_error);
+    }
 
     // Get LocalStorageClient for SSE support
     auto local_storage = ServiceLocator::storage_client();
@@ -196,6 +214,9 @@ ObjectService::delete_object(const UserInfo& user_info, const String& bucket_nam
 
     if (auto error = validate_object_key(object_key)) {
         return Result<void, ApiError>(err_tag, *error);
+    }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "DeleteObject")) {
+        return Result<void, ApiError>(err_tag, *access_error);
     }
 
     auto result = storage_client_->delete_object(bucket_name, object_key);
@@ -224,6 +245,12 @@ ObjectService::copy_object(const UserInfo& user_info,
     if (auto error = validate_object_key(dest_key)) {
         return Err<Object>(*error);
     }
+    if (auto access_error = validate_access(user_info, source_bucket, source_key, "GetObject")) {
+        return Err<Object>(*access_error);
+    }
+    if (auto access_error = validate_access(user_info, dest_bucket, dest_key, "CopyObject")) {
+        return Err<Object>(*access_error);
+    }
 
     auto result = storage_client_->copy_object(source_bucket, source_key, dest_bucket, dest_key);
 
@@ -250,6 +277,9 @@ ObjectService::get_object_tags(const UserInfo& user_info, const String& bucket_n
     if (auto error = validate_object_key(object_key)) {
         return Err<StringMap>(*error);
     }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "GetObjectTagging")) {
+        return Err<StringMap>(*access_error);
+    }
 
     auto result = storage_client_->get_object_tags(bucket_name, object_key);
     if (!result) {
@@ -270,6 +300,9 @@ ObjectService::set_object_tags(const UserInfo& user_info,
     if (auto error = validate_object_key(object_key)) {
         return Result<void, ApiError>(err_tag, *error);
     }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "PutObjectTagging")) {
+        return Result<void, ApiError>(err_tag, *access_error);
+    }
 
     auto result = storage_client_->set_object_tags(bucket_name, object_key, tags);
     if (!result) {
@@ -286,6 +319,9 @@ ObjectService::delete_object_tags(const UserInfo& user_info, const String& bucke
 
     if (auto error = validate_object_key(object_key)) {
         return Result<void, ApiError>(err_tag, *error);
+    }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "DeleteObjectTagging")) {
+        return Result<void, ApiError>(err_tag, *access_error);
     }
 
     // Delete tags by setting empty tag map
@@ -313,6 +349,9 @@ ObjectService::generate_presigned_url(const UserInfo& user_info,
 
     if (expiry_seconds <= 0 || expiry_seconds > 7 * 24 * 3600) {
         return Err<String>(ApiError(HttpStatus::BadRequest, "Expiry must be between 1 second and 7 days"));
+    }
+    if (auto access_error = validate_access(user_info, bucket_name, object_key, "GetObject")) {
+        return Err<String>(*access_error);
     }
 
     auto result = storage_client_->generate_presigned_url(bucket_name, object_key, expiry_seconds, method);
@@ -348,6 +387,14 @@ ObjectService::validate_access(const UserInfo& user,
                                const String& bucket_name,
                                const String& object_key,
                                const String& action) {
+    auto db = ServiceLocator::database();
+    if (db) {
+        auto visible = db->is_bucket_visible_to_user(bucket_name, user.access_key, user.is_admin);
+        if (!visible || !visible.value()) {
+            return ApiError(HttpStatus::Forbidden, "Bucket is not visible for current user");
+        }
+    }
+
     // Use PolicyEvaluator for proper IAM-style policy evaluation
     PolicyEvaluator evaluator;
 

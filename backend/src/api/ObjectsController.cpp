@@ -482,8 +482,11 @@ ObjectsController::get_presigned_url(const drogon::HttpRequestPtr& req,
     auto user_info = get_user_from_request(req);
 
     int expiry_seconds = 3600; // Default 1 hour
-    // Support both 'expires' (swagger) and 'expiry' (legacy) parameter names
-    String expires_param = req->getParameter("expires");
+    // Support both 'expires_in' (preferred), 'expires' (legacy), and 'expiry' (legacy) parameter names.
+    String expires_param = req->getParameter("expires_in");
+    if (expires_param.empty()) {
+        expires_param = req->getParameter("expires");
+    }
     if (expires_param.empty()) {
         expires_param = req->getParameter("expiry");
     }
