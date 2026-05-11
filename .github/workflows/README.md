@@ -37,7 +37,7 @@
 
 - Push в `main`, `dev`
 - Pull requests в `main`, `dev`
-- Изменения в `web-app/`
+- Изменения в `frontend/`
 
 **Шаги:**
 
@@ -86,7 +86,7 @@ cd build/tests && ./unit_tests
 ### Frontend проверки
 
 ```bash
-cd web-app
+cd frontend
 npm ci
 npm run lint
 npm run type-check
@@ -163,4 +163,4 @@ ESLint warnings не блокируют build (`continue-on-error: true`).
 - **Pre-commit config:** `.pre-commit-config.yaml`
 - **vcpkg dependencies:** `vcpkg.json`
 - **CMake config:** `CMakeLists.txt`
-- **Node.js dependencies:** `web-app/package.json`
+- **Node.js dependencies:** `frontend/package.json`

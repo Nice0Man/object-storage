@@ -8,7 +8,6 @@ on:
 
 env:
   BUILD_TYPE: Release
-  VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
 
 jobs:
   lint:
@@ -32,17 +31,17 @@ jobs:
 
     - name: Check Clang Format
       run: |
-        find src include tests -name "*.cpp" -o -name "*.hpp" -o -name "*.h" | \
+        find backend/src backend/include backend/tests -name "*.cpp" -o -name "*.hpp" -o -name "*.h" | \
           xargs clang-format-14 --dry-run --Werror || echo "Format issues found"
       continue-on-error: true
 
     - name: Run Clang-Tidy
       run: |
-        if [ -d "src" ]; then
+        if [ -d "backend/src" ]; then
           # Create compile_commands.json for clang-tidy
-          cmake -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || echo "CMake configuration failed"
+          cmake -B build -S backend -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=ON || echo "CMake configuration failed"
           if [ -f "build/compile_commands.json" ]; then
-            find src -name "*.cpp" | head -5 | \
+            find backend/src -name "*.cpp" | head -5 | \
               xargs clang-tidy-14 --checks='-*,modernize-*,readability-*' \
               -p build || echo "Clang-tidy warnings found"
           else
@@ -53,13 +52,13 @@ jobs:
 
     - name: Run Cppcheck
       run: |
-        if [ -d "src" ]; then
+        if [ -d "backend/src" ]; then
           cppcheck --enable=warning,style,performance,portability \
             --error-exitcode=0 \
             --inline-suppr \
             --suppress=missingIncludeSystem \
             --quiet \
-            src/ || echo "Cppcheck warnings found"
+            backend/src/ || echo "Cppcheck warnings found"
         fi
 
   markdown-lint:
@@ -105,21 +104,15 @@ jobs:
           ${{ matrix.compiler.cc }} ${{ matrix.compiler.cxx }} \
           libssl-dev uuid-dev zlib1g-dev
 
-    - name: Setup vcpkg
-      run: |
-        if [ ! -d "vcpkg" ]; then
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
-          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
-        fi
-
     - name: Configure CMake
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
       run: |
-        if [ ! -f "CMakeLists.txt" ]; then
-          echo "CMakeLists.txt not found, creating stub"
-          cat > CMakeLists.txt << 'EOF'
+        if [ ! -f "backend/CMakeLists.txt" ]; then
+          echo "backend/CMakeLists.txt not found, creating stub"
+          mkdir -p backend
+          cat > backend/CMakeLists.txt << 'EOF'
         cmake_minimum_required(VERSION 3.20)
         project(ObjectStorageConsole CXX)
         set(CMAKE_CXX_STANDARD 20)
@@ -127,10 +120,9 @@ jobs:
         EOF
         fi
 
-        cmake -B build \
+        cmake -B build -S backend \
           -G Ninja \
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
     - name: Build
       run: cmake --build build --config ${{ env.BUILD_TYPE }} -j$(nproc) || echo "Build stage not ready"
@@ -159,8 +151,9 @@ jobs:
 
     - name: Configure CMake with Coverage
       run: |
-        if [ ! -f "CMakeLists.txt" ]; then
-          cat > CMakeLists.txt << 'EOF'
+        if [ ! -f "backend/CMakeLists.txt" ]; then
+          mkdir -p backend
+          cat > backend/CMakeLists.txt << 'EOF'
         cmake_minimum_required(VERSION 3.20)
         project(ObjectStorageConsole CXX)
         set(CMAKE_CXX_STANDARD 20)
@@ -168,7 +161,7 @@ jobs:
         EOF
         fi
 
-        cmake -B build \
+        cmake -B build -S backend \
           -G Ninja \
           -DCMAKE_BUILD_TYPE=Debug \
           -DCMAKE_CXX_FLAGS="--coverage" \

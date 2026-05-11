@@ -4,12 +4,12 @@ on:
   push:
     branches: [ main, dev ]
     paths:
-      - 'web-app/**'
+      - 'frontend/**'
       - '.github/workflows/frontend-ci.yml'
   pull_request:
     branches: [ main, dev ]
     paths:
-      - 'web-app/**'
+      - 'frontend/**'
 
 jobs:
   build-and-test:
@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: web-app
+        working-directory: frontend
 
     steps:
     - uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: web-app/package-lock.json
+        cache-dependency-path: frontend/package-lock.json
 
     - name: Install dependencies
       run: npm ci
@@ -56,7 +56,7 @@ jobs:
       if: success()
       with:
         name: frontend-build
-        path: web-app/build
+        path: frontend/build
         retention-days: 7
 
     - name: Build size report

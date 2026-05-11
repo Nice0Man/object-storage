@@ -4,20 +4,18 @@ on:
   push:
     branches: [ main, dev ]
     paths:
-      - 'src/**'
-      - 'include/**'
-      - 'tests/**'
-      - 'CMakeLists.txt'
-      - 'vcpkg.json'
+      - 'backend/src/**'
+      - 'backend/include/**'
+      - 'backend/tests/**'
+      - 'backend/CMakeLists.txt'
       - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [ main, dev ]
     paths:
-      - 'src/**'
-      - 'include/**'
-      - 'tests/**'
-      - 'CMakeLists.txt'
-      - 'vcpkg.json'
+      - 'backend/src/**'
+      - 'backend/include/**'
+      - 'backend/tests/**'
+      - 'backend/CMakeLists.txt'
 
 jobs:
   build-and-test:
@@ -36,31 +34,11 @@ jobs:
           build-essential cmake ninja-build pkg-config \
           libsqlite3-dev libssl-dev uuid-dev zlib1g-dev
 
-    - name: Cache vcpkg
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ github.workspace }}/vcpkg
-          ${{ github.workspace }}/build/vcpkg_installed
-        key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-v2
-        restore-keys: |
-          ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json') }}-
-          ${{ runner.os }}-vcpkg-
-
-    - name: Setup vcpkg
-      run: |
-        if [ ! -d "vcpkg" ]; then
-          git clone https://github.com/microsoft/vcpkg.git vcpkg
-          ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
-        fi
-
     - name: Configure CMake
       run: |
-        cmake -B build -G Ninja \
+        cmake -B build -S backend -G Ninja \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake \
-          -DBUILD_TESTING=ON \
-          -DVCPKG_INSTALL_OPTIONS="--clean-after-build"
+          -DBUILD_TESTS=ON
 
     - name: Build
       run: cmake --build build --config Release -j$(nproc)
@@ -103,7 +81,7 @@ jobs:
       with:
         name: backend-build
         path: |
-          build/console_server
+          build/bin/console
         retention-days: 7
         if-no-files-found: warn
 

@@ -1,0 +1,22 @@
+# Image expects host-built artifacts: ./backend/build/bin/console and ./frontend/build
+# Run: ./build-backend.sh && ./build-frontend.sh   then: docker compose build
+services:
+  object-storage-console:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: object-storage-console:latest
+    container_name: object-storage-console
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/config.example.json:/app/config.json:ro
+      - object_storage_data:/app/data
+      - object_storage_storage:/app/storage
+      - object_storage_logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  object_storage_data:
+  object_storage_storage:
+  object_storage_logs:

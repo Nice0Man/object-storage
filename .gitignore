@@ -13,11 +13,6 @@ CTestTestfile.cmake
 _deps/
 compile_commands.json
 
-# vcpkg
-vcpkg/
-vcpkg_installed/
-.vcpkg-root
-
 # IDE
 .vscode/
 .idea/
@@ -74,10 +69,10 @@ test_results/
 # Package managers
 node_modules/
 
-# Web app build artifacts
-web-app/build/
-web-app/dist/
-web-app/.cache/
+# Frontend build artifacts
+frontend/build/
+frontend/dist/
+frontend/.cache/
 
 # Logs
 *.log
@@ -128,5 +123,5 @@ drogon_config.json
 
 # Playwright / E2E test artifacts
 .playwright-mcp/
-tests/e2e/test-results/
-tests/e2e/screenshots/
+backend/tests/e2e/test-results/
+backend/tests/e2e/screenshots/
