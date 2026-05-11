@@ -81,6 +81,12 @@ class BucketService : public IBucketService {
                                                           const String& name,
                                                           const Json::Value& config) override;
 
+    Result<Vector<String>, models::ApiError> get_bucket_visibility_groups(const UserInfo& user_info,
+                                                                          const String& name) override;
+    Result<void, models::ApiError> set_bucket_visibility_groups(const UserInfo& user_info,
+                                                                const String& name,
+                                                                const Vector<String>& groups) override;
+
   private:
     /**
      * @brief Validate bucket name according to S3 naming rules

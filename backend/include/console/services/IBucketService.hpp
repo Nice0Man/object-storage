@@ -176,6 +176,19 @@ class IBucketService {
     virtual Result<void, models::ApiError> set_bucket_object_lock(const UserInfo& user_info,
                                                                   const String& name,
                                                                   const Json::Value& config) = 0;
+
+    /**
+     * @brief Get bucket visibility groups.
+     */
+    virtual Result<Vector<String>, models::ApiError> get_bucket_visibility_groups(const UserInfo& user_info,
+                                                                                  const String& name) = 0;
+
+    /**
+     * @brief Set bucket visibility groups.
+     */
+    virtual Result<void, models::ApiError> set_bucket_visibility_groups(const UserInfo& user_info,
+                                                                        const String& name,
+                                                                        const Vector<String>& groups) = 0;
 };
 
 } // namespace console::services

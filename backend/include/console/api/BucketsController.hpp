@@ -49,6 +49,9 @@ class BucketsController : public drogon::HttpController<BucketsController> {
     // Bucket object lock configuration
     ADD_METHOD_TO(BucketsController::getObjectLock, "/api/v1/buckets/{1}/object-lock", drogon::Get, "AuthFilter");
     ADD_METHOD_TO(BucketsController::setObjectLock, "/api/v1/buckets/{1}/object-lock", drogon::Put, "AuthFilter");
+    // Bucket visibility by groups
+    ADD_METHOD_TO(BucketsController::getVisibility, "/api/v1/buckets/{1}/visibility", drogon::Get, "AuthFilter");
+    ADD_METHOD_TO(BucketsController::setVisibility, "/api/v1/buckets/{1}/visibility", drogon::Put, "AuthFilter");
     METHOD_LIST_END
 
     void list(const drogon::HttpRequestPtr& req, std::function<void(const drogon::HttpResponsePtr&)>&& callback);
@@ -125,6 +128,13 @@ class BucketsController : public drogon::HttpController<BucketsController> {
                        const String& bucket_name);
 
     void setObjectLock(const drogon::HttpRequestPtr& req,
+                       std::function<void(const drogon::HttpResponsePtr&)>&& callback,
+                       const String& bucket_name);
+
+    void getVisibility(const drogon::HttpRequestPtr& req,
+                       std::function<void(const drogon::HttpResponsePtr&)>&& callback,
+                       const String& bucket_name);
+    void setVisibility(const drogon::HttpRequestPtr& req,
                        std::function<void(const drogon::HttpResponsePtr&)>&& callback,
                        const String& bucket_name);
 

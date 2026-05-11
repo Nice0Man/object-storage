@@ -140,7 +140,7 @@ class BucketServiceTest : public ::testing::Test {
 
         user_info_.access_key = "testuser";
         user_info_.secret_key = "testsecret";
-        user_info_.is_admin = false;
+        user_info_.is_admin = true;
 
         admin_info_.access_key = "admin";
         admin_info_.secret_key = "adminsecret";
@@ -310,12 +310,13 @@ TEST_F(BucketServiceTest, DeleteBucket_Success) {
 }
 
 TEST_F(BucketServiceTest, DeleteBucket_NotEmpty) {
-    EXPECT_CALL(*mock_client_, delete_bucket("test-bucket")).WillOnce(Return(Err<bool, String>("Bucket not empty")));
+    EXPECT_CALL(*mock_client_, delete_bucket("test-bucket"))
+        .WillOnce(Return(Err<bool, String>("Bucket is not empty: test-bucket")));
 
     auto result = bucket_service_->delete_bucket(user_info_, "test-bucket");
 
     EXPECT_TRUE(result.is_err());
-    EXPECT_EQ(result.error().status(), HttpStatus::InternalServerError);
+    EXPECT_EQ(result.error().status(), HttpStatus::Conflict);
 }
 
 TEST_F(BucketServiceTest, DeleteBucket_NotFound) {
@@ -324,6 +325,7 @@ TEST_F(BucketServiceTest, DeleteBucket_NotFound) {
     auto result = bucket_service_->delete_bucket(user_info_, "nonexistent");
 
     EXPECT_TRUE(result.is_err());
+    EXPECT_EQ(result.error().status(), HttpStatus::NotFound);
 }
 
 // ============================================================================

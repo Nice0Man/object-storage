@@ -209,6 +209,8 @@ struct UserInfo {
     String secret_key;
     String session_token;
     String account_name;
+    String role{"viewer"};
+    Vector<String> groups;
     Vector<String> policies;
     TimePoint created_at;
     bool is_admin{false};

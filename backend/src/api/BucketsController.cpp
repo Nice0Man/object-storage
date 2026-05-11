@@ -111,6 +111,12 @@ BucketsController::create(const drogon::HttpRequestPtr& req,
     String bucket_name = (*json)["name"].asString();
     String region = (*json).get("region", "us-east-1").asString();
     bool object_locking = (*json).get("object_locking", false).asBool();
+    Vector<String> visibility_groups;
+    if ((*json).isMember("visibility_groups") && (*json)["visibility_groups"].isArray()) {
+        for (const auto& entry : (*json)["visibility_groups"]) {
+            visibility_groups.push_back(entry.asString());
+        }
+    }
 
     CONSOLE_LOG_INFO("Creating bucket: {} in region: {}", bucket_name, region);
 
@@ -122,6 +128,18 @@ BucketsController::create(const drogon::HttpRequestPtr& req,
         resp->setStatusCode(static_cast<drogon::HttpStatusCode>(result.error().status()));
         callback(resp);
         return;
+    }
+    if (!visibility_groups.empty()) {
+        auto visibility_result = bucket_service->set_bucket_visibility_groups(user_info,
+                                                                              bucket_name,
+                                                                              visibility_groups);
+        if (!visibility_result) {
+            auto error_json = visibility_result.error().to_json();
+            auto resp = drogon::HttpResponse::newHttpJsonResponse(error_json);
+            resp->setStatusCode(static_cast<drogon::HttpStatusCode>(visibility_result.error().status()));
+            callback(resp);
+            return;
+        }
     }
 
     Json::Value response;
@@ -749,6 +767,80 @@ BucketsController::setObjectLock(const drogon::HttpRequestPtr& req,
     response["message"] = "Object lock configuration updated successfully";
     response["bucket"] = bucket_name;
 
+    auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
+    callback(resp);
+}
+
+void
+BucketsController::getVisibility(const drogon::HttpRequestPtr& req,
+                                 std::function<void(const drogon::HttpResponsePtr&)>&& callback,
+                                 const String& bucket_name) {
+    auto user_info = get_user_from_request(req);
+    auto bucket_service = ServiceLocator::bucket_service();
+    if (!bucket_service) {
+        Json::Value error;
+        error["error"] = "Service not available";
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+        resp->setStatusCode(drogon::k500InternalServerError);
+        callback(resp);
+        return;
+    }
+    auto result = bucket_service->get_bucket_visibility_groups(user_info, bucket_name);
+    if (!result) {
+        auto error_json = result.error().to_json();
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(error_json);
+        resp->setStatusCode(static_cast<drogon::HttpStatusCode>(result.error().status()));
+        callback(resp);
+        return;
+    }
+    Json::Value response;
+    response["bucket"] = bucket_name;
+    response["groups"] = Json::Value(Json::arrayValue);
+    for (const auto& group : result.value()) {
+        response["groups"].append(group);
+    }
+    auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
+    callback(resp);
+}
+
+void
+BucketsController::setVisibility(const drogon::HttpRequestPtr& req,
+                                 std::function<void(const drogon::HttpResponsePtr&)>&& callback,
+                                 const String& bucket_name) {
+    auto user_info = get_user_from_request(req);
+    auto bucket_service = ServiceLocator::bucket_service();
+    if (!bucket_service) {
+        Json::Value error;
+        error["error"] = "Service not available";
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+        resp->setStatusCode(drogon::k500InternalServerError);
+        callback(resp);
+        return;
+    }
+    auto json = req->getJsonObject();
+    if (!json || !json->isMember("groups") || !(*json)["groups"].isArray()) {
+        Json::Value error;
+        error["error"] = "groups array is required";
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
+        resp->setStatusCode(drogon::k400BadRequest);
+        callback(resp);
+        return;
+    }
+    Vector<String> groups;
+    for (const auto& entry : (*json)["groups"]) {
+        groups.push_back(entry.asString());
+    }
+    auto result = bucket_service->set_bucket_visibility_groups(user_info, bucket_name, groups);
+    if (!result) {
+        auto error_json = result.error().to_json();
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(error_json);
+        resp->setStatusCode(static_cast<drogon::HttpStatusCode>(result.error().status()));
+        callback(resp);
+        return;
+    }
+    Json::Value response;
+    response["message"] = "Bucket visibility updated";
+    response["bucket"] = bucket_name;
     auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
     callback(resp);
 }

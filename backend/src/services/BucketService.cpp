@@ -1,6 +1,7 @@
 #include "console/services/BucketService.hpp"
 
 #include "console/common/Logger.hpp"
+#include "console/common/ServiceLocator.hpp"
 #include "console/services/PolicyEvaluator.hpp"
 
 #include <json/json.h>
@@ -27,8 +28,24 @@ BucketService::list_buckets(const UserInfo& user_info) {
             ApiError(HttpStatus::InternalServerError, "Failed to list buckets: " + result.error()));
     }
 
-    CONSOLE_LOG_INFO("Successfully listed {} buckets", result.value().size());
-    return Result<Vector<Bucket>, ApiError>(ok_tag, result.value());
+    Vector<Bucket> visible_buckets;
+    auto db = ServiceLocator::database();
+    for (const auto& bucket : result.value()) {
+        if (db) {
+            auto vis = db->is_bucket_visible_to_user(bucket.name(), user_info.access_key, user_info.is_admin);
+            if (!vis || !vis.value()) {
+                continue;
+            }
+        }
+        auto access_error = validate_access(user_info, bucket.name(), "ListBucket");
+        if (access_error) {
+            continue;
+        }
+        visible_buckets.push_back(bucket);
+    }
+
+    CONSOLE_LOG_INFO("Successfully listed {} visible buckets", visible_buckets.size());
+    return Result<Vector<Bucket>, ApiError>(ok_tag, visible_buckets);
 }
 
 Result<Bucket, ApiError>
@@ -38,6 +55,9 @@ BucketService::create_bucket(const UserInfo& user_info, const String& name, cons
     if (auto error = validate_bucket_name(name)) {
         CONSOLE_LOG_WARN("Invalid bucket name: {}", name);
         return Err<Bucket>(*error);
+    }
+    if (auto access_error = validate_access(user_info, name, "CreateBucket")) {
+        return Err<Bucket>(*access_error);
     }
 
     auto result = storage_client_->create_bucket(name, region);
@@ -60,12 +80,22 @@ BucketService::create_bucket(const UserInfo& user_info, const String& name, cons
 Result<void, ApiError>
 BucketService::delete_bucket(const UserInfo& user_info, const String& name) {
     CONSOLE_LOG_INFO("Deleting bucket: {}", name);
+    if (auto access_error = validate_access(user_info, name, "DeleteBucket")) {
+        return Result<void, ApiError>(err_tag, *access_error);
+    }
 
     auto result = storage_client_->delete_bucket(name);
     if (!result) {
-        CONSOLE_LOG_ERROR("Failed to delete bucket {}: {}", name, result.error());
-        return Result<void, ApiError>(
-            err_tag, ApiError(HttpStatus::InternalServerError, "Failed to delete bucket: " + result.error()));
+        const String& err = result.error();
+        CONSOLE_LOG_ERROR("Failed to delete bucket {}: {}", name, err);
+        if (err.rfind("Bucket is not empty", 0) == 0) {
+            return Result<void, ApiError>(err_tag, ApiError(HttpStatus::Conflict, err));
+        }
+        if (err.rfind("Bucket not found", 0) == 0) {
+            return Result<void, ApiError>(err_tag, ApiError(HttpStatus::NotFound, err));
+        }
+        return Result<void, ApiError>(err_tag,
+                                      ApiError(HttpStatus::InternalServerError, "Failed to delete bucket: " + err));
     }
 
     CONSOLE_LOG_INFO("Bucket deleted: {}", name);
@@ -75,6 +105,9 @@ BucketService::delete_bucket(const UserInfo& user_info, const String& name) {
 Result<Bucket, ApiError>
 BucketService::get_bucket_info(const UserInfo& user_info, const String& name) {
     CONSOLE_LOG_DEBUG("Getting bucket info: {}", name);
+    if (auto access_error = validate_access(user_info, name, "ListBucket")) {
+        return Err<Bucket>(*access_error);
+    }
 
     auto result = storage_client_->get_bucket(name);
     if (!result) {
@@ -87,6 +120,9 @@ BucketService::get_bucket_info(const UserInfo& user_info, const String& name) {
 
 Result<void, ApiError>
 BucketService::set_bucket_policy(const UserInfo& user_info, const String& name, const String& policy_json) {
+    if (auto access_error = validate_access(user_info, name, "PutBucketPolicy")) {
+        return Result<void, ApiError>(err_tag, *access_error);
+    }
     CONSOLE_LOG_INFO("Setting policy for bucket: {}", name);
 
     if (auto error = validate_bucket_name(name)) {
@@ -120,6 +156,9 @@ BucketService::set_bucket_policy(const UserInfo& user_info, const String& name, 
 Result<String, ApiError>
 BucketService::get_bucket_policy(const UserInfo& user_info, const String& name) {
     CONSOLE_LOG_DEBUG("Getting bucket policy for: {}", name);
+    if (auto access_error = validate_access(user_info, name, "GetBucketPolicy")) {
+        return Err<String>(*access_error);
+    }
 
     // Check bucket exists
     auto exists_result = storage_client_->bucket_exists(name);
@@ -139,6 +178,9 @@ BucketService::get_bucket_policy(const UserInfo& user_info, const String& name) 
 Result<void, ApiError>
 BucketService::set_bucket_versioning(const UserInfo& user_info, const String& name, bool enabled) {
     CONSOLE_LOG_INFO("Setting bucket versioning for {}: {}", name, enabled);
+    if (auto access_error = validate_access(user_info, name, "PutBucketVersioning")) {
+        return Result<void, ApiError>(err_tag, *access_error);
+    }
 
     // Check bucket exists
     auto exists_result = storage_client_->bucket_exists(name);
@@ -160,6 +202,9 @@ BucketService::set_bucket_versioning(const UserInfo& user_info, const String& na
 Result<bool, ApiError>
 BucketService::get_bucket_versioning(const UserInfo& user_info, const String& name) {
     CONSOLE_LOG_DEBUG("Getting bucket versioning for: {}", name);
+    if (auto access_error = validate_access(user_info, name, "GetBucketVersioning")) {
+        return Err<bool>(*access_error);
+    }
 
     // Check bucket exists
     auto exists_result = storage_client_->bucket_exists(name);
@@ -263,6 +308,9 @@ BucketService::delete_bucket_tags(const UserInfo& user_info, const String& name)
 Result<bool, ApiError>
 BucketService::bucket_exists(const UserInfo& user_info, const String& name) {
     CONSOLE_LOG_DEBUG("Checking if bucket exists: {}", name);
+    if (auto access_error = validate_access(user_info, name, "ListBucket")) {
+        return Err<bool>(*access_error);
+    }
 
     auto result = storage_client_->bucket_exists(name);
     if (!result) {
@@ -319,6 +367,14 @@ BucketService::validate_bucket_name(const String& name) {
 
 Optional<ApiError>
 BucketService::validate_access(const UserInfo& user, const String& bucket_name, const String& action) {
+    auto db = ServiceLocator::database();
+    if (db) {
+        auto visible = db->is_bucket_visible_to_user(bucket_name, user.access_key, user.is_admin);
+        if (!visible || !visible.value()) {
+            return ApiError(HttpStatus::Forbidden, "Bucket is not visible for current user");
+        }
+    }
+
     // Use PolicyEvaluator for proper IAM-style policy evaluation
     PolicyEvaluator evaluator;
 
@@ -407,6 +463,9 @@ BucketService::validate_policy_json(const String& policy_json) {
 Result<Json::Value, models::ApiError>
 BucketService::get_bucket_encryption(const UserInfo& user_info, const String& name) {
     CONSOLE_LOG_DEBUG("Getting encryption for bucket: {}", name);
+    if (auto access_error = validate_access(user_info, name, "GetBucketPolicy")) {
+        return Err<Json::Value>(*access_error);
+    }
 
     auto result = storage_client_->get_bucket_encryption(name);
     if (!result) {
@@ -418,6 +477,9 @@ BucketService::get_bucket_encryption(const UserInfo& user_info, const String& na
 Result<void, models::ApiError>
 BucketService::set_bucket_encryption(const UserInfo& user_info, const String& name, const Json::Value& config) {
     CONSOLE_LOG_INFO("Setting encryption for bucket: {}", name);
+    if (auto access_error = validate_access(user_info, name, "PutBucketPolicy")) {
+        return Err<void>(*access_error);
+    }
 
     auto result = storage_client_->set_bucket_encryption(name, config);
     if (!result) {
@@ -429,6 +491,9 @@ BucketService::set_bucket_encryption(const UserInfo& user_info, const String& na
 Result<Json::Value, models::ApiError>
 BucketService::get_bucket_lifecycle(const UserInfo& user_info, const String& name) {
     CONSOLE_LOG_DEBUG("Getting lifecycle for bucket: {}", name);
+    if (auto access_error = validate_access(user_info, name, "GetBucketPolicy")) {
+        return Err<Json::Value>(*access_error);
+    }
 
     auto result = storage_client_->get_bucket_lifecycle(name);
     if (!result) {
@@ -440,6 +505,9 @@ BucketService::get_bucket_lifecycle(const UserInfo& user_info, const String& nam
 Result<void, models::ApiError>
 BucketService::set_bucket_lifecycle(const UserInfo& user_info, const String& name, const Json::Value& rules) {
     CONSOLE_LOG_INFO("Setting lifecycle for bucket: {}", name);
+    if (auto access_error = validate_access(user_info, name, "PutBucketPolicy")) {
+        return Err<void>(*access_error);
+    }
 
     auto result = storage_client_->set_bucket_lifecycle(name, rules);
     if (!result) {
@@ -451,6 +519,9 @@ BucketService::set_bucket_lifecycle(const UserInfo& user_info, const String& nam
 Result<Json::Value, models::ApiError>
 BucketService::get_bucket_object_lock(const UserInfo& user_info, const String& name) {
     CONSOLE_LOG_DEBUG("Getting object lock config for bucket: {}", name);
+    if (auto access_error = validate_access(user_info, name, "GetBucketPolicy")) {
+        return Err<Json::Value>(*access_error);
+    }
 
     auto result = storage_client_->get_bucket_object_lock(name);
     if (!result) {
@@ -462,8 +533,45 @@ BucketService::get_bucket_object_lock(const UserInfo& user_info, const String& n
 Result<void, models::ApiError>
 BucketService::set_bucket_object_lock(const UserInfo& user_info, const String& name, const Json::Value& config) {
     CONSOLE_LOG_INFO("Setting object lock config for bucket: {}", name);
+    if (auto access_error = validate_access(user_info, name, "PutBucketPolicy")) {
+        return Err<void>(*access_error);
+    }
 
     auto result = storage_client_->set_bucket_object_lock(name, config);
+    if (!result) {
+        return Err<void>(ApiError(HttpStatus::InternalServerError, result.error()));
+    }
+    return Ok<ApiError>();
+}
+
+Result<Vector<String>, models::ApiError>
+BucketService::get_bucket_visibility_groups(const UserInfo& user_info, const String& name) {
+    if (auto access_error = validate_access(user_info, name, "GetBucketPolicy")) {
+        return Err<Vector<String>>(*access_error);
+    }
+    auto db = ServiceLocator::database();
+    if (!db) {
+        return Err<Vector<String>>(ApiError(HttpStatus::InternalServerError, "Database not available"));
+    }
+    auto result = db->get_bucket_visibility_groups(name);
+    if (!result) {
+        return Err<Vector<String>>(ApiError(HttpStatus::InternalServerError, result.error()));
+    }
+    return Ok<Vector<String>, ApiError>(result.value());
+}
+
+Result<void, models::ApiError>
+BucketService::set_bucket_visibility_groups(const UserInfo& user_info,
+                                            const String& name,
+                                            const Vector<String>& groups) {
+    if (auto access_error = validate_access(user_info, name, "PutBucketPolicy")) {
+        return Err<void>(*access_error);
+    }
+    auto db = ServiceLocator::database();
+    if (!db) {
+        return Err<void>(ApiError(HttpStatus::InternalServerError, "Database not available"));
+    }
+    auto result = db->set_bucket_visibility_groups(name, groups);
     if (!result) {
         return Err<void>(ApiError(HttpStatus::InternalServerError, result.error()));
     }
