@@ -10,6 +10,7 @@ import type {
   LoginRequest,
   LoginResponse,
   SessionResponse,
+  CurrentUserResponse,
   ListBucketsResponse,
   CreateBucketRequest,
   BucketInfo,
@@ -156,8 +157,10 @@ class ApiClient {
     return response.data;
   }
 
-  async getCurrentUser(): Promise<any> {
-    const response = await this.client.get("/api/v1/auth/me");
+  async getCurrentUser(): Promise<CurrentUserResponse> {
+    const response = await this.client.get<CurrentUserResponse>(
+      "/api/v1/auth/me",
+    );
     return response.data;
   }
 

@@ -163,7 +163,22 @@ export interface LoginResponse {
 export interface SessionResponse {
   authenticated: boolean;
   username: string;
+  access_key?: string;
+  is_admin?: boolean;
+  role?: "viewer" | "editor" | "admin" | string;
+  groups?: string[];
+  policies?: string[];
   expires_at: string;
+}
+
+/** GET /api/v1/auth/me */
+export interface CurrentUserResponse {
+  username: string;
+  access_key: string;
+  is_admin: boolean;
+  role?: string;
+  groups?: string[];
+  policies?: string[];
 }
 
 // Buckets
