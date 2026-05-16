@@ -81,10 +81,12 @@ class CommandLine {
 
     // Helper methods
     bool init_services_for_cli();
+    static bool is_read_only_cli_command(const String& command);
     void print_table(const Vector<Vector<String>>& rows, const Vector<String>& headers);
 
     std::map<String, Command> commands_;
     bool services_initialized_{false};
+    bool cli_db_read_only_{false};
 };
 
 } // namespace console::cli

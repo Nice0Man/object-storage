@@ -14,6 +14,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <set>
 #include <termios.h>
 #include <unistd.h>
 
@@ -238,6 +239,8 @@ CommandLine::run(int argc, char* argv[]) {
         return 1;
     }
 
+    cli_db_read_only_ = is_read_only_cli_command(command);
+
     // Collect arguments
     Vector<String> args;
     for (int i = 2; i < argc; i++) {
@@ -245,6 +248,17 @@ CommandLine::run(int argc, char* argv[]) {
     }
 
     return it->second.handler(args);
+}
+
+bool
+CommandLine::is_read_only_cli_command(const String& command) {
+    static const std::set<String> read_only_commands = {
+        "user:list",
+        "user:info",
+        "bucket:list",
+        "bucket:info",
+    };
+    return read_only_commands.count(command) > 0;
 }
 
 void
@@ -312,7 +326,8 @@ CommandLine::init_services_for_cli() {
     }
 
     // Initialize database - use absolute path from config or relative to project root
-    String db_path = config.get<String>("database.path").value_or("data/console.db");
+    String db_path = config.get<String>("database.path").value_or("./data/rocksdb");
+    String db_encryption_key = config.get<String>("database.encryption_key").value_or("");
     std::filesystem::path db_file_path(db_path);
 
     if (db_file_path.is_relative()) {
@@ -328,10 +343,22 @@ CommandLine::init_services_for_cli() {
     std::filesystem::create_directories(db_file_path.parent_path());
     db_path = db_file_path.string();
 
-    auto database = std::make_shared<storage::DatabaseManager>(db_path);
-    if (auto result = database->initialize(); !result) {
-        print_error("Failed to initialize database: " + result.error());
+    const size_t thread_pool_size = cli_db_read_only_ ? 0 : 4;
+    auto database = std::make_shared<storage::DatabaseManager>(db_path, db_encryption_key, thread_pool_size);
+    if (auto result = database->initialize(cli_db_read_only_); !result) {
+        const auto& err = result.error();
+        if (!cli_db_read_only_ &&
+            (err.find("LOCK") != String::npos || err.find("Resource temporarily unavailable") != String::npos)) {
+            print_error("Failed to initialize database: " + err);
+            print_warning("The database is locked by a running server. Stop the server first, or use read-only "
+                          "commands (user:list, user:info, bucket:list, bucket:info).");
+        } else {
+            print_error("Failed to initialize database: " + err);
+        }
         return false;
+    }
+    if (cli_db_read_only_) {
+        print_info("Opened database in read-only mode (server may be running)");
     }
     ServiceLocator::set_database(database);
 
