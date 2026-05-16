@@ -44,9 +44,20 @@ EncryptionService::get_master_key() {
         String key_hex = config.get<String>("encryption.master_key").value_or("");
 
         if (key_hex.empty()) {
-            // Generate a new master key
-            master_key_ = generate_key(AES_KEY_SIZE);
-            CONSOLE_LOG_WARN("Generated new encryption master key. Configure 'encryption.master_key' for persistence.");
+            // Derive a stable key from JWT secret so restarts do not break SSE-S3 objects
+            const String& jwt_secret = config.auth().jwt_secret;
+            if (!jwt_secret.empty()) {
+                unsigned char hash[SHA256_DIGEST_LENGTH];
+                SHA256(reinterpret_cast<const unsigned char*>(jwt_secret.data()), jwt_secret.size(), hash);
+                master_key_.assign(hash, hash + SHA256_DIGEST_LENGTH);
+                CONSOLE_LOG_INFO("Encryption master key derived from auth.jwt_secret (set encryption.master_key for a "
+                                 "dedicated key)");
+            } else {
+                master_key_ = generate_key(AES_KEY_SIZE);
+                CONSOLE_LOG_WARN(
+                    "Generated new encryption master key. Configure 'encryption.master_key' or 'auth.jwt_secret' "
+                    "for persistence.");
+            }
         } else {
             // Parse hex string to bytes
             master_key_.resize(AES_KEY_SIZE);
