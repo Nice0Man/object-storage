@@ -20,6 +20,36 @@
 namespace console::clients {
 
 namespace {
+
+/** File on disk is plaintext but metadata still says SSE-S3 (legacy uploads / key rotation). */
+bool
+looks_like_plaintext_object_payload(const ByteArray& data) {
+    if (data.size() < 4) {
+        return false;
+    }
+    // PNG
+    if (data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47) {
+        return true;
+    }
+    // JPEG
+    if (data[0] == 0xFF && data[1] == 0xD8) {
+        return true;
+    }
+    // GIF
+    if (data.size() >= 6 && data[0] == 'G' && data[1] == 'I' && data[2] == 'F') {
+        return true;
+    }
+    // PDF
+    if (data.size() >= 5 && data[0] == '%' && data[1] == 'P' && data[2] == 'D' && data[3] == 'F') {
+        return true;
+    }
+    // ZIP / Office Open XML
+    if (data[0] == 'P' && data[1] == 'K' && data[2] == 0x03 && data[3] == 0x04) {
+        return true;
+    }
+    return false;
+}
+
 String
 encode_presigned_key_path(const String& raw_key) {
     static constexpr char hex[] = "0123456789ABCDEF";
@@ -491,6 +521,24 @@ LocalStorageClient::get_object(const String& bucket_name, const String& object_k
         }
 
         if (!decrypt_result) {
+            // Legacy: metadata.encrypted=true but bytes on disk were never encrypted (or wrong key only
+            // shows up as bad padding while payload is still a valid file).
+            if (obj_meta.sse_type == "SSE-S3" && looks_like_plaintext_object_payload(data)) {
+                CONSOLE_LOG_WARN("Object {}/{} is marked SSE-S3 but file looks like plaintext; serving raw bytes. "
+                                 "Re-upload after setting a stable encryption.master_key in config.",
+                                 bucket_name,
+                                 object_key);
+                return Ok<ByteArray, String>(std::move(data));
+            }
+
+            if (obj_meta.sse_type == "SSE-S3") {
+                return Err<ByteArray, String>(
+                    "Decryption failed: " + decrypt_result.error() +
+                    ". The object was encrypted with a different server key (e.g. before "
+                    "encryption.master_key or auth.jwt_secret was fixed). Set a permanent "
+                    "encryption.master_key in config.json, restart once, and re-upload the object.");
+            }
+
             return Err<ByteArray, String>("Decryption failed: " + decrypt_result.error());
         }
 
