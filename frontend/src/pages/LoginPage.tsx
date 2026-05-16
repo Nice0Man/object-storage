@@ -231,10 +231,6 @@ const LoginPage: React.FC = () => {
                     py: 1.5,
                     fontSize: "1.1rem",
                     fontWeight: 600,
-                    transition: "background-color 0.2s ease, box-shadow 0.2s ease",
-                    "&:hover": {
-                      boxShadow: 2,
-                    },
                     "&:disabled": {
                       background: (theme) =>
                         theme.palette.action.disabledBackground,

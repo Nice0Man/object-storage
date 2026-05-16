@@ -4,7 +4,6 @@ import {
   Container,
   Toolbar,
   Typography,
-  Button,
   Drawer,
   List,
   ListItem,
@@ -14,18 +13,12 @@ import {
   IconButton,
   Divider,
   Tooltip,
-  Avatar,
-  Stack,
-  Chip,
-  useTheme,
-  alpha,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Storage as StorageIcon,
   Folder as FolderIcon,
   People as PeopleIcon,
-  ExitToApp as LogoutIcon,
   Dashboard as DashboardIcon,
   MonitorHeart as MonitorHeartIcon,
   Person as PersonIcon,
@@ -36,8 +29,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { logout, selectCapabilities, selectUsername, selectRole } from '../../store/authSlice';
 import { useTranslation } from 'react-i18next';
-import ThemeToggle from '../Settings/ThemeToggle';
-import LanguageSelector from '../Settings/LanguageSelector';
+import SidebarUserPanel from './SidebarUserPanel';
 import { Outlet } from 'react-router-dom';
 import { can, type Capability } from '../../auth/capabilities';
 
@@ -49,7 +41,6 @@ interface MainLayoutProps {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const theme = useTheme();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
   const navigate = useNavigate();
@@ -59,14 +50,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const role = useAppSelector(selectRole);
   const capabilities = useAppSelector(selectCapabilities);
   const { t } = useTranslation();
-
-  const roleLabel = React.useMemo(() => {
-    const r = (role || 'viewer').toLowerCase();
-    if (r === 'admin') return t('nav.role_admin');
-    if (r === 'editor') return t('nav.role_editor');
-    if (r === 'viewer') return t('nav.role_viewer');
-    return t('nav.role_other', { role });
-  }, [role, t]);
 
   const drawerWidth = collapsed ? drawerWidthCollapsed : drawerWidthExpanded;
 
@@ -119,16 +102,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               minHeight: 44,
               justifyContent: collapsed ? 'center' : 'flex-start',
               px: collapsed ? 1 : 1.5,
-              '&.Mui-selected': {
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
-                '&:hover': {
-                  bgcolor: 'primary.dark',
-                },
-                '& .MuiListItemIcon-root': {
-                  color: 'primary.contrastText',
-                },
-              },
               ...(disabled
                 ? {
                     opacity: 0.52,
@@ -151,13 +124,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Toolbar
         sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          bgcolor: 'background.paper',
+          borderBottom: 1,
+          borderColor: 'divider',
+          minHeight: 56,
           justifyContent: collapsed ? 'center' : 'space-between',
           px: 1.5,
         }}
       >
         {!collapsed && (
-          <Typography variant="subtitle1" noWrap component="div" sx={{ color: 'white', fontWeight: 700 }}>
+          <Typography variant="subtitle1" noWrap component="div" sx={{ fontWeight: 700 }}>
             {t('app.title')}
           </Typography>
         )}
@@ -165,13 +141,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           onClick={handleCollapse}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           sx={{
-            color: 'white',
             ml: collapsed ? 'auto' : 0,
             mr: collapsed ? 'auto' : 0,
-            bgcolor: collapsed ? 'rgba(255,255,255,0.14)' : 'transparent',
-            '&:hover': {
-              bgcolor: collapsed ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)',
-            },
           }}
         >
           {collapsed ? <StorageIcon fontSize="small" /> : <ChevronLeftIcon />}
@@ -189,7 +160,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 color="text.secondary"
                 sx={{ px: 2.5, pt: 1.5, pb: 0.5, textTransform: 'uppercase', letterSpacing: 0.8 }}
               >
-                Недоступно
+                {t('nav.unavailable')}
               </Typography>
             )}
             {unavailableItems.map((item) => renderMenuButton(item, true))}
@@ -201,71 +172,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
       <Box
         sx={{
-          px: 1.5,
-          pt: 2,
-          pb: 1.5,
+          flexShrink: 0,
+          width: '100%',
           display: 'flex',
-          justifyContent: collapsed ? 'center' : 'stretch',
           borderTop: 1,
           borderColor: 'divider',
-          bgcolor: alpha(theme.palette.action.hover, theme.palette.mode === 'dark' ? 0.12 : 0.5),
         }}
       >
-        {!collapsed ? (
-          <Stack spacing={1.5} sx={{ width: '100%' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-              <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main', flexShrink: 0 }}>
-                {(username ?? '?').charAt(0).toUpperCase()}
-              </Avatar>
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600, lineHeight: 1.3 }}>
-                  {username ?? 'User'}
-                </Typography>
-                {roleLabel.trim().toLowerCase() !== (username ?? '').trim().toLowerCase() && (
-                  <Chip
-                    label={roleLabel}
-                    size="small"
-                    variant="outlined"
-                    color="primary"
-                    sx={{ mt: 0.5, height: 22, '& .MuiChip-label': { px: 1, fontSize: '0.7rem' } }}
-                  />
-                )}
-              </Box>
-            </Box>
-
-            <Stack direction="row" spacing={0.5} justifyContent="flex-start" alignItems="center" sx={{ pl: 0.25 }}>
-              <ThemeToggle />
-              <LanguageSelector />
-            </Stack>
-
-            <Button
-              fullWidth
-              variant="outlined"
-              color="error"
-              size="small"
-              startIcon={<LogoutIcon />}
-              onClick={handleLogout}
-              sx={{ textTransform: 'none', borderRadius: 1.5 }}
-            >
-              {t('auth.logout')}
-            </Button>
-          </Stack>
-        ) : (
-          <Stack sx={{ alignItems: 'center', gap: 0.75, width: '100%' }}>
-            <Tooltip title={username} placement="right">
-              <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
-                {(username ?? '?').charAt(0).toUpperCase()}
-              </Avatar>
-            </Tooltip>
-            <ThemeToggle />
-            <LanguageSelector />
-            <Tooltip title={t('auth.logout')} placement="right">
-              <IconButton color="error" onClick={handleLogout}>
-                <LogoutIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        )}
+        <SidebarUserPanel
+          collapsed={collapsed}
+          username={username}
+          role={role}
+          onLogout={handleLogout}
+        />
       </Box>
     </Box>
   );

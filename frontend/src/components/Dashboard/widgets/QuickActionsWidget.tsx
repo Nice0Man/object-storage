@@ -79,14 +79,12 @@ const QuickActionsWidget: React.FC<QuickActionsWidgetProps> = ({
               minWidth: 0,
               maxWidth: "100%",
               cursor: editMode ? "default" : "pointer",
-              transition: "box-shadow 0.2s ease, background-color 0.2s ease",
               borderRadius: 2,
               backgroundColor: alpha(action.color, 0.08),
               border: `1px solid ${alpha(action.color, 0.22)}`,
-              "&:hover": !editMode ? {
-                boxShadow: theme.shadows[2],
-                backgroundColor: alpha(action.color, 0.12),
-              } : {},
+              "&:hover": !editMode
+                ? { backgroundColor: alpha(action.color, 0.12) }
+                : {},
             }}
           >
             <CardContent sx={{ py: 1.5, px: 2 }}>

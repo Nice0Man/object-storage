@@ -2,15 +2,15 @@ import { createTheme, ThemeOptions, alpha } from "@mui/material/styles";
 
 export const lightPalette = {
   primary: {
-    main: "#2563eb", // Modern blue
+    main: "#2563eb",
     light: "#60a5fa",
     dark: "#1e40af",
     contrastText: "#ffffff",
   },
   secondary: {
-    main: "#8b5cf6", // Purple accent
-    light: "#a78bfa",
-    dark: "#6d28d9",
+    main: "#64748b",
+    light: "#94a3b8",
+    dark: "#475569",
     contrastText: "#ffffff",
   },
   success: {
@@ -29,7 +29,7 @@ export const lightPalette = {
     dark: "#dc2626",
   },
   background: {
-    default: "#f8fafc",
+    default: "#f1f5f9",
     paper: "#ffffff",
   },
   text: {
@@ -46,10 +46,10 @@ export const darkPalette = {
     contrastText: "#ffffff",
   },
   secondary: {
-    main: "#a78bfa",
-    light: "#c4b5fd",
-    dark: "#8b5cf6",
-    contrastText: "#ffffff",
+    main: "#94a3b8",
+    light: "#cbd5e1",
+    dark: "#64748b",
+    contrastText: "#0f172a",
   },
   success: {
     main: "#10b981",
@@ -83,65 +83,51 @@ const getDesignTokens = (mode: "light" | "dark"): ThemeOptions => ({
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: "2.5rem",
-      fontWeight: 700,
-      letterSpacing: "-0.02em",
-    },
-    h2: {
-      fontSize: "2rem",
-      fontWeight: 700,
-      letterSpacing: "-0.01em",
-    },
-    h3: {
-      fontSize: "1.75rem",
-      fontWeight: 600,
-      letterSpacing: "-0.01em",
-    },
-    h4: {
-      fontSize: "1.5rem",
-      fontWeight: 600,
-    },
-    h5: {
-      fontSize: "1.25rem",
-      fontWeight: 600,
-    },
-    h6: {
-      fontSize: "1rem",
-      fontWeight: 600,
-    },
-    button: {
-      textTransform: "none",
-      fontWeight: 500,
-    },
+    h1: { fontSize: "2rem", fontWeight: 600, letterSpacing: "-0.02em" },
+    h2: { fontSize: "1.75rem", fontWeight: 600, letterSpacing: "-0.01em" },
+    h3: { fontSize: "1.5rem", fontWeight: 600 },
+    h4: { fontSize: "1.25rem", fontWeight: 600 },
+    h5: { fontSize: "1.125rem", fontWeight: 600 },
+    h6: { fontSize: "1rem", fontWeight: 600 },
+    button: { textTransform: "none", fontWeight: 500 },
   },
   shape: {
-    borderRadius: 12, // Smooth rounded corners
+    borderRadius: 8,
+  },
+  transitions: {
+    duration: {
+      shortest: 0,
+      shorter: 0,
+      short: 0,
+    },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        "@media (prefers-reduced-motion: reduce)": {
+          "*": {
+            animationDuration: "0.01ms !important",
+            animationIterationCount: "1 !important",
+            transitionDuration: "0.01ms !important",
+          },
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
-          padding: "10px 24px",
-          fontSize: "0.95rem",
+          borderRadius: 8,
+          padding: "8px 20px",
+          fontSize: "0.9375rem",
           fontWeight: 500,
           boxShadow: "none",
-          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
           "&:hover": {
-            boxShadow:
-              mode === "light"
-                ? "0 4px 12px rgba(0, 0, 0, 0.15)"
-                : "0 4px 12px rgba(0, 0, 0, 0.5)",
-            transform: "translateY(-1px)",
+            boxShadow: "none",
           },
         },
         contained: {
           "&:hover": {
-            boxShadow:
-              mode === "light"
-                ? "0 6px 16px rgba(0, 0, 0, 0.2)"
-                : "0 6px 16px rgba(0, 0, 0, 0.6)",
+            boxShadow: "none",
           },
         },
       },
@@ -150,32 +136,21 @@ const getDesignTokens = (mode: "light" | "dark"): ThemeOptions => ({
       styleOverrides: {
         root: {
           backgroundImage: "none",
-          transition: "box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         },
-        elevation1: {
-          boxShadow:
+        outlined: {
+          borderColor:
             mode === "light"
-              ? "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)"
-              : "0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4)",
+              ? alpha("#0f172a", 0.12)
+              : alpha("#f1f5f9", 0.12),
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow:
-            mode === "light"
-              ? "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)"
-              : "0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4)",
-          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          "&:hover": {
-            boxShadow:
-              mode === "light"
-                ? "0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.08)"
-                : "0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.5)",
-            transform: "translateY(-2px)",
-          },
+          borderRadius: 8,
+          boxShadow: "none",
+          border: `1px solid ${mode === "light" ? alpha("#0f172a", 0.08) : alpha("#f1f5f9", 0.08)}`,
         },
       },
     },
@@ -183,21 +158,15 @@ const getDesignTokens = (mode: "light" | "dark"): ThemeOptions => ({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            borderRadius: 10,
-            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-            "&:hover": {
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor:
-                  mode === "light"
-                    ? alpha("#2563eb", 0.5)
-                    : alpha("#3b82f6", 0.5),
-              },
-            },
-            "&.Mui-focused": {
-              boxShadow:
+            borderRadius: 8,
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor:
                 mode === "light"
-                  ? "0 0 0 3px rgba(37, 99, 235, 0.1)"
-                  : "0 0 0 3px rgba(59, 130, 246, 0.2)",
+                  ? alpha("#2563eb", 0.4)
+                  : alpha("#3b82f6", 0.4),
+            },
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderWidth: 1,
             },
           },
         },
@@ -206,8 +175,20 @@ const getDesignTokens = (mode: "light" | "dark"): ThemeOptions => ({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 6,
           fontWeight: 500,
+        },
+      },
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          "&:hover": {
+            backgroundColor:
+              mode === "light"
+                ? alpha("#0f172a", 0.04)
+                : alpha("#f1f5f9", 0.04),
+          },
         },
       },
     },
@@ -222,23 +203,35 @@ const getDesignTokens = (mode: "light" | "dark"): ThemeOptions => ({
         head: {
           fontWeight: 600,
           backgroundColor:
-            mode === "light" ? alpha("#2563eb", 0.05) : alpha("#3b82f6", 0.1),
+            mode === "light" ? alpha("#2563eb", 0.04) : alpha("#3b82f6", 0.08),
         },
       },
     },
-    MuiAppBar: {
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          borderRight: `1px solid ${mode === "light" ? alpha("#0f172a", 0.08) : alpha("#f1f5f9", 0.08)}`,
+        },
+      },
+    },
+    MuiListItemButton: {
       styleOverrides: {
         root: {
-          boxShadow:
-            mode === "light"
-              ? "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)"
-              : "0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4)",
+          borderRadius: 8,
+          "&.Mui-selected": {
+            backgroundColor: alpha(mode === "light" ? "#2563eb" : "#3b82f6", 0.12),
+            color: mode === "light" ? "#1e40af" : "#93c5fd",
+            "&:hover": {
+              backgroundColor: alpha(mode === "light" ? "#2563eb" : "#3b82f6", 0.16),
+            },
+            "& .MuiListItemIcon-root": {
+              color: mode === "light" ? "#2563eb" : "#60a5fa",
+            },
+          },
         },
       },
     },
   },
 });
 
-export const createAppTheme = (mode: "light" | "dark") => {
-  return createTheme(getDesignTokens(mode));
-};
+export const createAppTheme = (mode: "light" | "dark") => createTheme(getDesignTokens(mode));

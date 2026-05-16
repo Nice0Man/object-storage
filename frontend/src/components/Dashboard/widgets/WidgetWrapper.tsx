@@ -18,6 +18,7 @@ import {
   Delete,
 } from "@mui/icons-material";
 import type { DashboardWidget } from "../../../api/types";
+import { widgetScrollSx } from "../../../theme/widgetStyles";
 
 interface WidgetWrapperProps {
   widget: DashboardWidget;
@@ -76,15 +77,8 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
         flexDirection: "column",
         overflow: "hidden",
         cursor: editMode ? "default" : onClick ? "pointer" : "default",
-        transition: "border-color 0.2s ease, background-color 0.2s ease",
-        "&:hover": !editMode && onClick
-          ? { boxShadow: theme.shadows[1] }
-          : {},
         ...(editMode && {
           border: `2px dashed ${alpha(theme.palette.primary.main, 0.5)}`,
-          "&:hover": {
-            borderColor: theme.palette.primary.main,
-          },
         }),
       }}
     >
@@ -250,9 +244,9 @@ const WidgetWrapper: React.FC<WidgetWrapperProps> = ({
               sx={{
                 flex: 1,
                 minHeight: 0,
-                overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
+                ...widgetScrollSx(theme),
               }}
             >
               {children}

@@ -1,4 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { filterChartDataByTimeRange, type ChartTimeRange } from "../../utils/chartTimeRange";
+import { CHART_MARGIN, CHART_Y_AXIS_WIDTH, chartContainerSx } from "./chartLayout";
 import {
     BarChart,
     Bar,
@@ -33,7 +36,7 @@ interface ApiErrorData {
     success?: number;
 }
 
-type TimeRange = "1h" | "6h" | "24h" | "7d";
+type TimeRange = ChartTimeRange;
 
 interface ApiErrorsChartProps {
     data: ApiErrorData[];
@@ -50,9 +53,14 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
     onModeChange,
     fillParent = false,
 }) => {
+    const { t } = useTranslation();
     const theme = useTheme();
     const [timeRange, setTimeRange] = useState<TimeRange>(defaultMode);
     const [activeBar, setActiveBar] = useState<string | null>(null);
+
+    useEffect(() => {
+        setTimeRange(defaultMode);
+    }, [defaultMode]);
 
     // Colors based on theme
     const colors = useMemo(() => ({
@@ -63,25 +71,18 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
         text: theme.palette.text.secondary,
     }), [theme.palette.mode, theme.palette.divider, theme.palette.text.secondary]);
 
-    // Process data based on time range
     const processedData = useMemo(() => {
         if (!data || data.length === 0) {
-            // Generate sample empty data
-            return Array.from({ length: 12 }, (_, i) => ({
-                time: `${String(i * 2).padStart(2, "0")}:00`,
-                error_4xx: 0,
-                error_5xx: 0,
-                success: 0,
-                total: 0,
-            }));
+            return [];
         }
 
-        return data.map((item) => ({
+        const filtered = filterChartDataByTimeRange(data, timeRange);
+        return filtered.map((item) => ({
             ...item,
             success: (item.requests || item.count || 0) - item.error_4xx - item.error_5xx,
-            total: item.requests || item.count || (item.error_4xx + item.error_5xx),
+            total: item.requests || item.count || item.error_4xx + item.error_5xx,
         }));
-    }, [data]);
+    }, [data, timeRange]);
 
     // Calculate statistics
     const stats = useMemo(() => {
@@ -179,7 +180,6 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
                         gap: 0.75,
                         cursor: "pointer",
                         opacity: activeBar && activeBar !== entry.dataKey ? 0.4 : 1,
-                        transition: "opacity 0.2s ease",
                     }}
                     onMouseEnter={() => setActiveBar(entry.dataKey)}
                     onMouseLeave={() => setActiveBar(null)}
@@ -204,8 +204,46 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
         ? { height: "100%", minHeight: 160, display: "flex", flexDirection: "column" as const }
         : { height: 280, display: "flex", flexDirection: "column" as const };
 
+    const rangeLabel = timeRange.toUpperCase();
+
+    const renderTimeRangeToggle = () => (
+        <ToggleButtonGroup
+            value={timeRange}
+            exclusive
+            onChange={handleTimeRangeChange}
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            size="small"
+            aria-label="time range"
+            sx={{
+                bgcolor: alpha(theme.palette.background.paper, 0.5),
+                borderRadius: 1,
+                "& .MuiToggleButton-root": {
+                    px: 1.5,
+                    py: 0.5,
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                    color: theme.palette.text.secondary,
+                    border: "none",
+                    borderRadius: "4px !important",
+                    mx: 0.25,
+                    "&.Mui-selected": {
+                        bgcolor: alpha(theme.palette.primary.main, 0.15),
+                        color: theme.palette.primary.main,
+                        fontWeight: 600,
+                    },
+                },
+            }}
+        >
+            <ToggleButton value="1h" aria-label="1 hour">1H</ToggleButton>
+            <ToggleButton value="6h" aria-label="6 hours">6H</ToggleButton>
+            <ToggleButton value="24h" aria-label="24 hours">24H</ToggleButton>
+            <ToggleButton value="7d" aria-label="7 days">7D</ToggleButton>
+        </ToggleButtonGroup>
+    );
+
     // Empty state
-    if (!data || data.length === 0 || stats.totalRequests === 0) {
+    if (!data || data.length === 0) {
         return (
             <Box sx={rootLayout}>
                 {showModeSelector && (
@@ -216,39 +254,7 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
                                 No errors recorded
                             </Typography>
                         </Stack>
-                        <ToggleButtonGroup
-                            value={timeRange}
-                            exclusive
-                            onChange={handleTimeRangeChange}
-                            onMouseDown={(event) => event.stopPropagation()}
-                            onClick={(event) => event.stopPropagation()}
-                            size="small"
-                            aria-label="time range"
-                            sx={{
-                                bgcolor: alpha(theme.palette.background.paper, 0.5),
-                                borderRadius: 1,
-                                "& .MuiToggleButton-root": {
-                                    px: 1.5,
-                                    py: 0.5,
-                                    fontSize: "0.75rem",
-                                    fontWeight: 500,
-                                    color: theme.palette.text.secondary,
-                                    border: "none",
-                                    borderRadius: "4px !important",
-                                    mx: 0.25,
-                                    "&.Mui-selected": {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.15),
-                                        color: theme.palette.primary.main,
-                                        fontWeight: 600,
-                                    },
-                                },
-                            }}
-                        >
-                            <ToggleButton value="1h">1H</ToggleButton>
-                            <ToggleButton value="6h">6H</ToggleButton>
-                            <ToggleButton value="24h">24H</ToggleButton>
-                            <ToggleButton value="7d">7D</ToggleButton>
-                        </ToggleButtonGroup>
+                        {renderTimeRangeToggle()}
                     </Box>
                 )}
                 <Box
@@ -262,8 +268,40 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
                     }}
                 >
                     <CheckCircle sx={{ fontSize: 48, color: colors.success, mb: 1, opacity: 0.5 }} />
-                    <Typography variant="body2" color="text.secondary">
-                        No error data available for this period
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                        {t("dashboard.charts.noApiData")}
+                    </Typography>
+                </Box>
+            </Box>
+        );
+    }
+
+    if (processedData.length === 0) {
+        return (
+            <Box sx={rootLayout}>
+                {showModeSelector && (
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            <CheckCircle sx={{ color: colors.success, fontSize: 20 }} />
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: colors.success }}>
+                                {t("dashboard.charts.noErrorsForRange", { range: rangeLabel })}
+                            </Typography>
+                        </Stack>
+                        {renderTimeRangeToggle()}
+                    </Box>
+                )}
+                <Box
+                    sx={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <CheckCircle sx={{ fontSize: 48, color: colors.success, mb: 1, opacity: 0.5 }} />
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                        {t("dashboard.charts.noErrorsForRange", { range: rangeLabel })}
                     </Typography>
                 </Box>
             </Box>
@@ -296,79 +334,19 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
                             {stats.totalErrors} errors / {stats.totalRequests} requests
                         </Typography>
                     </Stack>
-                    <ToggleButtonGroup
-                        value={timeRange}
-                        exclusive
-                        onChange={handleTimeRangeChange}
-                        onMouseDown={(event) => event.stopPropagation()}
-                        onClick={(event) => event.stopPropagation()}
-                        size="small"
-                        aria-label="time range"
-                        sx={{
-                            bgcolor: alpha(theme.palette.background.paper, 0.5),
-                            borderRadius: 1,
-                            "& .MuiToggleButton-root": {
-                                px: 1.5,
-                                py: 0.5,
-                                fontSize: "0.75rem",
-                                fontWeight: 500,
-                                color: theme.palette.text.secondary,
-                                border: "none",
-                                borderRadius: "4px !important",
-                                mx: 0.25,
-                                transition: "all 0.2s ease",
-                                "&:hover": {
-                                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                                },
-                                "&.Mui-selected": {
-                                    bgcolor: alpha(theme.palette.primary.main, 0.15),
-                                    color: theme.palette.primary.main,
-                                    fontWeight: 600,
-                                    "&:hover": {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.2),
-                                    },
-                                },
-                            },
-                        }}
-                    >
-                        <ToggleButton value="1h" aria-label="1 hour">1H</ToggleButton>
-                        <ToggleButton value="6h" aria-label="6 hours">6H</ToggleButton>
-                        <ToggleButton value="24h" aria-label="24 hours">24H</ToggleButton>
-                        <ToggleButton value="7d" aria-label="7 days">7D</ToggleButton>
-                    </ToggleButtonGroup>
+                    {renderTimeRangeToggle()}
                 </Box>
             )}
 
             <Box
-                sx={
-                    fillParent
-                        ? {
-                              flex: 1,
-                              minHeight: 0,
-                              width: "100%",
-                              maxWidth: "100%",
-                              overflow: "hidden",
-                              position: "relative",
-                              isolation: "isolate",
-                          }
-                        : {
-                              width: "100%",
-                              maxWidth: "100%",
-                              overflow: "hidden",
-                              position: "relative",
-                              minHeight: showModeSelector ? 210 : 240,
-                          }
-                }
+                sx={chartContainerSx(fillParent)}
                 onMouseDown={(event) => event.stopPropagation()}
                 onClick={(event) => event.stopPropagation()}
             >
-            <ResponsiveContainer
-                width="100%"
-                height={fillParent ? "100%" : (showModeSelector ? 210 : 240)}
-            >
+            <ResponsiveContainer width="100%" height={fillParent ? "100%" : 260}>
                 <BarChart
                     data={processedData}
-                    margin={{ top: 5, right: 5, left: -10, bottom: 5 }}
+                    margin={CHART_MARGIN}
                     barGap={0}
                     barCategoryGap="20%"
                 >
@@ -396,18 +374,24 @@ const ApiErrorsChart: React.FC<ApiErrorsChartProps> = ({
                         tick={{ fill: colors.text }}
                     />
                     <YAxis
+                        width={CHART_Y_AXIS_WIDTH}
                         stroke={colors.text}
                         style={{ fontSize: "11px" }}
                         tickLine={false}
                         axisLine={false}
                         tick={{ fill: colors.text }}
+                        tickMargin={4}
                         allowDecimals={false}
                     />
                     <Tooltip
                         content={<CustomTooltip />}
                         cursor={{ fill: alpha(theme.palette.action.hover, 0.1) }}
                     />
-                    <Legend content={<CustomLegend />} />
+                    <Legend
+                        content={<CustomLegend />}
+                        verticalAlign="bottom"
+                        height={28}
+                    />
                     <Bar
                         dataKey="error_4xx"
                         name="4xx Client Errors"

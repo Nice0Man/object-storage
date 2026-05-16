@@ -37,13 +37,16 @@ const ThroughputWidget: React.FC<ThroughputWidgetProps> = ({
 }) => {
   const theme = useTheme();
   const [data, setData] = React.useState<DataThroughputData[]>([]);
+  const [timeRange, setTimeRange] = React.useState<"1h" | "6h" | "24h" | "7d">(
+    (widget.settings?.timeRange as "1h" | "6h" | "24h" | "7d") || "24h",
+  );
 
   const fetchData = useCallback(async () => {
-    const response = await apiClient.getDataThroughputStats();
+    const response = await apiClient.getDataThroughputStats(timeRange);
     if (response && response.data) {
       setData(response.data);
     }
-  }, []);
+  }, [timeRange]);
 
   const { loading, error, lastRefresh, refresh, nextRefreshIn } = useWidgetRefresh({
     interval: widget.refresh_interval,
@@ -51,11 +54,32 @@ const ThroughputWidget: React.FC<ThroughputWidgetProps> = ({
     onRefresh: fetchData,
   });
 
-  const timeRange = widget.settings?.timeRange || "24h";
-  const rawChartMode = widget.settings?.chartMode as string | undefined;
-  // Ensure chartMode is a valid value for DataThroughputChart
-  const chartMode: "stacked" | "lines" | "total" =
-    rawChartMode === "lines" || rawChartMode === "total" ? rawChartMode : "stacked";
+  React.useEffect(() => {
+    if (widget.visible) {
+      refresh();
+    }
+  }, [timeRange, widget.visible, refresh]);
+
+  React.useEffect(() => {
+    const fromSettings = widget.settings?.timeRange as "1h" | "6h" | "24h" | "7d" | undefined;
+    if (fromSettings) {
+      setTimeRange(fromSettings);
+    }
+  }, [widget.settings?.timeRange]);
+
+  const parseChartMode = (value: string | undefined): "stacked" | "lines" | "total" =>
+    value === "lines" || value === "total" ? value : "stacked";
+
+  const [chartMode, setChartMode] = React.useState<"stacked" | "lines" | "total">(() =>
+    parseChartMode(widget.settings?.chartMode as string | undefined),
+  );
+
+  React.useEffect(() => {
+    const fromSettings = widget.settings?.chartMode as string | undefined;
+    if (fromSettings) {
+      setChartMode(parseChartMode(fromSettings));
+    }
+  }, [widget.settings?.chartMode]);
 
   return (
     <WidgetWrapper
@@ -80,7 +104,7 @@ const ThroughputWidget: React.FC<ThroughputWidgetProps> = ({
           minHeight: 0,
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden",
+          overflow: "visible",
           maxWidth: "100%",
         }}
       >
@@ -94,7 +118,9 @@ const ThroughputWidget: React.FC<ThroughputWidgetProps> = ({
         showModeSelector={!editMode}
         showChartModeSelector={!editMode}
         defaultTimeRange={timeRange}
-        defaultChartMode={chartMode}
+        chartMode={chartMode}
+        onChartModeChange={setChartMode}
+        onTimeRangeChange={setTimeRange}
         fillParent
       />
       </Box>

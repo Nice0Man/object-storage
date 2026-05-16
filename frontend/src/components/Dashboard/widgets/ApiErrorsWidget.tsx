@@ -28,13 +28,16 @@ const ApiErrorsWidget: React.FC<ApiErrorsWidgetProps> = ({
 }) => {
   const theme = useTheme();
   const [data, setData] = React.useState<ApiErrorData[]>([]);
+  const [timeRange, setTimeRange] = React.useState<"1h" | "6h" | "24h" | "7d">(
+    (widget.settings?.timeRange as "1h" | "6h" | "24h" | "7d") || "24h",
+  );
 
   const fetchData = useCallback(async () => {
-    const response = await apiClient.getApiErrorStats();
+    const response = await apiClient.getApiErrorStats(timeRange);
     if (response && response.data) {
       setData(response.data);
     }
-  }, []);
+  }, [timeRange]);
 
   const { loading, error, lastRefresh, refresh, nextRefreshIn } = useWidgetRefresh({
     interval: widget.refresh_interval,
@@ -42,7 +45,18 @@ const ApiErrorsWidget: React.FC<ApiErrorsWidgetProps> = ({
     onRefresh: fetchData,
   });
 
-  const timeRange = widget.settings?.timeRange || "24h";
+  React.useEffect(() => {
+    if (widget.visible) {
+      refresh();
+    }
+  }, [timeRange, widget.visible, refresh]);
+
+  React.useEffect(() => {
+    const fromSettings = widget.settings?.timeRange as "1h" | "6h" | "24h" | "7d" | undefined;
+    if (fromSettings) {
+      setTimeRange(fromSettings);
+    }
+  }, [widget.settings?.timeRange]);
 
   return (
     <WidgetWrapper
@@ -67,7 +81,7 @@ const ApiErrorsWidget: React.FC<ApiErrorsWidgetProps> = ({
           minHeight: 0,
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden",
+          overflow: "visible",
           maxWidth: "100%",
         }}
       >
@@ -79,6 +93,7 @@ const ApiErrorsWidget: React.FC<ApiErrorsWidgetProps> = ({
         data={data}
         showModeSelector={!editMode}
         defaultMode={timeRange}
+        onModeChange={setTimeRange}
         fillParent
       />
       </Box>

@@ -1,4 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { filterChartDataByTimeRange, type ChartTimeRange } from "../../utils/chartTimeRange";
+import { CHART_MARGIN, CHART_Y_AXIS_WIDTH, chartContainerSx } from "./chartLayout";
 import {
     XAxis,
     YAxis,
@@ -35,7 +38,7 @@ interface DataPoint {
     total_bytes: number;
 }
 
-type TimeRange = "1h" | "6h" | "24h" | "7d";
+type TimeRange = ChartTimeRange;
 type ChartMode = "stacked" | "lines" | "total";
 
 interface DataThroughputChartProps {
@@ -45,6 +48,9 @@ interface DataThroughputChartProps {
     showChartModeSelector?: boolean;
     defaultTimeRange?: TimeRange;
     defaultChartMode?: ChartMode;
+    /** Controlled chart mode (Stacked / Lines / Total). */
+    chartMode?: ChartMode;
+    onChartModeChange?: (mode: ChartMode) => void;
     onTimeRangeChange?: (range: TimeRange) => void;
     /** When true, chart fills parent flex height (dashboard widgets). */
     fillParent?: boolean;
@@ -57,13 +63,42 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
     showChartModeSelector = true,
     defaultTimeRange = "24h",
     defaultChartMode = "stacked",
+    chartMode: chartModeProp,
+    onChartModeChange,
     onTimeRangeChange,
     fillParent = false,
 }) => {
+    const { t } = useTranslation();
     const theme = useTheme();
+    const chartInstanceId = React.useId().replace(/:/g, "");
     const [timeRange, setTimeRange] = useState<TimeRange>(defaultTimeRange);
-    const [chartMode, setChartMode] = useState<ChartMode>(defaultChartMode);
+    const [internalChartMode, setInternalChartMode] = useState<ChartMode>(defaultChartMode);
     const [activeArea, setActiveArea] = useState<string | null>(null);
+
+    const chartMode = chartModeProp ?? internalChartMode;
+
+    const gradientIds = useMemo(
+        () => ({
+            read: `throughput-read-${chartInstanceId}`,
+            write: `throughput-write-${chartInstanceId}`,
+            total: `throughput-total-${chartInstanceId}`,
+        }),
+        [chartInstanceId],
+    );
+
+    useEffect(() => {
+        setTimeRange(defaultTimeRange);
+    }, [defaultTimeRange]);
+
+    useEffect(() => {
+        if (chartModeProp === undefined) {
+            setInternalChartMode(defaultChartMode);
+        }
+    }, [defaultChartMode, chartModeProp]);
+
+    useEffect(() => {
+        setActiveArea(null);
+    }, [chartMode]);
 
     // Colors based on theme
     const colors = useMemo(() => ({
@@ -77,27 +112,31 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
         text: theme.palette.text.secondary,
     }), [theme.palette.mode, theme.palette.divider, theme.palette.text.secondary]);
 
-    // Process data
+    // Process data (filter by selected time range)
     const processedData = useMemo(() => {
         if (!data || data.length === 0) {
-            // Generate sample empty data
-            return Array.from({ length: 12 }, (_, i) => ({
-                time: `${String(i * 2).padStart(2, "0")}:00`,
-                read_bytes: 0,
-                write_bytes: 0,
-                total_bytes: 0,
-            }));
+            return [];
         }
-        return data;
-    }, [data]);
+        return filterChartDataByTimeRange(data, timeRange).map((point) => {
+            const read = point.read_bytes ?? 0;
+            const write = point.write_bytes ?? 0;
+            return {
+                ...point,
+                read_bytes: read,
+                write_bytes: write,
+                total_bytes: point.total_bytes ?? read + write,
+            };
+        });
+    }, [data, timeRange]);
 
     // Calculate statistics
     const stats = useMemo(() => {
         const totalRead = processedData.reduce((sum, d) => sum + d.read_bytes, 0);
         const totalWrite = processedData.reduce((sum, d) => sum + d.write_bytes, 0);
         const total = totalRead + totalWrite;
-        const avgRead = totalRead / processedData.length;
-        const avgWrite = totalWrite / processedData.length;
+        const pointCount = Math.max(processedData.length, 1);
+        const avgRead = totalRead / pointCount;
+        const avgWrite = totalWrite / pointCount;
 
         // Calculate trend (last half vs first half)
         const mid = Math.floor(processedData.length / 2);
@@ -121,8 +160,18 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
         }
     };
 
+    const setChartMode = useCallback(
+        (mode: ChartMode) => {
+            if (chartModeProp === undefined) {
+                setInternalChartMode(mode);
+            }
+            onChartModeChange?.(mode);
+        },
+        [chartModeProp, onChartModeChange],
+    );
+
     const handleChartModeChange = (event: React.MouseEvent<HTMLElement>, newMode: ChartMode | null) => {
-        event.stopPropagation(); // Prevent parent card click
+        event.stopPropagation();
         if (newMode) {
             setChartMode(newMode);
         }
@@ -173,20 +222,24 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                             </Typography>
                         </Box>
                     ))}
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            mt: 1.5,
-                            pt: 1.5,
-                            borderTop: `1px solid ${theme.palette.divider}`,
-                        }}
-                    >
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>Total</Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                            {formatBytes(payload.reduce((sum: number, entry: any) => sum + entry.value, 0))}
-                        </Typography>
-                    </Box>
+                    {payload.length > 1 && (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                mt: 1.5,
+                                pt: 1.5,
+                                borderTop: `1px solid ${theme.palette.divider}`,
+                            }}
+                        >
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                Total
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                {formatBytes(payload.reduce((sum: number, entry: any) => sum + (entry.value || 0), 0))}
+                            </Typography>
+                        </Box>
+                    )}
                 </Box>
             );
         }
@@ -204,7 +257,6 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                         gap: 0.75,
                         cursor: "pointer",
                         opacity: activeArea && activeArea !== entry.dataKey ? 0.4 : 1,
-                        transition: "opacity 0.2s ease",
                     }}
                     onMouseEnter={() => setActiveArea(entry.dataKey)}
                     onMouseLeave={() => setActiveArea(null)}
@@ -224,43 +276,51 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
         ? { height: "100%", minHeight: 160, display: "flex", flexDirection: "column" as const }
         : { height: 280, display: "flex", flexDirection: "column" as const };
 
+    const rangeLabel = timeRange.toUpperCase();
+
+    const renderTimeRangeToggle = () => (
+        <ToggleButtonGroup
+            value={timeRange}
+            exclusive
+            onChange={handleTimeRangeChange}
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            size="small"
+            aria-label="time range"
+            sx={{
+                bgcolor: alpha(theme.palette.background.paper, 0.5),
+                borderRadius: 1,
+                "& .MuiToggleButton-root": {
+                    px: 1.5,
+                    py: 0.5,
+                    fontSize: "0.75rem",
+                    fontWeight: 500,
+                    color: theme.palette.text.secondary,
+                    border: "none",
+                    borderRadius: "4px !important",
+                    mx: 0.25,
+                    "&.Mui-selected": {
+                        bgcolor: alpha(theme.palette.primary.main, 0.15),
+                        color: theme.palette.primary.main,
+                        fontWeight: 600,
+                    },
+                },
+            }}
+        >
+            <ToggleButton value="1h">1H</ToggleButton>
+            <ToggleButton value="6h">6H</ToggleButton>
+            <ToggleButton value="24h">24H</ToggleButton>
+            <ToggleButton value="7d">7D</ToggleButton>
+        </ToggleButtonGroup>
+    );
+
     // Empty state
-    if (!data || data.length === 0 || stats.total === 0) {
+    if (!data || data.length === 0) {
         return (
             <Box sx={rootLayout}>
                 {showModeSelector && (
                     <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-                        <ToggleButtonGroup
-                            value={timeRange}
-                            exclusive
-                            onChange={handleTimeRangeChange}
-                            size="small"
-                            aria-label="time range"
-                            sx={{
-                                bgcolor: alpha(theme.palette.background.paper, 0.5),
-                                borderRadius: 1,
-                                "& .MuiToggleButton-root": {
-                                    px: 1.5,
-                                    py: 0.5,
-                                    fontSize: "0.75rem",
-                                    fontWeight: 500,
-                                    color: theme.palette.text.secondary,
-                                    border: "none",
-                                    borderRadius: "4px !important",
-                                    mx: 0.25,
-                                    "&.Mui-selected": {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.15),
-                                        color: theme.palette.primary.main,
-                                        fontWeight: 600,
-                                    },
-                                },
-                            }}
-                        >
-                            <ToggleButton value="1h">1H</ToggleButton>
-                            <ToggleButton value="6h">6H</ToggleButton>
-                            <ToggleButton value="24h">24H</ToggleButton>
-                            <ToggleButton value="7d">7D</ToggleButton>
-                        </ToggleButtonGroup>
+                        {renderTimeRangeToggle()}
                     </Box>
                 )}
                 <Box
@@ -274,8 +334,35 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                     }}
                 >
                     <ShowChart sx={{ fontSize: 48, color: colors.write, mb: 1, opacity: 0.5 }} />
-                    <Typography variant="body2" color="text.secondary">
-                        No throughput data available for this period
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                        {t("dashboard.charts.noApiData")}
+                    </Typography>
+                </Box>
+            </Box>
+        );
+    }
+
+    if (processedData.length === 0) {
+        return (
+            <Box sx={rootLayout}>
+                {showModeSelector && (
+                    <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+                        {renderTimeRangeToggle()}
+                    </Box>
+                )}
+                <Box
+                    sx={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: theme.palette.text.secondary,
+                    }}
+                >
+                    <ShowChart sx={{ fontSize: 48, color: colors.write, mb: 1, opacity: 0.5 }} />
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
+                        {t("dashboard.charts.noThroughputForRange", { range: rangeLabel })}
                     </Typography>
                 </Box>
             </Box>
@@ -324,17 +411,10 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                                     border: "none",
                                     borderRadius: "4px !important",
                                     mx: 0.25,
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.08),
-                                    },
                                     "&.Mui-selected": {
                                         bgcolor: alpha(theme.palette.primary.main, 0.15),
                                         color: theme.palette.primary.main,
                                         fontWeight: 600,
-                                        "&:hover": {
-                                            bgcolor: alpha(theme.palette.primary.main, 0.2),
-                                        },
                                     },
                                 },
                             }}
@@ -344,92 +424,32 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                             <ToggleButton value="total">Total</ToggleButton>
                         </ToggleButtonGroup>
                     )}
-                    {showModeSelector && (
-                        <ToggleButtonGroup
-                            value={timeRange}
-                            exclusive
-                            onChange={handleTimeRangeChange}
-                            onMouseDown={(event) => event.stopPropagation()}
-                            onClick={(event) => event.stopPropagation()}
-                            size="small"
-                            aria-label="time range"
-                            sx={{
-                                bgcolor: alpha(theme.palette.background.paper, 0.5),
-                                borderRadius: 1,
-                                "& .MuiToggleButton-root": {
-                                    px: 1.5,
-                                    py: 0.5,
-                                    fontSize: "0.75rem",
-                                    fontWeight: 500,
-                                    color: theme.palette.text.secondary,
-                                    border: "none",
-                                    borderRadius: "4px !important",
-                                    mx: 0.25,
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.08),
-                                    },
-                                    "&.Mui-selected": {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.15),
-                                        color: theme.palette.primary.main,
-                                        fontWeight: 600,
-                                        "&:hover": {
-                                            bgcolor: alpha(theme.palette.primary.main, 0.2),
-                                        },
-                                    },
-                                },
-                            }}
-                        >
-                            <ToggleButton value="1h">1H</ToggleButton>
-                            <ToggleButton value="6h">6H</ToggleButton>
-                            <ToggleButton value="24h">24H</ToggleButton>
-                            <ToggleButton value="7d">7D</ToggleButton>
-                        </ToggleButtonGroup>
-                    )}
+                    {showModeSelector && renderTimeRangeToggle()}
                 </Stack>
             </Box>
 
             <Box
-                sx={
-                    fillParent
-                        ? {
-                              flex: 1,
-                              minHeight: 0,
-                              width: "100%",
-                              maxWidth: "100%",
-                              overflow: "hidden",
-                              position: "relative",
-                              isolation: "isolate",
-                          }
-                        : {
-                              width: "100%",
-                              maxWidth: "100%",
-                              overflow: "hidden",
-                              position: "relative",
-                              minHeight: showModeSelector || showChartModeSelector ? 210 : 240,
-                          }
-                }
+                sx={chartContainerSx(fillParent)}
                 onMouseDown={(event) => event.stopPropagation()}
                 onClick={(event) => event.stopPropagation()}
             >
-            <ResponsiveContainer
-                width="100%"
-                height={fillParent ? "100%" : (showModeSelector || showChartModeSelector ? 210 : 240)}
-            >
+            <ResponsiveContainer width="100%" height={fillParent ? "100%" : 260}>
                 <AreaChart
+                    key={chartMode}
                     data={processedData}
-                    margin={{ top: 5, right: 5, left: -10, bottom: 5 }}
+                    margin={CHART_MARGIN}
+                    stackOffset="none"
                 >
                     <defs>
-                        <linearGradient id="colorRead" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id={gradientIds.read} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={colors.read} stopOpacity={0.4} />
                             <stop offset="95%" stopColor={colors.read} stopOpacity={0.05} />
                         </linearGradient>
-                        <linearGradient id="colorWrite" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id={gradientIds.write} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={colors.write} stopOpacity={0.4} />
                             <stop offset="95%" stopColor={colors.write} stopOpacity={0.05} />
                         </linearGradient>
-                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                        <linearGradient id={gradientIds.total} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor={colors.total} stopOpacity={0.4} />
                             <stop offset="95%" stopColor={colors.total} stopOpacity={0.05} />
                         </linearGradient>
@@ -448,11 +468,13 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                         tick={{ fill: colors.text }}
                     />
                     <YAxis
+                        width={CHART_Y_AXIS_WIDTH}
                         stroke={colors.text}
                         style={{ fontSize: "11px" }}
                         tickLine={false}
                         axisLine={false}
                         tick={{ fill: colors.text }}
+                        tickMargin={4}
                         tickFormatter={(value) => {
                             const formatted = formatBytes(value);
                             return formatted.split(" ")[0];
@@ -462,7 +484,11 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                         content={<CustomTooltip />}
                         cursor={{ stroke: alpha(theme.palette.primary.main, 0.3), strokeWidth: 1 }}
                     />
-                    <Legend content={<CustomLegend />} />
+                    <Legend
+                        content={<CustomLegend />}
+                        verticalAlign="bottom"
+                        height={28}
+                    />
 
                     {chartMode === "total" ? (
                         <Area
@@ -471,9 +497,8 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                             name="Total"
                             stroke={colors.total}
                             strokeWidth={2}
-                            fill="url(#colorTotal)"
-                            animationDuration={800}
-                            animationEasing="ease-out"
+                            fill={`url(#${gradientIds.total})`}
+                            isAnimationActive={false}
                             dot={false}
                             activeDot={{ r: 6, fill: colors.total, stroke: "#fff", strokeWidth: 2 }}
                         />
@@ -485,11 +510,10 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                                 name="Write"
                                 stroke={colors.write}
                                 strokeWidth={2}
-                                fill={chartMode === "stacked" ? "url(#colorWrite)" : "transparent"}
-                                stackId={chartMode === "stacked" ? "1" : undefined}
-                                animationDuration={800}
-                                animationEasing="ease-out"
-                                dot={false}
+                                fill={chartMode === "stacked" ? `url(#${gradientIds.write})` : "none"}
+                                stackId={chartMode === "stacked" ? "throughput" : undefined}
+                                isAnimationActive={false}
+                                dot={chartMode === "lines"}
                                 activeDot={{ r: 5, fill: colors.write, stroke: "#fff", strokeWidth: 2 }}
                                 opacity={activeArea === null || activeArea === "write_bytes" ? 1 : 0.3}
                             />
@@ -499,12 +523,10 @@ const DataThroughputChart: React.FC<DataThroughputChartProps> = ({
                                 name="Read"
                                 stroke={colors.read}
                                 strokeWidth={2}
-                                fill={chartMode === "stacked" ? "url(#colorRead)" : "transparent"}
-                                stackId={chartMode === "stacked" ? "1" : undefined}
-                                animationDuration={800}
-                                animationEasing="ease-out"
-                                animationBegin={200}
-                                dot={false}
+                                fill={chartMode === "stacked" ? `url(#${gradientIds.read})` : "none"}
+                                stackId={chartMode === "stacked" ? "throughput" : undefined}
+                                isAnimationActive={false}
+                                dot={chartMode === "lines"}
                                 activeDot={{ r: 5, fill: colors.read, stroke: "#fff", strokeWidth: 2 }}
                                 opacity={activeArea === null || activeArea === "read_bytes" ? 1 : 0.3}
                             />
