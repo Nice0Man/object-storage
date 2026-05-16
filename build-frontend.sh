@@ -23,6 +23,21 @@ if [[ ! -f package.json ]]; then
 fi
 
 needs_install=0
+stale_node_modules=0
+if [[ -d node_modules/react-scripts ]]; then
+  echo "Detected legacy react-scripts in node_modules (project uses Vite)."
+  stale_node_modules=1
+fi
+if [[ -d node_modules ]] && ! node -e "require('vite/package.json')" 2>/dev/null; then
+  echo "Vite is missing from node_modules."
+  stale_node_modules=1
+fi
+if [[ "${stale_node_modules}" == "1" ]]; then
+  chmod -R u+w node_modules 2>/dev/null || true
+  rm -rf node_modules
+  needs_install=1
+fi
+
 if [[ "${INSTALL_DEPS}" == "1" ]] || [[ "${SKIP_INSTALL}" != "1" ]]; then
   needs_install=1
 elif [[ ! -d node_modules ]] || ! node -e "require('vite/package.json')" 2>/dev/null; then
@@ -69,13 +84,13 @@ if [[ "${needs_install}" == "1" ]]; then
     chmod -R u+w node_modules 2>/dev/null || true
     rm -rf node_modules
   fi
-  if [[ -d node_modules ]] && [[ -f package-lock.json ]]; then
-    if ! npm ci --prefer-offline --no-audit --no-fund 2>/dev/null; then
+  if [[ -f package-lock.json ]]; then
+    if ! npm ci --no-audit --no-fund --include=optional; then
       echo "npm ci failed (lock out of sync?). Running npm install."
-      npm install --no-audit --no-fund
+      npm install --no-audit --no-fund --include=optional
     fi
   else
-    npm install --no-audit --no-fund
+    npm install --no-audit --no-fund --include=optional
   fi
   if ! node -e "
     const os = process.platform;
@@ -116,6 +131,16 @@ if [[ "${STRICT}" == "1" ]]; then
   npm run type-check
 else
   echo "Fast build: vite only (STRICT_FRONTEND_BUILD=1 for tsc)"
+fi
+
+if ! node -e "require('vite/package.json')" 2>/dev/null; then
+  echo "Error: Vite not installed after npm install. Run: CLEAN_FRONTEND_NODE_MODULES=1 INSTALL_NODE_DEPS=1 ./build-frontend.sh"
+  exit 1
+fi
+
+if [[ -d node_modules/react-scripts ]]; then
+  echo "Error: react-scripts still present; package.json expects Vite. Clean node_modules and retry."
+  exit 1
 fi
 
 npm run build
