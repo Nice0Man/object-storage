@@ -67,6 +67,9 @@ class Config {
     const DefaultAdminConfig& default_admin() const { return default_admin_config_; }
     DefaultAdminConfig& default_admin() { return default_admin_config_; }
 
+    const TerminalConfig& terminal() const { return terminal_config_; }
+    TerminalConfig& terminal() { return terminal_config_; }
+
     /**
      * @brief Get configuration value by key
      * @param key Dot-separated key path (e.g., "server.port")
@@ -108,6 +111,7 @@ class Config {
     S3Config s3_config_;
     AuthConfig auth_config_;
     DefaultAdminConfig default_admin_config_;
+    TerminalConfig terminal_config_;
     nlohmann::json raw_json_;
     Vector<String> validation_errors_;
 

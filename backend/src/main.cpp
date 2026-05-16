@@ -15,6 +15,7 @@
 #include "console/api/ObjectsController.hpp"
 #include "console/api/PresignedController.hpp"
 #include "console/api/StatsController.hpp"
+#include "console/api/TerminalStatusController.hpp"
 #include "console/api/UsersController.hpp"
 
 // Register filters and middleware by including their headers
@@ -40,6 +41,7 @@
 
 // Websocket
 #include "console/websocket/EventsController.hpp"
+#include "console/websocket/TerminalController.hpp"
 
 #include <drogon/drogon.h>
 

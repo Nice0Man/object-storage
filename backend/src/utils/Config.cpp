@@ -65,6 +65,13 @@ Config::load_from_file(const std::filesystem::path& config_path) {
             default_admin_config_.enabled = admin.value("enabled", default_admin_config_.enabled);
         }
 
+        if (raw_json_.contains("terminal")) {
+            auto& terminal = raw_json_["terminal"];
+            terminal_config_.enabled = terminal.value("enabled", terminal_config_.enabled);
+            terminal_config_.shell = terminal.value("shell", terminal_config_.shell);
+            terminal_config_.max_sessions = terminal.value("max_sessions", terminal_config_.max_sessions);
+        }
+
         is_valid_ = validate();
         return is_valid_;
 
@@ -119,6 +126,13 @@ Config::load_from_string(const String& json_str) {
             default_admin_config_.password = admin.value("password", default_admin_config_.password);
             default_admin_config_.account_name = admin.value("account_name", default_admin_config_.account_name);
             default_admin_config_.enabled = admin.value("enabled", default_admin_config_.enabled);
+        }
+
+        if (raw_json_.contains("terminal")) {
+            auto& terminal = raw_json_["terminal"];
+            terminal_config_.enabled = terminal.value("enabled", terminal_config_.enabled);
+            terminal_config_.shell = terminal.value("shell", terminal_config_.shell);
+            terminal_config_.max_sessions = terminal.value("max_sessions", terminal_config_.max_sessions);
         }
 
         is_valid_ = validate();

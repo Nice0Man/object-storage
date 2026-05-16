@@ -10,6 +10,7 @@ set(API_SOURCES
     ObjectsController.cpp
     PresignedController.cpp
     StatsController.cpp
+    TerminalStatusController.cpp
     UsersController.cpp
 )
 

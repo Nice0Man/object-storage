@@ -256,6 +256,13 @@ struct DefaultAdminConfig {
     bool enabled{true};
 };
 
+/** Interactive admin shell over WebSocket (PTY). Disabled by default in production. */
+struct TerminalConfig {
+    bool enabled{false};
+    String shell{"/bin/bash"};
+    uint16_t max_sessions{8};
+};
+
 // ============================================================================
 // Callback Types
 // ============================================================================
