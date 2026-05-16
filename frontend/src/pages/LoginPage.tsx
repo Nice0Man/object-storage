@@ -9,8 +9,6 @@ import {
   IconButton,
   Card,
   CardContent,
-  Fade,
-  Zoom,
 } from "@mui/material";
 import {
   Visibility,
@@ -88,10 +86,7 @@ const LoginPage: React.FC = () => {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: (theme) =>
-          theme.palette.mode === "light"
-            ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-            : "linear-gradient(135deg, #1e3a8a 0%, #312e81 100%)",
+        backgroundColor: (theme) => theme.palette.background.default,
         position: "relative",
       }}
     >
@@ -110,44 +105,34 @@ const LoginPage: React.FC = () => {
       </Box>
 
       <Container maxWidth="sm">
-        <Fade in timeout={800}>
-          <Card
-            elevation={24}
+        <Card
+            elevation={3}
             sx={{
-              borderRadius: 4,
+              borderRadius: 2,
               overflow: "hidden",
-              backdropFilter: "blur(10px)",
-              bgcolor: (theme) =>
-                theme.palette.mode === "light"
-                  ? "rgba(255, 255, 255, 0.95)"
-                  : "rgba(30, 41, 59, 0.95)",
+              bgcolor: "background.paper",
             }}
           >
             <Box
               sx={{
                 p: 2,
-                background: (theme) =>
-                  theme.palette.mode === "light"
-                    ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                    : "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+                borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Zoom in timeout={600}>
-                <Storage sx={{ fontSize: 48, color: "white", mr: 2 }} />
-              </Zoom>
+              <Storage sx={{ fontSize: 40, color: "primary.main", mr: 2 }} />
               <Box>
                 <Typography
                   variant="h5"
-                  sx={{ color: "white", fontWeight: 700 }}
+                  sx={{ color: "text.primary", fontWeight: 700 }}
                 >
                   {t("app.title")}
                 </Typography>
                 <Typography
                   variant="body2"
-                  sx={{ color: "rgba(255, 255, 255, 0.9)" }}
+                  sx={{ color: "text.secondary" }}
                 >
                   {t("app.subtitle")}
                 </Typography>
@@ -195,10 +180,7 @@ const LoginPage: React.FC = () => {
                   }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      transition: "all 0.3s",
-                      "&:hover": {
-                        transform: "translateY(-2px)",
-                      },
+                      transition: "border-color 0.2s ease",
                     },
                   }}
                 />
@@ -233,10 +215,7 @@ const LoginPage: React.FC = () => {
                   }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      transition: "all 0.3s",
-                      "&:hover": {
-                        transform: "translateY(-2px)",
-                      },
+                      transition: "border-color 0.2s ease",
                     },
                   }}
                 />
@@ -252,19 +231,13 @@ const LoginPage: React.FC = () => {
                     py: 1.5,
                     fontSize: "1.1rem",
                     fontWeight: 600,
-                    background: (theme) =>
-                      theme.palette.mode === "light"
-                        ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-                        : "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-                    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                    transition: "background-color 0.2s ease, box-shadow 0.2s ease",
                     "&:hover": {
-                      transform: "translateY(-2px)",
-                      boxShadow: "0 8px 16px rgba(102, 126, 234, 0.4)",
+                      boxShadow: 2,
                     },
                     "&:disabled": {
                       background: (theme) =>
                         theme.palette.action.disabledBackground,
-                      transform: "none",
                     },
                   }}
                 >
@@ -273,22 +246,17 @@ const LoginPage: React.FC = () => {
               </Box>
             </CardContent>
           </Card>
-        </Fade>
 
-        {/* Footer */}
-        <Fade in timeout={1200}>
-          <Typography
-            variant="body2"
-            align="center"
-            sx={{
-              mt: 3,
-              color: "white",
-              textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-            }}
-          >
-            © 2025 Object Storage Console. Built with ❤️
-          </Typography>
-        </Fade>
+        <Typography
+          variant="body2"
+          align="center"
+          sx={{
+            mt: 3,
+            color: "text.secondary",
+          }}
+        >
+          © 2025 Object Storage Console
+        </Typography>
       </Container>
     </Box>
   );

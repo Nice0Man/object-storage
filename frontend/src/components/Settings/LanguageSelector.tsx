@@ -38,7 +38,7 @@ const LanguageSelector: React.FC = () => {
   return (
     <>
       <Tooltip title={t("settings.selectLanguage")}>
-        <IconButton onClick={handleClick} color="inherit" sx={{ ml: 1 }}>
+        <IconButton onClick={handleClick} color="inherit" size="small">
           <Language />
         </IconButton>
       </Tooltip>

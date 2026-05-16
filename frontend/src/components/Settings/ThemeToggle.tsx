@@ -14,7 +14,7 @@ const ThemeToggle: React.FC = () => {
         mode === "light" ? t("settings.darkMode") : t("settings.lightMode")
       }
     >
-      <IconButton onClick={toggleTheme} color="inherit" sx={{ ml: 1 }}>
+      <IconButton onClick={toggleTheme} color="inherit" size="small">
         {mode === "light" ? <Brightness4 /> : <Brightness7 />}
       </IconButton>
     </Tooltip>
