@@ -42,7 +42,19 @@
     "users": "Users",
     "system": "System Health",
     "profile": "Profile",
-    "settings": "Settings"
+    "settings": "Settings",
+    "unavailable": "Unavailable",
+    "role_admin": "Administrator",
+    "role_editor": "Editor",
+    "role_viewer": "Viewer",
+    "role_other": "{{role}}",
+    "userPanel": {
+      "signedInAs": "Signed in as",
+      "appearance": "Appearance",
+      "theme": "Theme",
+      "language": "Language",
+      "defaultUser": "User"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -71,7 +83,10 @@
       "apiActivity": "API Activity",
       "last7Days": "Last 7 Days",
       "last24Hours": "Last 24 Hours",
-      "requests": "Requests"
+      "requests": "Requests",
+      "noThroughputForRange": "No throughput for the selected period ({{range}})",
+      "noErrorsForRange": "No API requests for the selected period ({{range}})",
+      "noApiData": "No data from the server yet"
     },
     "quickActions": "Quick Actions",
     "createBucket": "Create Bucket",
@@ -197,7 +212,15 @@
       "fillAllFields": "Please fill all fields",
       "invalidJson": "Invalid JSON format",
       "invalidFormat": "Invalid policy format",
-      "noPolicies": "No policies assigned"
+      "noPolicies": "No policies assigned",
+      "templatesHint": "Quick templates — click to fill the form:",
+      "templates": {
+        "readonly": "Read-only (Get/List)",
+        "readwrite": "Read & write",
+        "listOnly": "List buckets only",
+        "bucketAdmin": "Bucket administration",
+        "denyDelete": "Read-only, deny delete"
+      }
     },
     "groups": {
       "title": "User Groups",
@@ -213,13 +236,16 @@
   },
   "settings": {
     "title": "Settings",
+    "appearance": "Appearance",
     "theme": "Theme",
     "language": "Language",
     "darkMode": "Dark Mode",
     "lightMode": "Light Mode",
     "selectLanguage": "Select Language",
     "english": "English",
-    "russian": "Russian"
+    "russian": "Russian",
+    "englishShort": "EN",
+    "russianShort": "RU"
   },
   "system": {
     "health": {
@@ -234,6 +260,20 @@
       "error": "Failed to load system health",
       "components": "Components",
       "status": "Status"
+    },
+    "terminal": {
+      "title": "Admin Terminal",
+      "loading": "Loading terminal settings…",
+      "refreshTooltip": "Re-fetch terminal settings from the server (enabled, permissions, shell). Does not reconnect an active session.",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "disabledHint": "Enable in config.json: terminal.enabled: true and restart the server.",
+      "errorLoad": "Failed to load terminal settings",
+      "errorDisabled": "Terminal is disabled on the server (terminal.enabled in config.json).",
+      "errorAdminOnly": "Terminal is available to administrators only.",
+      "errorWebSocket": "WebSocket connection error"
     }
   },
   "profile": {

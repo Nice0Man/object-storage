@@ -42,7 +42,19 @@
     "users": "Пользователи",
     "system": "Состояние системы",
     "profile": "Профиль",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "unavailable": "Недоступно",
+    "role_admin": "Администратор",
+    "role_editor": "Редактор",
+    "role_viewer": "Наблюдатель",
+    "role_other": "{{role}}",
+    "userPanel": {
+      "signedInAs": "Вы вошли как",
+      "appearance": "Оформление",
+      "theme": "Тема",
+      "language": "Язык",
+      "defaultUser": "Пользователь"
+    }
   },
   "dashboard": {
     "title": "Панель управления",
@@ -71,7 +83,10 @@
       "apiActivity": "Активность API",
       "last7Days": "Последние 7 дней",
       "last24Hours": "Последние 24 часа",
-      "requests": "Запросы"
+      "requests": "Запросы",
+      "noThroughputForRange": "Нет данных о пропускной способности за выбранный период ({{range}})",
+      "noErrorsForRange": "Нет API-запросов за выбранный период ({{range}})",
+      "noApiData": "Сервер ещё не вернул данные"
     },
     "quickActions": "Быстрые действия",
     "createBucket": "Создать бакет",
@@ -197,7 +212,15 @@
       "fillAllFields": "Заполните все поля",
       "invalidJson": "Неверный формат JSON",
       "invalidFormat": "Неверный формат политики",
-      "noPolicies": "Политики не назначены"
+      "noPolicies": "Политики не назначены",
+      "templatesHint": "Быстрые шаблоны — нажмите, чтобы заполнить форму:",
+      "templates": {
+        "readonly": "Только чтение (Get/List)",
+        "readwrite": "Чтение и запись",
+        "listOnly": "Только список бакетов",
+        "bucketAdmin": "Администрирование бакетов",
+        "denyDelete": "Чтение без удаления"
+      }
     },
     "groups": {
       "title": "Группы пользователя",
@@ -213,13 +236,16 @@
   },
   "settings": {
     "title": "Настройки",
+    "appearance": "Оформление",
     "theme": "Тема",
     "language": "Язык",
     "darkMode": "Тёмная тема",
     "lightMode": "Светлая тема",
     "selectLanguage": "Выберите язык",
     "english": "Английский",
-    "russian": "Русский"
+    "russian": "Русский",
+    "englishShort": "EN",
+    "russianShort": "RU"
   },
   "system": {
     "health": {
@@ -234,6 +260,20 @@
       "error": "Не удалось загрузить состояние системы",
       "components": "Компоненты",
       "status": "Статус"
+    },
+    "terminal": {
+      "title": "Терминал администратора",
+      "loading": "Загрузка настроек терминала…",
+      "refreshTooltip": "Заново запросить настройки терминала с сервера (включён ли, права доступа, shell). Активную сессию не переподключает.",
+      "connected": "Подключено",
+      "disconnected": "Отключено",
+      "connect": "Подключить",
+      "disconnect": "Отключить",
+      "disabledHint": "Включите в config.json: terminal.enabled: true и перезапустите сервер.",
+      "errorLoad": "Не удалось загрузить настройки терминала",
+      "errorDisabled": "Терминал отключён на сервере (terminal.enabled в config.json).",
+      "errorAdminOnly": "Терминал доступен только администраторам.",
+      "errorWebSocket": "Ошибка WebSocket-соединения"
     }
   },
   "profile": {
