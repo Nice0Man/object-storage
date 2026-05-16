@@ -36,10 +36,13 @@ import {
   Add,
   Security,
   History,
+  Groups,
+  GppMaybe,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
 import type {
   BucketEncryptionConfig,
+  BucketObjectLockConfig,
   LifecycleConfiguration,
   LifecycleRule,
 } from "../../api/types";
@@ -97,6 +100,17 @@ const BucketSettingsDialog: React.FC<BucketSettingsDialogProps> = ({
   const [newRulePrefix, setNewRulePrefix] = useState("");
   const [newRuleDays, setNewRuleDays] = useState(30);
 
+  // Visibility (RBAC groups)
+  const [visibilityGroups, setVisibilityGroups] = useState<string[]>([]);
+  const [visibilityInput, setVisibilityInput] = useState("");
+
+  // Object Lock
+  const [objectLockConfig, setObjectLockConfig] = useState<BucketObjectLockConfig>({
+    object_lock_enabled: false,
+  });
+  const [retentionMode, setRetentionMode] = useState("GOVERNANCE");
+  const [retentionDays, setRetentionDays] = useState(30);
+
   const fetchSettings = async () => {
     if (!bucketName) return;
 
@@ -134,6 +148,27 @@ const BucketSettingsDialog: React.FC<BucketSettingsDialogProps> = ({
         setLifecycleConfig(lifecycleData);
       } catch (e) {
         console.warn("Failed to fetch lifecycle:", e);
+      }
+
+      try {
+        const visibilityData = await apiClient.getBucketVisibility(bucketName);
+        setVisibilityGroups(visibilityData.groups || []);
+        setVisibilityInput((visibilityData.groups || []).join("\n"));
+      } catch (e) {
+        console.warn("Failed to fetch visibility:", e);
+        setVisibilityGroups([]);
+        setVisibilityInput("");
+      }
+
+      try {
+        const lockData = await apiClient.getBucketObjectLockConfig(bucketName);
+        setObjectLockConfig(lockData);
+        if (lockData.default_retention) {
+          setRetentionMode(lockData.default_retention.mode || "GOVERNANCE");
+          setRetentionDays(lockData.default_retention.days ?? 30);
+        }
+      } catch (e) {
+        console.warn("Failed to fetch object lock:", e);
       }
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to load settings");
@@ -239,6 +274,47 @@ const BucketSettingsDialog: React.FC<BucketSettingsDialogProps> = ({
     }
   };
 
+  const handleSaveVisibility = async () => {
+    setSaving(true);
+    try {
+      const groups = visibilityInput
+        .split(/[\n,]+/)
+        .map((g) => g.trim())
+        .filter(Boolean);
+      await apiClient.setBucketVisibility(bucketName, groups);
+      setVisibilityGroups(groups);
+      setSuccess("Visibility groups saved");
+      onSuccess?.();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to save visibility");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveObjectLock = async () => {
+    setSaving(true);
+    try {
+      const config: BucketObjectLockConfig = {
+        object_lock_enabled: objectLockConfig.object_lock_enabled,
+      };
+      if (objectLockConfig.object_lock_enabled) {
+        config.default_retention = {
+          mode: retentionMode,
+          days: retentionDays,
+        };
+      }
+      await apiClient.setBucketObjectLockConfig(bucketName, config);
+      setObjectLockConfig(config);
+      setSuccess("Object Lock settings saved");
+      onSuccess?.();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to save Object Lock");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -263,11 +339,13 @@ const BucketSettingsDialog: React.FC<BucketSettingsDialogProps> = ({
           </Box>
         ) : (
           <>
-            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} variant="scrollable">
               <Tab icon={<History />} label="Versioning" />
               <Tab icon={<LocalOffer />} label="Tags" />
               <Tab icon={<Lock />} label="Encryption" />
               <Tab icon={<Schedule />} label="Lifecycle" />
+              <Tab icon={<Groups />} label="Visibility" />
+              <Tab icon={<GppMaybe />} label="Object Lock" />
             </Tabs>
 
             {/* Versioning Tab */}
@@ -522,6 +600,98 @@ const BucketSettingsDialog: React.FC<BucketSettingsDialogProps> = ({
                     disabled={saving}
                   >
                     {saving ? "Saving..." : "Save Lifecycle Rules"}
+                  </Button>
+                </Box>
+              </Paper>
+            </TabPanel>
+
+            <TabPanel value={tabValue} index={4}>
+              <Paper variant="outlined" sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Bucket Visibility (Groups)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Restrict bucket access to users in these groups. One group per line or comma-separated.
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={4}
+                  label="Groups"
+                  value={visibilityInput}
+                  onChange={(e) => setVisibilityInput(e.target.value)}
+                  placeholder={"admins\nstorage-team"}
+                  sx={{ mb: 2 }}
+                />
+                {visibilityGroups.length > 0 && (
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+                    {visibilityGroups.map((g) => (
+                      <Chip key={g} label={g} size="small" />
+                    ))}
+                  </Box>
+                )}
+                <Button
+                  variant="contained"
+                  onClick={handleSaveVisibility}
+                  disabled={saving}
+                >
+                  {saving ? "Saving..." : "Save Visibility"}
+                </Button>
+              </Paper>
+            </TabPanel>
+
+            <TabPanel value={tabValue} index={5}>
+              <Paper variant="outlined" sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Object Lock
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  WORM retention for objects in this bucket. Enable only if required for compliance.
+                </Typography>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={objectLockConfig.object_lock_enabled}
+                      onChange={(e) =>
+                        setObjectLockConfig((prev) => ({
+                          ...prev,
+                          object_lock_enabled: e.target.checked,
+                        }))
+                      }
+                    />
+                  }
+                  label={objectLockConfig.object_lock_enabled ? "Enabled" : "Disabled"}
+                />
+                {objectLockConfig.object_lock_enabled && (
+                  <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+                    <FormControl size="small" sx={{ maxWidth: 280 }}>
+                      <InputLabel>Default retention mode</InputLabel>
+                      <Select
+                        value={retentionMode}
+                        label="Default retention mode"
+                        onChange={(e) => setRetentionMode(e.target.value)}
+                      >
+                        <MenuItem value="GOVERNANCE">Governance</MenuItem>
+                        <MenuItem value="COMPLIANCE">Compliance</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      label="Default retention (days)"
+                      type="number"
+                      size="small"
+                      value={retentionDays}
+                      onChange={(e) => setRetentionDays(parseInt(e.target.value, 10) || 1)}
+                      sx={{ maxWidth: 200 }}
+                    />
+                  </Box>
+                )}
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    onClick={handleSaveObjectLock}
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save Object Lock"}
                   </Button>
                 </Box>
               </Paper>
