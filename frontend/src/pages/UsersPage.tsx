@@ -383,7 +383,6 @@ const UsersPage: React.FC = () => {
       </Dialog>
 
       {/* User Policies Dialog */}
-      {/* eslint-disable-next-line jsx-a11y/no-access-key */}
       {selectedUserForManagement && (
         <UserPoliciesDialog
           open={policiesDialogOpen}
@@ -398,7 +397,6 @@ const UsersPage: React.FC = () => {
       )}
 
       {/* User Groups Dialog */}
-      {/* eslint-disable-next-line jsx-a11y/no-access-key */}
       {selectedUserForManagement && (
         <UserGroupsDialog
           open={groupsDialogOpen}
