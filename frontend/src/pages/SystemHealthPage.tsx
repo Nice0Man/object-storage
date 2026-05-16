@@ -35,10 +35,23 @@ import {
   Layers,
   Timeline,
   Warning,
+  Terminal as TerminalIcon,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
+import { useAppSelector } from "../hooks/useAppSelector";
+import { selectAuth } from "../store/authSlice";
 import apiClient from "../api/client";
-import type { HealthResponse, VersionResponse } from "../api/types";
+import AdminTerminalPanel from "../components/System/AdminTerminalPanel";
+import type {
+  HealthResponse,
+  VersionResponse,
+  ReadyResponse,
+  LiveResponse,
+  InfrastructureSummary,
+  InfrastructureServersResponse,
+  InfrastructureDrivesResponse,
+  InfrastructureHealStatus,
+} from "../api/types";
 import ApiErrorsChart from "../components/Charts/ApiErrorsChart";
 import DataThroughputChart from "../components/Charts/DataThroughputChart";
 
@@ -67,9 +80,16 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
 const SystemHealthPage: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { isAdmin } = useAppSelector(selectAuth);
   const [tabValue, setTabValue] = useState(0);
   const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [ready, setReady] = useState<ReadyResponse | null>(null);
+  const [live, setLive] = useState<LiveResponse | null>(null);
   const [version, setVersion] = useState<VersionResponse | null>(null);
+  const [infraSummary, setInfraSummary] = useState<InfrastructureSummary | null>(null);
+  const [infraServers, setInfraServers] = useState<InfrastructureServersResponse | null>(null);
+  const [infraDrives, setInfraDrives] = useState<InfrastructureDrivesResponse | null>(null);
+  const [infraHeal, setInfraHeal] = useState<InfrastructureHealStatus | null>(null);
   const [serverStats, setServerStats] = useState<any>(null);
   const [driveStats, setDriveStats] = useState<any>(null);
   const [poolStats, setPoolStats] = useState<any[]>([]);
@@ -79,17 +99,60 @@ const SystemHealthPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastCheck, setLastCheck] = useState<Date>(new Date());
 
+  const loadApiErrorsStats = async (range: "1h" | "6h" | "24h" | "7d") => {
+    try {
+      const apiErrorsResponse = await apiClient.getApiErrorStats(range);
+      setApiErrorsData(apiErrorsResponse?.data || []);
+    } catch (e) {
+      console.warn("Failed to fetch API error stats:", e);
+      setApiErrorsData([]);
+    }
+  };
+
+  const loadThroughputStats = async (range: "1h" | "6h" | "24h" | "7d") => {
+    try {
+      const throughputResponse = await apiClient.getDataThroughputStats(range);
+      setThroughputData(throughputResponse?.data || []);
+    } catch (e) {
+      console.warn("Failed to fetch throughput stats:", e);
+      setThroughputData([]);
+    }
+  };
+
   const loadHealthData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const [healthData, versionData] = await Promise.all([
+      const [healthData, versionData, readyData, liveData] = await Promise.all([
         apiClient.getHealth(),
         apiClient.getVersion(),
+        apiClient.getReady(),
+        apiClient.getLive(),
       ]);
       setHealth(healthData);
       setVersion(versionData);
+      setReady(readyData);
+      setLive(liveData);
       setLastCheck(new Date());
+
+      try {
+        const [summary, servers, drives, heal] = await Promise.all([
+          apiClient.getInfrastructureSummary(),
+          apiClient.listInfrastructureServers(),
+          apiClient.listInfrastructureDrives(),
+          apiClient.getInfrastructureHealStatus(),
+        ]);
+        setInfraSummary(summary);
+        setInfraServers(servers);
+        setInfraDrives(drives);
+        setInfraHeal(heal);
+      } catch (e) {
+        console.warn("Failed to fetch infrastructure API:", e);
+        setInfraSummary(null);
+        setInfraServers(null);
+        setInfraDrives(null);
+        setInfraHeal(null);
+      }
 
       // Load additional infrastructure stats
       try {
@@ -116,21 +179,8 @@ const SystemHealthPage: React.FC = () => {
         setPoolStats([]);
       }
 
-      try {
-        const apiErrorsResponse = await apiClient.getApiErrorStats();
-        setApiErrorsData(apiErrorsResponse?.data || []);
-      } catch (e) {
-        console.warn("Failed to fetch API error stats:", e);
-        setApiErrorsData([]);
-      }
-
-      try {
-        const throughputResponse = await apiClient.getDataThroughputStats();
-        setThroughputData(throughputResponse?.data || []);
-      } catch (e) {
-        console.warn("Failed to fetch throughput stats:", e);
-        setThroughputData([]);
-      }
+      await loadApiErrorsStats("24h");
+      await loadThroughputStats("24h");
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to load system health");
     } finally {
@@ -224,6 +274,20 @@ const SystemHealthPage: React.FC = () => {
           <Typography variant="body2" color="text.secondary">
             {t("system.health.lastCheck")}: {lastCheck.toLocaleString()}
           </Typography>
+          <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}>
+            <Chip
+              size="small"
+              label={`Ready: ${ready?.ready ? "yes" : "no"}`}
+              color={ready?.ready ? "success" : "warning"}
+              variant="outlined"
+            />
+            <Chip
+              size="small"
+              label={`Live: ${live?.alive ? "yes" : "no"}`}
+              color={live?.alive ? "success" : "error"}
+              variant="outlined"
+            />
+          </Box>
         </Box>
         <IconButton
           onClick={loadHealthData}
@@ -305,6 +369,10 @@ const SystemHealthPage: React.FC = () => {
               <Tab icon={<SdStorage />} label="Drives" iconPosition="start" />
               <Tab icon={<Layers />} label="Pools" iconPosition="start" />
               <Tab icon={<Timeline />} label="Metrics" iconPosition="start" />
+              <Tab icon={<Storage />} label="Infrastructure" iconPosition="start" />
+              {isAdmin && (
+                <Tab icon={<TerminalIcon />} label="Terminal" iconPosition="start" />
+              )}
             </Tabs>
           </Paper>
 
@@ -319,11 +387,6 @@ const SystemHealthPage: React.FC = () => {
                     sx={{
                       height: "100%",
                       borderLeft: `4px solid ${getStatusColor(status as string)}`,
-                      transition: "all 0.3s",
-                      "&:hover": {
-                        transform: "translateY(-4px)",
-                        boxShadow: theme.shadows[8],
-                      },
                     }}
                   >
                     <CardContent>
@@ -642,8 +705,11 @@ const SystemHealthPage: React.FC = () => {
                     <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
                       {apiErrorsData.reduce((sum, item) => sum + (item.count || 0), 0)}
                     </Typography>
-                    <Box sx={{ height: 200 }}>
-                      <ApiErrorsChart data={apiErrorsData} />
+                    <Box sx={{ height: 280 }}>
+                      <ApiErrorsChart
+                        data={apiErrorsData}
+                        onModeChange={(range) => loadApiErrorsStats(range)}
+                      />
                     </Box>
                   </CardContent>
                 </Card>
@@ -660,14 +726,114 @@ const SystemHealthPage: React.FC = () => {
                     <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>
                       {formatBytes(throughputData.reduce((sum, item) => sum + (item.total_bytes || 0), 0))}
                     </Typography>
-                    <Box sx={{ height: 200 }}>
-                      <DataThroughputChart data={throughputData} formatBytes={formatBytes} />
+                    <Box sx={{ height: 280 }}>
+                      <DataThroughputChart
+                        data={throughputData}
+                        formatBytes={formatBytes}
+                        onTimeRangeChange={(range) => loadThroughputStats(range)}
+                      />
                     </Box>
                   </CardContent>
                 </Card>
               </Grid>
             </Grid>
           </TabPanel>
+
+          <TabPanel value={tabValue} index={5}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                    Summary (read-only)
+                  </Typography>
+                  {infraSummary ? (
+                    <Typography variant="body2" component="pre" sx={{ m: 0, fontFamily: "monospace", fontSize: "0.8rem" }}>
+                      {JSON.stringify(infraSummary, null, 2)}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      Infrastructure API unavailable or insufficient permissions.
+                    </Typography>
+                  )}
+                </Paper>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="h6" sx={{ mb: 1 }}>Servers</Typography>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {(infraServers?.servers ?? []).slice(0, 20).map((server, idx) => (
+                        <TableRow key={String(server.id ?? idx)}>
+                          <TableCell>{String(server.id ?? server.name ?? idx)}</TableCell>
+                          <TableCell>{String(server.status ?? "—")}</TableCell>
+                        </TableRow>
+                      ))}
+                      {!infraServers?.servers?.length && (
+                        <TableRow>
+                          <TableCell colSpan={2} align="center">No data</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="h6" sx={{ mb: 1 }}>Drives</Typography>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>ID</TableCell>
+                        <TableCell>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {(infraDrives?.drives ?? []).slice(0, 20).map((drive, idx) => (
+                        <TableRow key={String(drive.id ?? idx)}>
+                          <TableCell>{String(drive.id ?? idx)}</TableCell>
+                          <TableCell>{String(drive.status ?? "—")}</TableCell>
+                        </TableRow>
+                      ))}
+                      {!infraDrives?.drives?.length && (
+                        <TableRow>
+                          <TableCell colSpan={2} align="center">No data</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+              <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
+                    Heal status
+                  </Typography>
+                  {infraHeal ? (
+                    <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                      <Chip label={`Status: ${infraHeal.status ?? "unknown"}`} size="small" />
+                      {infraHeal.progress != null && (
+                        <Chip label={`Progress: ${infraHeal.progress}%`} size="small" />
+                      )}
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">No heal data</Typography>
+                  )}
+                </Paper>
+              </Grid>
+            </Grid>
+          </TabPanel>
+
+          {isAdmin && (
+            <TabPanel value={tabValue} index={6}>
+              <AdminTerminalPanel />
+            </TabPanel>
+          )}
         </>
       )}
     </Box>
