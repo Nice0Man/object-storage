@@ -29,6 +29,14 @@ import {
   Refresh,
 } from "@mui/icons-material";
 import apiClient from "../../api/client";
+import { widgetScrollSx } from "../../theme/widgetStyles";
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+};
 
 interface EncryptedUploadDialogProps {
   open: boolean;
@@ -181,7 +189,7 @@ const EncryptedUploadDialog: React.FC<EncryptedUploadDialogProps> = ({
         Upload Files
         {useSseC && <Lock fontSize="small" color="warning" />}
       </DialogTitle>
-      <DialogContent>
+      <DialogContent dividers sx={{ overflow: "hidden" }}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
             {error}
@@ -307,36 +315,60 @@ const EncryptedUploadDialog: React.FC<EncryptedUploadDialogProps> = ({
             <Typography variant="subtitle2" gutterBottom>
               Selected Files ({selectedFiles.length}):
             </Typography>
-            <List dense>
+            <List
+              dense
+              sx={(theme) => ({
+                maxHeight: 280,
+                overflowY: "auto",
+                overflowX: "hidden",
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 1,
+                bgcolor: "background.default",
+                ...widgetScrollSx(theme),
+              })}
+            >
               {selectedFiles.map((file, index) => {
                 const progress = uploadProgress[file.name] || 0;
                 return (
                   <ListItem
-                    key={index}
+                    key={`${file.name}-${index}`}
+                    alignItems="flex-start"
+                    sx={{ pr: !uploading ? 7 : 2, py: 1 }}
                     secondaryAction={
-                      !uploading && (
+                      !uploading ? (
                         <IconButton
                           edge="end"
+                          aria-label="Remove file"
                           onClick={() => handleRemoveFile(index)}
                         >
                           <Delete />
                         </IconButton>
-                      )
+                      ) : undefined
                     }
-                    sx={{ flexDirection: "column", alignItems: "flex-start" }}
                   >
                     <ListItemText
-                      primary={file.name}
-                      secondary={`${(file.size / 1024 / 1024).toFixed(2)} MB`}
-                    />
-                    {progress > 0 && (
-                      <Box sx={{ width: "100%", mt: 1 }}>
-                        <LinearProgress variant="determinate" value={progress} />
-                        <Typography variant="caption" sx={{ mt: 0.5 }}>
-                          {progress}%
+                      primary={
+                        <Typography variant="body2" noWrap title={file.name}>
+                          {file.name}
                         </Typography>
-                      </Box>
-                    )}
+                      }
+                      secondary={
+                        <Box component="span" sx={{ display: "block", width: "100%", mt: 0.25 }}>
+                          <Typography variant="caption" color="text.secondary" component="span">
+                            {formatFileSize(file.size)}
+                          </Typography>
+                          {progress > 0 && (
+                            <Box sx={{ width: "100%", mt: 1, pr: 1 }}>
+                              <LinearProgress variant="determinate" value={progress} sx={{ height: 6, borderRadius: 1 }} />
+                              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+                                {progress}%
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      }
+                    />
                   </ListItem>
                 );
               })}

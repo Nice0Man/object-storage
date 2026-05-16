@@ -145,7 +145,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
         }
     }, [open, fileType, fileUrl]);
 
-    // Reset state when closing
+    // Reset state when closing or switching files
     useEffect(() => {
         if (!open) {
             setZoom(1);
@@ -155,6 +155,14 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             setTextContent("");
         }
     }, [open]);
+
+    useEffect(() => {
+        if (open) {
+            setZoom(1);
+            setRotation(0);
+            setLoading(fileType !== "code");
+        }
+    }, [open, fileUrl, fileName, fileType]);
 
     // Handle keyboard navigation
     useEffect(() => {
@@ -176,7 +184,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
 
     const handleZoomIn = () => setZoom((z) => Math.min(z + 0.25, 3));
     const handleZoomOut = () => setZoom((z) => Math.max(z - 0.25, 0.5));
-    const handleRotate = () => setRotation((r) => (r + 90) % 360);
+    /** Always +90° clockwise; do not use % 360 — CSS would animate 270→0 the wrong way. */
+    const handleRotate = () => setRotation((r) => r + 90);
     const handleFullscreen = () => setIsFullscreen((f) => !f);
 
     const handleCopyContent = useCallback(() => {
@@ -233,8 +242,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({
                             maxWidth: "100%",
                             maxHeight: "100%",
                             objectFit: "contain",
-                            transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                            transition: "transform 0.3s ease",
+                            transform: `rotate(${rotation}deg) scale(${zoom})`,
+                            transition: "transform 0.2s ease-out",
                             cursor: "zoom-in",
                             display: loading ? "none" : "block",
                         }}

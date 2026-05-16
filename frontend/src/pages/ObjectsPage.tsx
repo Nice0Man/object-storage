@@ -116,6 +116,8 @@ const ObjectsPage: React.FC = () => {
   const [encryptedUploadOpen, setEncryptedUploadOpen] = useState(false);
   const [encryptedDownloadOpen, setEncryptedDownloadOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [previewObject, setPreviewObject] = useState<{
     url: string;
     name: string;
@@ -123,6 +125,20 @@ const ObjectsPage: React.FC = () => {
     isEncrypted?: boolean;
     encryptionType?: string;
   } | null>(null);
+
+  const revokePreviewBlob = () => {
+    if (previewBlobUrl) {
+      URL.revokeObjectURL(previewBlobUrl);
+      setPreviewBlobUrl(null);
+    }
+  };
+
+  const handlePreviewClose = () => {
+    setPreviewOpen(false);
+    revokePreviewBlob();
+    setPreviewObject(null);
+    setPreviewLoading(false);
+  };
 
   useEffect(() => {
     dispatch(fetchBuckets());
@@ -188,45 +204,37 @@ const ObjectsPage: React.FC = () => {
     const object = objects.find((obj) => obj.key === key);
     if (!object) return;
 
-    const isEncrypted = object.sse_type === "SSE-C";
+    setSelectedObjectKey(key);
+    revokePreviewBlob();
 
-    // For SSE-C encrypted objects, show download dialog instead (need key)
-    if (isEncrypted) {
-      setSelectedObjectKey(key);
-      setPreviewObject({
-        url: "",
-        name: key.split("/").pop() || key,
-        size: object.size,
-        isEncrypted: true,
-        encryptionType: object.sse_type,
-      });
+    const displayName = key.split("/").pop() || key;
+    const basePreview = {
+      name: displayName,
+      size: object.size,
+      isEncrypted: object.encrypted || !!object.sse_type,
+      encryptionType: object.sse_type,
+    };
+
+    if (object.sse_type === "SSE-C") {
+      setPreviewObject({ url: "", ...basePreview, isEncrypted: true });
       setPreviewOpen(true);
       return;
     }
 
-    try {
-      // Generate presigned URL for preview (valid for 1 hour)
-      const presignedResponse = await apiClient.getPresignedUrl(selectedBucket, key, 3600);
+    setPreviewLoading(true);
 
-      setPreviewObject({
-        url: presignedResponse.url,
-        name: key.split("/").pop() || key,
-        size: object.size,
-        isEncrypted: object.encrypted || object.sse_type === "SSE-S3",
-        encryptionType: object.sse_type,
-      });
+    try {
+      const blob = await apiClient.downloadObject(selectedBucket, key);
+      const url = URL.createObjectURL(blob);
+      setPreviewBlobUrl(url);
+      setPreviewObject({ url, ...basePreview });
       setPreviewOpen(true);
     } catch (error) {
-      console.error("Failed to generate preview URL:", error);
-      // Fallback: just show file info without preview
-      setPreviewObject({
-        url: "",
-        name: key.split("/").pop() || key,
-        size: object.size,
-        isEncrypted: object.encrypted,
-        encryptionType: object.sse_type,
-      });
+      console.error("Failed to load preview:", error);
+      setPreviewObject({ url: "", ...basePreview });
       setPreviewOpen(true);
+    } finally {
+      setPreviewLoading(false);
     }
   };
 
@@ -704,11 +712,8 @@ const ObjectsPage: React.FC = () => {
       {previewObject && (
         <FilePreview
           open={previewOpen}
-          onClose={() => {
-            setPreviewOpen(false);
-            setPreviewObject(null);
-          }}
-          fileUrl={previewObject.url}
+          onClose={handlePreviewClose}
+          fileUrl={previewLoading ? "" : previewObject.url}
           fileName={previewObject.name}
           fileSize={previewObject.size}
           isEncrypted={previewObject.isEncrypted}

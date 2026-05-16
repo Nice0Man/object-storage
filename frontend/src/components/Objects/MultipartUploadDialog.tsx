@@ -28,6 +28,7 @@ import {
 } from "@mui/icons-material";
 import { useDropzone } from "react-dropzone";
 import apiClient from "../../api/client";
+import { widgetScrollSx } from "../../theme/widgetStyles";
 
 interface FileUploadState {
   file: File;
@@ -266,7 +267,18 @@ const MultipartUploadDialog: React.FC<MultipartUploadDialogProps> = ({
               />
             </Box>
 
-            <List dense sx={{ maxHeight: 300, overflow: "auto" }}>
+            <List
+              dense
+              sx={(theme) => ({
+                maxHeight: 280,
+                overflowY: "auto",
+                overflowX: "hidden",
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 1,
+                ...widgetScrollSx(theme),
+              })}
+            >
               {files.map((fileState, index) => (
                 <ListItem
                   key={`${fileState.file.name}-${index}`}
