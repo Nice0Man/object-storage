@@ -8,9 +8,73 @@
 #include "console/services/UserService.hpp"
 #include "console/storage/DatabaseManager.hpp"
 
+#include <algorithm>
 #include <ctime>
 #include <filesystem>
 #include <json/json.h>
+#include <map>
+
+namespace {
+
+struct StatsTimeRange {
+    int64_t from_timestamp;
+    int64_t bucket_size;
+    int bucket_count;
+    bool daily;
+};
+
+StatsTimeRange
+resolve_stats_range(const std::string& range, int64_t now) {
+    if (range == "7d") {
+        return {now - (7 * 86400), 86400, 7, true};
+    }
+    if (range == "6h") {
+        return {now - (6 * 3600), 3600, 6, false};
+    }
+    if (range == "1h") {
+        return {now - 3600, 3600, 1, false};
+    }
+    return {now - (24 * 3600), 3600, 24, false};
+}
+
+int64_t
+start_of_local_day(int64_t ts) {
+    std::time_t t = static_cast<std::time_t>(ts);
+    std::tm tm_local = *std::localtime(&t);
+    tm_local.tm_hour = 0;
+    tm_local.tm_min = 0;
+    tm_local.tm_sec = 0;
+    return static_cast<int64_t>(std::mktime(&tm_local));
+}
+
+int64_t
+bucket_key_for_timestamp(int64_t ts, const StatsTimeRange& cfg) {
+    if (cfg.daily) {
+        return start_of_local_day(ts);
+    }
+    return (ts / cfg.bucket_size) * cfg.bucket_size;
+}
+
+int64_t
+bucket_timestamp_at_index(int index_from_end, const StatsTimeRange& cfg, int64_t now) {
+    if (cfg.daily) {
+        return start_of_local_day(now - (index_from_end * 86400));
+    }
+    int64_t ts = now - (index_from_end * cfg.bucket_size);
+    return (ts / cfg.bucket_size) * cfg.bucket_size;
+}
+
+void
+format_bucket_label(char* buf, size_t buf_size, int64_t bucket_ts, bool daily) {
+    std::time_t t = static_cast<std::time_t>(bucket_ts);
+    if (daily) {
+        std::strftime(buf, buf_size, "%d.%m", std::localtime(&t));
+    } else {
+        std::strftime(buf, buf_size, "%H:%M", std::localtime(&t));
+    }
+}
+
+} // namespace
 
 namespace console::api {
 
@@ -463,11 +527,10 @@ StatsController::get_api_errors(const drogon::HttpRequestPtr& req,
             return;
         }
 
-        // Get API stats for last 24 hours
         auto now = std::time(nullptr);
-        auto from_timestamp = now - (24 * 3600);
+        const auto range = resolve_stats_range(req->getParameter("range"), now);
 
-        auto stats_result = db_manager->get_api_request_stats(from_timestamp, now);
+        auto stats_result = db_manager->get_api_request_stats(range.from_timestamp, now);
         if (!stats_result) {
             CONSOLE_LOG_ERROR("Failed to get API stats: {}", stats_result.error());
             Json::Value error;
@@ -478,14 +541,11 @@ StatsController::get_api_errors(const drogon::HttpRequestPtr& req,
             return;
         }
 
-        // Group by hour
-        std::map<int64_t, std::tuple<int, int, int>> hourly_stats; // timestamp -> (total, 4xx, 5xx)
+        std::map<int64_t, std::tuple<int, int, int>> bucket_stats;
 
         for (const auto& stat : stats_result.value()) {
-            // Round to hour
-            int64_t hour_ts = (stat.timestamp / 3600) * 3600;
-
-            auto& [total, err_4xx, err_5xx] = hourly_stats[hour_ts];
+            const int64_t key = bucket_key_for_timestamp(stat.timestamp, range);
+            auto& [total, err_4xx, err_5xx] = bucket_stats[key];
             total++;
 
             if (stat.status_code >= 400 && stat.status_code < 500) {
@@ -499,25 +559,23 @@ StatsController::get_api_errors(const drogon::HttpRequestPtr& req,
         int total_requests = 0;
         int total_errors = 0;
 
-        // Fill in missing hours with zeros
-        for (int i = 23; i >= 0; i--) {
-            int64_t hour_ts = now - (i * 3600);
-            hour_ts = (hour_ts / 3600) * 3600;
+        for (int i = range.bucket_count - 1; i >= 0; i--) {
+            const int64_t bucket_ts = bucket_timestamp_at_index(i, range, now);
 
-            auto it = hourly_stats.find(hour_ts);
+            auto it = bucket_stats.find(bucket_ts);
             int requests = 0, error_4xx = 0, error_5xx = 0;
 
-            if (it != hourly_stats.end()) {
+            if (it != bucket_stats.end()) {
                 requests = std::get<0>(it->second);
                 error_4xx = std::get<1>(it->second);
                 error_5xx = std::get<2>(it->second);
             }
 
             Json::Value point;
-            char time_buf[6];
-            std::strftime(time_buf, sizeof(time_buf), "%H:%M", std::localtime(&hour_ts));
+            char time_buf[16];
+            format_bucket_label(time_buf, sizeof(time_buf), bucket_ts, range.daily);
 
-            point["timestamp"] = static_cast<Json::Int64>(hour_ts);
+            point["timestamp"] = static_cast<Json::Int64>(bucket_ts);
             point["time"] = time_buf;
             point["requests"] = requests;
             point["error_4xx"] = error_4xx;
@@ -529,6 +587,7 @@ StatsController::get_api_errors(const drogon::HttpRequestPtr& req,
         }
 
         response["data"] = data;
+        response["range"] = req->getParameter("range").empty() ? "24h" : req->getParameter("range");
         response["total_requests"] = total_requests;
         response["total_errors"] = total_errors;
         // error_rate as percentage of failed requests
@@ -566,11 +625,10 @@ StatsController::get_data_throughput(const drogon::HttpRequestPtr& req,
             return;
         }
 
-        // Get throughput stats for last 24 hours
         auto now = std::time(nullptr);
-        auto from_timestamp = now - (24 * 3600);
+        const auto range = resolve_stats_range(req->getParameter("range"), now);
 
-        auto stats_result = db_manager->get_throughput_stats(from_timestamp, now);
+        auto stats_result = db_manager->get_throughput_stats(range.from_timestamp, now);
         if (!stats_result) {
             CONSOLE_LOG_ERROR("Failed to get throughput stats: {}", stats_result.error());
             Json::Value error;
@@ -581,14 +639,11 @@ StatsController::get_data_throughput(const drogon::HttpRequestPtr& req,
             return;
         }
 
-        // Group by hour and aggregate
-        std::map<int64_t, std::tuple<int64_t, int64_t, int64_t>> hourly_stats; // timestamp -> (read, write, total)
+        std::map<int64_t, std::tuple<int64_t, int64_t, int64_t>> bucket_stats;
 
         for (const auto& stat : stats_result.value()) {
-            // Round to hour
-            int64_t hour_ts = (stat.timestamp / 3600) * 3600;
-
-            auto& [read_bytes, write_bytes, total_bytes] = hourly_stats[hour_ts];
+            const int64_t key = bucket_key_for_timestamp(stat.timestamp, range);
+            auto& [read_bytes, write_bytes, total_bytes] = bucket_stats[key];
             read_bytes += stat.read_bytes;
             write_bytes += stat.write_bytes;
             total_bytes += stat.total_bytes;
@@ -599,25 +654,23 @@ StatsController::get_data_throughput(const drogon::HttpRequestPtr& req,
         int64_t total_write = 0;
         int64_t peak_throughput = 0;
 
-        // Fill in all 24 hours
-        for (int i = 23; i >= 0; i--) {
-            int64_t hour_ts = now - (i * 3600);
-            hour_ts = (hour_ts / 3600) * 3600;
+        for (int i = range.bucket_count - 1; i >= 0; i--) {
+            const int64_t bucket_ts = bucket_timestamp_at_index(i, range, now);
 
-            auto it = hourly_stats.find(hour_ts);
+            auto it = bucket_stats.find(bucket_ts);
             int64_t read_bytes = 0, write_bytes = 0, total_bytes = 0;
 
-            if (it != hourly_stats.end()) {
+            if (it != bucket_stats.end()) {
                 read_bytes = std::get<0>(it->second);
                 write_bytes = std::get<1>(it->second);
                 total_bytes = std::get<2>(it->second);
             }
 
             Json::Value point;
-            char time_buf[6];
-            std::strftime(time_buf, sizeof(time_buf), "%H:%M", std::localtime(&hour_ts));
+            char time_buf[16];
+            format_bucket_label(time_buf, sizeof(time_buf), bucket_ts, range.daily);
 
-            point["timestamp"] = static_cast<Json::Int64>(hour_ts);
+            point["timestamp"] = static_cast<Json::Int64>(bucket_ts);
             point["time"] = time_buf;
             point["read_bytes"] = static_cast<Json::Int64>(read_bytes);
             point["write_bytes"] = static_cast<Json::Int64>(write_bytes);
@@ -632,10 +685,12 @@ StatsController::get_data_throughput(const drogon::HttpRequestPtr& req,
             data.append(point);
         }
 
+        const int divisor = std::max(range.bucket_count, 1);
         response["data"] = data;
+        response["range"] = req->getParameter("range").empty() ? "24h" : req->getParameter("range");
         response["total_read"] = static_cast<Json::Int64>(total_read);
         response["total_write"] = static_cast<Json::Int64>(total_write);
-        response["average_throughput"] = static_cast<Json::Int64>((total_read + total_write) / 24);
+        response["average_throughput"] = static_cast<Json::Int64>((total_read + total_write) / divisor);
         response["peak_throughput"] = static_cast<Json::Int64>(peak_throughput);
 
         auto resp = drogon::HttpResponse::newHttpJsonResponse(response);
