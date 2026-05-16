@@ -20,10 +20,10 @@ class PresignedController : public drogon::HttpController<PresignedController> {
     METHOD_LIST_BEGIN
 
     // Access object via presigned URL (no auth middleware - public access)
-    ADD_METHOD_TO(PresignedController::access_object, "/api/v1/objects/{bucket}/{key:.*}", drogon::Get);
+    ADD_METHOD_TO(PresignedController::access_object, "/api/v1/objects/{bucket}/{key:path}", drogon::Get);
 
     // Upload object via presigned URL (PUT for upload)
-    ADD_METHOD_TO(PresignedController::upload_object, "/api/v1/objects/{bucket}/{key:.*}", drogon::Put);
+    ADD_METHOD_TO(PresignedController::upload_object, "/api/v1/objects/{bucket}/{key:path}", drogon::Put);
 
     METHOD_LIST_END
 

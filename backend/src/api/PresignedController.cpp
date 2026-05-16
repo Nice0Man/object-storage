@@ -138,10 +138,21 @@ PresignedController::access_object(const drogon::HttpRequestPtr& req,
 
     auto result = storage_client->get_object(bucket, canonical_key);
     if (!result) {
+        const String& err = result.error();
         Json::Value error;
-        error["error"] = result.error();
+        error["error"] = err;
         auto resp = drogon::HttpResponse::newHttpJsonResponse(error);
-        resp->setStatusCode(drogon::k404NotFound);
+        drogon::HttpStatusCode status = drogon::k404NotFound;
+        if (err.find("not found") == String::npos && err.find("Not found") == String::npos) {
+            if (err.find("encrypt") != String::npos || err.find("Decrypt") != String::npos ||
+                err.find("decrypt") != String::npos) {
+                status = drogon::k500InternalServerError;
+                CONSOLE_LOG_ERROR("Presigned download failed (encryption): {}/{} — {}", bucket, canonical_key, err);
+            } else {
+                status = drogon::k500InternalServerError;
+            }
+        }
+        resp->setStatusCode(status);
         callback(resp);
         return;
     }
