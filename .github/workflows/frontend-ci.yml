@@ -49,7 +49,6 @@ jobs:
       run: npm run build
       env:
         CI: true
-        GENERATE_SOURCEMAP: false
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -63,10 +62,10 @@ jobs:
       run: |
         echo "## Build Size Report" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        if [ -d "build/static/js" ]; then
+        if [ -d "build/assets" ]; then
           echo "### Main Bundle Size" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          ls -lh build/static/js/*.js 2>/dev/null | awk '{print $9, $5}' >> $GITHUB_STEP_SUMMARY || echo "No JS files found" >> $GITHUB_STEP_SUMMARY
+          ls -lh build/assets/*.js 2>/dev/null | awk '{print $9, $5}' >> $GITHUB_STEP_SUMMARY || echo "No JS files found" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
         fi
         echo "" >> $GITHUB_STEP_SUMMARY
