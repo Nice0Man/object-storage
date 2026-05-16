@@ -2,7 +2,7 @@
   "server": {
     "host": "0.0.0.0",
     "port": 9090,
-    "threads": 0,
+    "threads": 8,
     "enable_ssl": true,
     "ssl_cert": "/path/to/cert.pem",
     "ssl_key": "/path/to/key.pem",
@@ -40,6 +40,12 @@
   "storage": {
     "root_path": "./storage"
   },
+  "encryption": {
+    "master_key": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
+  "presigned_url": {
+    "secret_key": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  },
   "default_admin": {
     "username": "admin",
     "password": "CHANGE-THIS-PASSWORD",
@@ -51,5 +57,10 @@
     "items_per_page": 50,
     "enable_dark_mode": true,
     "show_hidden_files": false
+  },
+  "terminal": {
+    "enabled": true,
+    "shell": "/bin/bash",
+    "max_sessions": 8
   }
 }
