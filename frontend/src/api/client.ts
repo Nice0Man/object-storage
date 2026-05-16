@@ -1,8 +1,10 @@
-import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from "axios";
+import { AxiosInstance, AxiosRequestConfig } from "axios";
+import { createHttpClient, resolveApiBaseURL } from "../shared/api/http";
 import type {
   HealthResponse,
   ReadyResponse,
   LiveResponse,
+  TerminalStatusResponse,
   VersionResponse,
   SystemStats,
   CapacityStats,
@@ -25,7 +27,6 @@ import type {
   CreateUserRequest,
   UpdateUserRequest,
   UserPoliciesResponse,
-  ApiError,
   MultipartUploadInfo,
   CompletedPart,
   ListMultipartUploadsResponse,
@@ -33,6 +34,12 @@ import type {
   ObjectRetention,
   ObjectLegalHold,
   BucketObjectLockConfig,
+  BucketVisibilityResponse,
+  InfrastructureSummary,
+  InfrastructureServersResponse,
+  InfrastructureDrivesResponse,
+  InfrastructurePoolsResponse,
+  InfrastructureHealStatus,
   BucketTagsResponse,
   BucketEncryptionConfig,
   LifecycleConfiguration,
@@ -44,50 +51,22 @@ import type {
   UpdateWidgetRequest,
 } from "./types";
 
-function resolveApiBaseURL(explicit?: string): string {
-  if (explicit !== undefined && explicit.length > 0) {
-    return explicit;
-  }
-  const env = process.env.REACT_APP_API_URL;
-  if (typeof env === "string" && env.trim().length > 0) {
-    return env.trim();
-  }
-  // Same origin: dev server (CRA) proxies /api → backend; production SPA is served from the API host.
-  return "";
-}
-
 class ApiClient {
   private client: AxiosInstance;
   private token: string | null = null;
 
   constructor(baseURL?: string) {
     const resolved = resolveApiBaseURL(baseURL);
-    this.client = axios.create({
-      baseURL: resolved,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // withCredentials: false by default - we use JWT in localStorage, not cookies
-    });
-
-    // Load token from localStorage
     this.token = localStorage.getItem("auth_token");
+    this.client = createHttpClient(resolved, {
+      getToken: () => this.token,
+      setToken: (token) => this.setAuthToken(token),
+      clearToken: () => this.clearAuthToken(),
+      refreshToken: () => this.refreshToken(),
+    });
     if (this.token) {
       this.setAuthToken(this.token);
     }
-
-    // Response interceptor for error handling
-    this.client.interceptors.response.use(
-      (response) => response,
-      (error: AxiosError<ApiError>) => {
-        if (error.response?.status === 401) {
-          // Clear token and redirect to login
-          this.clearAuthToken();
-          window.location.href = "/login";
-        }
-        return Promise.reject(error);
-      },
-    );
   }
 
   private setAuthToken(token: string) {
@@ -120,6 +99,13 @@ class ApiClient {
 
   async getVersion(): Promise<VersionResponse> {
     const response = await this.client.get<VersionResponse>("/api/v1/version");
+    return response.data;
+  }
+
+  async getTerminalStatus(): Promise<TerminalStatusResponse> {
+    const response = await this.client.get<TerminalStatusResponse>(
+      "/api/v1/system/terminal/status",
+    );
     return response.data;
   }
 
@@ -300,7 +286,7 @@ class ApiClient {
     }
 
     const response = await this.client.get(
-      `/api/v1/buckets/${bucketName}/objects/${key}/download`,
+      `/api/v1/buckets/${bucketName}/objects/${encodeURIComponent(key)}/download`,
       {
         responseType: "blob",
         headers,
@@ -631,6 +617,24 @@ class ApiClient {
     await this.client.put(`/api/v1/buckets/${bucketName}/object-lock`, config);
   }
 
+  async getBucketVisibility(
+    bucketName: string,
+  ): Promise<BucketVisibilityResponse> {
+    const response = await this.client.get<BucketVisibilityResponse>(
+      `/api/v1/buckets/${bucketName}/visibility`,
+    );
+    return response.data;
+  }
+
+  async setBucketVisibility(
+    bucketName: string,
+    groups: string[],
+  ): Promise<void> {
+    await this.client.put(`/api/v1/buckets/${bucketName}/visibility`, {
+      groups,
+    });
+  }
+
   async getObjectRetention(
     bucketName: string,
     key: string,
@@ -770,13 +774,17 @@ class ApiClient {
     return response.data;
   }
 
-  async getApiErrorStats(): Promise<any> {
-    const response = await this.client.get("/api/v1/stats/api-errors");
+  async getApiErrorStats(range?: "1h" | "6h" | "24h" | "7d"): Promise<any> {
+    const response = await this.client.get("/api/v1/stats/api-errors", {
+      params: range ? { range } : undefined,
+    });
     return response.data;
   }
 
-  async getDataThroughputStats(): Promise<any> {
-    const response = await this.client.get("/api/v1/stats/data-throughput");
+  async getDataThroughputStats(range?: "1h" | "6h" | "24h" | "7d"): Promise<any> {
+    const response = await this.client.get("/api/v1/stats/data-throughput", {
+      params: range ? { range } : undefined,
+    });
     return response.data;
   }
 
@@ -821,6 +829,42 @@ class ApiClient {
 
   async updateDashboardWidget(id: string, request: UpdateWidgetRequest): Promise<DashboardWidget> {
     const response = await this.client.put<DashboardWidget>(`/api/v1/dashboard/widgets/${id}`, request);
+    return response.data;
+  }
+
+  // ==================== Infrastructure ====================
+  async getInfrastructureSummary(): Promise<InfrastructureSummary> {
+    const response = await this.client.get<InfrastructureSummary>(
+      "/api/v1/infrastructure/summary",
+    );
+    return response.data;
+  }
+
+  async listInfrastructureServers(): Promise<InfrastructureServersResponse> {
+    const response = await this.client.get<InfrastructureServersResponse>(
+      "/api/v1/infrastructure/servers",
+    );
+    return response.data;
+  }
+
+  async listInfrastructureDrives(): Promise<InfrastructureDrivesResponse> {
+    const response = await this.client.get<InfrastructureDrivesResponse>(
+      "/api/v1/infrastructure/drives",
+    );
+    return response.data;
+  }
+
+  async listInfrastructurePools(): Promise<InfrastructurePoolsResponse> {
+    const response = await this.client.get<InfrastructurePoolsResponse>(
+      "/api/v1/infrastructure/pools",
+    );
+    return response.data;
+  }
+
+  async getInfrastructureHealStatus(): Promise<InfrastructureHealStatus> {
+    const response = await this.client.get<InfrastructureHealStatus>(
+      "/api/v1/infrastructure/heal",
+    );
     return response.data;
   }
 }

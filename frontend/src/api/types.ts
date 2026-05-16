@@ -19,6 +19,14 @@ export interface LiveResponse {
   alive: boolean;
 }
 
+export interface TerminalStatusResponse {
+  enabled: boolean;
+  allowed: boolean;
+  shell: string;
+  max_sessions: number;
+  ws_path: string;
+}
+
 export interface VersionResponse {
   version: string;
   api_version: string;
@@ -427,6 +435,47 @@ export interface BucketObjectLockConfig {
     days?: number;
     years?: number;
   };
+}
+
+export interface BucketVisibilityResponse {
+  bucket: string;
+  groups: string[];
+}
+
+export interface InfrastructureSummary {
+  servers?: { total?: number; online?: number; offline?: number };
+  drives?: { total?: number; online?: number; offline?: number };
+  pools?: { total?: number };
+  heal?: { status?: string; progress?: number };
+  [key: string]: unknown;
+}
+
+export interface InfrastructureServersResponse {
+  servers: Array<Record<string, unknown>>;
+  total: number;
+  online: number;
+  offline: number;
+}
+
+export interface InfrastructureDrivesResponse {
+  drives: Array<Record<string, unknown>>;
+  total: number;
+  online: number;
+  offline: number;
+}
+
+export interface InfrastructurePoolsResponse {
+  pools: Array<Record<string, unknown>>;
+  total: number;
+}
+
+export interface InfrastructureHealStatus {
+  status?: string;
+  pool_id?: string;
+  progress?: number;
+  objects_healed?: number;
+  objects_total?: number;
+  [key: string]: unknown;
 }
 
 // ============================================================================
